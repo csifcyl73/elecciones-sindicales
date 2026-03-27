@@ -1,0 +1,4 @@
+Retrieving projectÔÇª
+> Connecting GitHub repository: https://github.com/csifcyl73/elecciones-sindicales
+Error: Failed to link csifcyl73/elecciones-sindicales. You need to add a Login Connection to your GitHub account first. (400)
+Visit https://vercel.com/docs/accounts/create-an-account#login-methods-and-connections for more information.

@@ -1,0 +1,7 @@
+open C:\Users\asus\.supabase\profile: The system cannot find the path specified.
+Supabase CLI 2.84.4
+Using profile: supabase (supabase.co)
+Loading project ref from flag: qowexnavboulambhysio
+Using access token for profile: supabase
+2026/03/27 12:16:06 HTTP GET: https://api.supabase.com/v1/projects/qowexnavboulambhysio
+Unexpected error retrieving remote project status: {"message":"Your account does not have the necessary privileges to access this endpoint. For more details, refer to our documentation https://supabase.com/docs/guides/platform/access-control"}
