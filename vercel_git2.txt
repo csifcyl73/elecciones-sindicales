@@ -1,3 +1,0 @@
-Retrieving projectÔÇª
-> Connecting GitHub repository: https://github.com/csifcyl73/elecciones-sindicales
-> csifcyl73/elecciones-sindicales is already connected to your project.
