@@ -1,3 +1,4 @@
+@import url('https://fonts.cdnfonts.com/css/glacial-indifference-2');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -123,8 +124,6 @@
   }
   body {
     @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
+    font-family: 'Glacial Indifference', sans-serif;
   }
 }
