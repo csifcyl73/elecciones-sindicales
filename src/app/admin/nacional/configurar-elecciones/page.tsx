@@ -75,18 +75,18 @@ export default function ConfigurarEleccionesPage() {
 
     setAddingUnit(true);
     try {
-      const { data, error: unityError } = await supabase
-        .from('unidades_electorales')
-        .insert([{
-          nombre: nuevaUnidadNombre.toUpperCase(),
-          provincia_id: formData.provincia_id ? parseInt(formData.provincia_id) : null,
-          sector_id: formData.sector_id ? parseInt(formData.sector_id) : null,
-          estado: 'configuracion'
-        }])
-        .select()
-        .single();
+      const response = await fetch('/api/admin/unidades', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: nuevaUnidadNombre,
+          provincia_id: formData.provincia_id,
+          sector_id: formData.sector_id
+        }),
+      });
 
-      if (unityError) throw unityError;
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Error en la respuesta del servidor');
 
       // Actualizar lista local y seleccionar la nueva unidad
       setUnidadesExistentes([...unidadesExistentes, data]);
@@ -96,7 +96,7 @@ export default function ConfigurarEleccionesPage() {
       setNuevaUnidadNombre('');
       setIsModalOpen(false);
     } catch (err: any) {
-      alert('Error al crear unidad: ' + err.message);
+      alert('Error definitivo al crear unidad: ' + err.message);
     } finally {
       setAddingUnit(false);
     }

@@ -124,6 +124,11 @@ ALTER TABLE public.mesas_electorales ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
     CREATE POLICY "Usuarios pueden leer todos los datos" ON public.usuarios FOR SELECT USING (true);
     CREATE POLICY "Cualquiera puede leer CCAA" ON public.ccaa FOR SELECT USING (true);
+    
+    -- Políticas para Unidades Electorales
+    CREATE POLICY "Permitir lectura de unidades" ON public.unidades_electorales FOR SELECT TO authenticated USING (true);
+    CREATE POLICY "Permitir insercion de unidades" ON public.unidades_electorales FOR INSERT TO authenticated WITH CHECK (true);
+    CREATE POLICY "Permitir actualizacion de unidades" ON public.unidades_electorales FOR UPDATE TO authenticated USING (true);
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
