@@ -13,7 +13,10 @@ import {
   Save, 
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  ChevronRight,
+  X,
+  Database
 } from 'lucide-react';
 
 export default function ConfigurarEleccionesPage() {
@@ -26,99 +29,97 @@ export default function ConfigurarEleccionesPage() {
   const [organos, setOrganos] = useState<any[]>([]);
   const [unidadesExistentes, setUnidadesExistentes] = useState<any[]>([]);
   
-  // Estados del formulario
+  // Estados del formulario principal
   const [formData, setFormData] = useState({
     provincia_id: '',
     sector_id: '',
     unidad_id: '',
     tipo_organo_id: '',
-    nombre_nueva_unidad: '',
-    delegados: 1
   });
+
+  // Estados del Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [nuevaUnidadNombre, setNuevaUnidadNombre] = useState('');
+  const [addingUnit, setAddingUnit] = useState(false);
   
-  const [showNuevaUnidad, setShowNuevaUnidad] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadMasters = async () => {
-      setLoading(true);
-      
-      // 1. Verificar sesión (Desactivado temporalmente para permitir visualización directa)
-      /*
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session || session.user.user_metadata?.role !== 'admin_nacional') {
-        router.replace('/admin/nacional');
-        return;
-      }
-      */
-
-      // 2. Cargar Maestros
-      const [provRes, sectRes, organRes, unityRes] = await Promise.all([
-        supabase.from('provincias').select('*').order('nombre'),
-        supabase.from('sectores').select('*').order('nombre'),
-        supabase.from('tipos_organos').select('*').order('nombre'),
-        supabase.from('unidades_electorales').select('*').order('nombre')
-      ]);
-
-      if (provRes.data) setProvincias(provRes.data);
-      if (sectRes.data) setSectores(sectRes.data);
-      if (organRes.data) setOrganos(organRes.data);
-      if (unityRes.data) setUnidadesExistentes(unityRes.data);
-      
-      setLoading(false);
-    };
-
     loadMasters();
   }, [router, supabase]);
 
-  const handleSave = async (e: React.FormEvent) => {
+  const loadMasters = async () => {
+    setLoading(true);
+    // 1. Cargar Maestros
+    const [provRes, sectRes, organRes, unityRes] = await Promise.all([
+      supabase.from('provincias').select('*').order('nombre'),
+      supabase.from('sectores').select('*').order('nombre'),
+      supabase.from('tipos_organos').select('*').order('nombre'),
+      supabase.from('unidades_electorales').select('*').order('nombre')
+    ]);
+
+    if (provRes.data) setProvincias(provRes.data);
+    if (sectRes.data) setSectores(sectRes.data);
+    if (organRes.data) setOrganos(organRes.data);
+    if (unityRes.data) setUnidadesExistentes(unityRes.data);
+    
+    setLoading(false);
+  };
+
+  const handleAddUnit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nuevaUnidadNombre.trim()) return;
+
+    setAddingUnit(true);
+    try {
+      const { data, error: unityError } = await supabase
+        .from('unidades_electorales')
+        .insert([{
+          nombre: nuevaUnidadNombre.toUpperCase(),
+          provincia_id: formData.provincia_id ? parseInt(formData.provincia_id) : null,
+          sector_id: formData.sector_id ? parseInt(formData.sector_id) : null,
+          estado: 'configuracion'
+        }])
+        .select()
+        .single();
+
+      if (unityError) throw unityError;
+
+      // Actualizar lista local y seleccionar la nueva unidad
+      setUnidadesExistentes([...unidadesExistentes, data]);
+      setFormData({ ...formData, unidad_id: data.id.toString() });
+      
+      // Cerrar modal y limpiar
+      setNuevaUnidadNombre('');
+      setIsModalOpen(false);
+    } catch (err: any) {
+      alert('Error al crear unidad: ' + err.message);
+    } finally {
+      setAddingUnit(false);
+    }
+  };
+
+  const handleNextStep = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError(null);
-    setSuccess(false);
 
     try {
-      let finalUnidadId = formData.unidad_id;
-
-      // Si es una nueva unidad, primero la creamos
-      if (showNuevaUnidad && formData.nombre_nueva_unidad) {
-        const { data, error: unityError } = await supabase
-          .from('unidades_electorales')
-          .insert([{
-            nombre: formData.nombre_nueva_unidad.toUpperCase(),
-            provincia_id: parseInt(formData.provincia_id),
-            sector_id: parseInt(formData.sector_id),
-            tipo_organo_id: parseInt(formData.tipo_organo_id),
-            delegados_a_elegir: formData.delegados,
-            estado: 'configuracion'
-          }])
-          .select()
-          .single();
-
-        if (unityError) throw unityError;
-        finalUnidadId = data.id;
-      } else if (!finalUnidadId) {
-        throw new Error('Debes seleccionar o crear una unidad electoral.');
-      }
-
-      // El usuario "configura" la elección (podríamos crear un registro de 'eleccion' vinculado a la unidad)
-      // Por ahora, marcamos la unidad como 'activa' o 'configurada'
-      const { error: updateError } = await supabase
-        .from('unidades_electorales')
-        .update({ estado: 'activa' })
-        .eq('id', finalUnidadId);
-
-      if (updateError) throw updateError;
-
+      if (!formData.unidad_id) throw new Error('Debes seleccionar una unidad electoral.');
+      
+      // Simulación de navegación al siguiente paso (Paso 2: Configuración específica por órgano)
       setSuccess(true);
-      // Opcional: Redirigir tras éxito
-      setTimeout(() => router.push('/admin/nacional/dashboard'), 2000);
+      setTimeout(() => {
+        // Aquí iría la redirección según el tipo de órgano
+        // router.push(`/admin/nacional/configurar-elecciones/paso-2?unidad=${formData.unidad_id}`);
+        setSuccess(false);
+        setSaving(false);
+      }, 1500);
     } catch (err: any) {
-      setError(err.message || 'Error al guardar la configuración.');
-    } finally {
+      setError(err.message);
       setSaving(false);
     }
   };
@@ -140,7 +141,7 @@ export default function ConfigurarEleccionesPage() {
       </div>
 
       <div className="relative z-10 max-w-4xl mx-auto">
-        {/* Header con botón para volver */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-12">
           <Link
             href="/admin/nacional/dashboard"
@@ -156,14 +157,13 @@ export default function ConfigurarEleccionesPage() {
             <h1 className="text-3xl md:text-4xl font-black tracking-tight bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
               CONFIGURAR ELECCIONES
             </h1>
-            <p className="text-white/40 text-sm mt-1">Definición de parámetros electorales</p>
+            <p className="text-white/40 text-sm mt-1">Paso 1: Par&aacute;metros generales</p>
           </div>
         </div>
 
-        {/* Card del Formulario */}
+        {/* Formulario Principal */}
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 md:p-10 rounded-[32px] shadow-2xl">
-          <form onSubmit={handleSave} className="space-y-8">
-            
+          <form onSubmit={handleNextStep} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               
               {/* Provincia */}
@@ -174,13 +174,11 @@ export default function ConfigurarEleccionesPage() {
                 <select
                   value={formData.provincia_id}
                   onChange={(e) => setFormData({ ...formData, provincia_id: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500 transition-all text-white appearance-none cursor-pointer hover:bg-white/10"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500 transition-all text-white cursor-pointer hover:bg-white/10"
                   required
                 >
-                  <option value="" disabled className="bg-gray-900">Selecciona Provincia</option>
-                  {provincias.map(p => (
-                    <option key={p.id} value={p.id} className="bg-gray-900">{p.nombre}</option>
-                  ))}
+                  <option value="" disabled>Selecciona Provincia</option>
+                  {provincias.map(p => <option key={p.id} value={p.id} className="bg-gray-900">{p.nombre}</option>)}
                 </select>
               </div>
 
@@ -192,13 +190,11 @@ export default function ConfigurarEleccionesPage() {
                 <select
                   value={formData.sector_id}
                   onChange={(e) => setFormData({ ...formData, sector_id: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500 transition-all text-white appearance-none cursor-pointer hover:bg-white/10"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500 transition-all text-white cursor-pointer hover:bg-white/10"
                   required
                 >
-                  <option value="" disabled className="bg-gray-900">Selecciona Sector</option>
-                  {sectores.map(s => (
-                    <option key={s.id} value={s.id} className="bg-gray-900">{s.nombre}</option>
-                  ))}
+                  <option value="" disabled>Selecciona Sector</option>
+                  {sectores.map(s => <option key={s.id} value={s.id} className="bg-gray-900">{s.nombre}</option>)}
                 </select>
               </div>
 
@@ -210,117 +206,97 @@ export default function ConfigurarEleccionesPage() {
                   </label>
                   <button
                     type="button"
-                    onClick={() => setShowNuevaUnidad(!showNuevaUnidad)}
+                    onClick={() => setIsModalOpen(true)}
                     className="flex items-center gap-1 text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors bg-blue-400/10 px-3 py-1.5 rounded-full border border-blue-400/20"
                   >
-                    {showNuevaUnidad ? 'Seleccionar existente' : 'Dar de alta nueva'}
-                    {showNuevaUnidad ? <CheckCircle2 className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                    Dar de alta nueva +
                   </button>
                 </div>
-
-                {showNuevaUnidad ? (
-                  <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                    <input
-                      type="text"
-                      placeholder="Nombre de la nueva unidad (ej: Ayto. de Madrid - Laborales)"
-                      value={formData.nombre_nueva_unidad}
-                      onChange={(e) => setFormData({ ...formData, nombre_nueva_unidad: e.target.value })}
-                      className="w-full bg-blue-900/10 border border-blue-400/30 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 transition-all text-white shadow-[0_0_15px_rgba(59,130,246,0.1)]"
-                      required
-                    />
-                  </div>
-                ) : (
-                  <select
-                    value={formData.unidad_id}
-                    onChange={(e) => setFormData({ ...formData, unidad_id: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500 transition-all text-white appearance-none cursor-pointer hover:bg-white/10"
-                    required={!showNuevaUnidad}
-                  >
-                    <option value="" disabled className="bg-gray-900">Selecciona Unidad</option>
-                    {unidadesExistentes
-                      .filter(u => 
-                        (!formData.provincia_id || u.provincia_id === parseInt(formData.provincia_id)) && 
-                        (!formData.sector_id || u.sector_id === parseInt(formData.sector_id))
-                      )
-                      .map(u => (
-                        <option key={u.id} value={u.id} className="bg-gray-900">{u.nombre}</option>
-                      ))
-                    }
-                    {unidadesExistentes.length === 0 && <option disabled className="bg-gray-900">No hay unidades cargadas</option>}
-                  </select>
-                )}
+                <select
+                  value={formData.unidad_id}
+                  onChange={(e) => setFormData({ ...formData, unidad_id: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500 transition-all text-white cursor-pointer hover:bg-white/10"
+                  required
+                >
+                  <option value="" disabled>Selecciona Unidad</option>
+                  {unidadesExistentes
+                    .filter(u => (!formData.provincia_id || u.provincia_id === parseInt(formData.provincia_id)))
+                    .map(u => <option key={u.id} value={u.id} className="bg-gray-900">{u.nombre}</option>)}
+                </select>
               </div>
 
               {/* Tipo de Órgano */}
-              <div className="space-y-3">
+              <div className="space-y-3 md:col-span-2">
                 <label className="flex items-center gap-2 text-sm font-bold text-emerald-400 uppercase tracking-widest px-1">
                   <Users className="w-4 h-4" /> Tipo de &Oacute;rgano
                 </label>
                 <select
                   value={formData.tipo_organo_id}
                   onChange={(e) => setFormData({ ...formData, tipo_organo_id: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500 transition-all text-white appearance-none cursor-pointer hover:bg-white/10"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500 transition-all text-white cursor-pointer hover:bg-white/10"
                   required
                 >
-                  <option value="" disabled className="bg-gray-900">Selecciona &Oacute;rgano</option>
-                  {organos.map(o => (
-                    <option key={o.id} value={o.id} className="bg-gray-900">{o.nombre}</option>
-                  ))}
+                  <option value="" disabled>Selecciona &Oacute;rgano</option>
+                  {organos.map(o => <option key={o.id} value={o.id} className="bg-gray-900">{o.nombre}</option>)}
                 </select>
               </div>
-
-              {/* Delegados a elegir (extra if new unity) */}
-              {showNuevaUnidad && (
-                <div className="space-y-3 animate-in fade-in zoom-in-95 duration-300">
-                  <label className="flex items-center gap-2 text-sm font-bold text-emerald-400 uppercase tracking-widest px-1">
-                    Delegados a elegir
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={formData.delegados}
-                    onChange={(e) => setFormData({ ...formData, delegados: parseInt(e.target.value) })}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500 transition-all text-white"
-                  />
-                </div>
-              )}
-
             </div>
 
-            {/* Feedback Mensajes */}
-            {error && (
-              <div className="flex items-center gap-3 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl text-sm font-semibold">
-                <AlertCircle className="w-5 h-5 shrink-0" />
-                {error}
-              </div>
-            )}
-
-            {success && (
-              <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl text-sm font-semibold animate-bounce">
-                <CheckCircle2 className="w-5 h-5 shrink-0" />
-                Configuraci&oacute;n guardada con &eacute;xito. Redirigiendo...
-              </div>
-            )}
-
-            {/* Botón de Guardar */}
+            {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl text-sm">{error}</div>}
+            
             <button
               type="submit"
-              disabled={saving || success}
-              className="w-full py-5 px-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xl rounded-2xl shadow-xl shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={saving}
+              className="w-full py-5 px-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xl rounded-2xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
             >
-              {saving ? (
-                <>
-                  <Loader2 className="w-6 h-6 animate-spin" /> Guardando...
-                </>
-              ) : (
-                <>
-                  <Save className="w-6 h-6" /> Guardar Configuraci&oacute;n
-                </>
-              )}
+              {saving ? <Loader2 className="w-6 h-6 animate-spin" /> : <>Siguiente <ChevronRight className="w-6 h-6" /></>}
             </button>
           </form>
         </div>
       </div>
+
+      {/* MODAL: Alta de Nueva Unidad */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md">
+          <div className="bg-[#111827] border border-white/10 w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="p-8 space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-blue-400" /> Nueva Unidad Electoral
+                </h2>
+                <button onClick={() => setIsModalOpen(false)} className="text-white/40 hover:text-white"><X className="w-6 h-6" /></button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">Nombre de la unidad electoral</label>
+                  <input
+                    type="text"
+                    value={nuevaUnidadNombre}
+                    onChange={(e) => setNuevaUnidadNombre(e.target.value.toUpperCase())}
+                    placeholder="EJ: JUNTA DE PERSONAL SANIDAD SEGOVIA"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 transition-all text-white placeholder:text-white/20"
+                  />
+                </div>
+
+                <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl">
+                  <p className="text-xs text-blue-300 leading-relaxed italic">
+                    * Al grabar, esta unidad estar&aacute; disponible para todos los administradores del sistema.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={handleAddUnit}
+                disabled={addingUnit || !nuevaUnidadNombre.trim()}
+                className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {addingUnit ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Database className="w-5 h-5" /> Grabar Unidad</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <footer className="relative z-10 mt-12 text-center text-white/20 text-xs">
         CSIF · Sistema de Gesti&oacute;n Electoral · Administrador Nacional
