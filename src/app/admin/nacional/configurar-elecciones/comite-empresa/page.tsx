@@ -16,7 +16,8 @@ import {
   CheckCircle2,
   Trash2,
   Briefcase,
-  Users
+  Users,
+  Database
 } from 'lucide-react';
 
 export default function ComiteEmpresaConfigPage() {
@@ -36,7 +37,12 @@ export default function ComiteEmpresaConfigPage() {
   const [delegadosTecnicos, setDelegadosTecnicos] = useState('');
   const [delegadosEspecialistas, setDelegadosEspecialistas] = useState('');
   
-  // Buscador de Sindicatos
+  // Modal y Gestión de Sindicatos
+  const [isUnionModalOpen, setIsUnionModalOpen] = useState(false);
+  const [nuevaUnionSiglas, setNuevaUnionSiglas] = useState('');
+  const [nuevaUnionNombre, setNuevaUnionNombre] = useState('');
+  const [addingUnion, setAddingUnion] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -67,6 +73,34 @@ export default function ComiteEmpresaConfigPage() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateUnion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nuevaUnionSiglas.trim() || !nuevaUnionNombre.trim()) return;
+    setAddingUnion(true);
+    try {
+      const response = await fetch('/api/admin/sindicatos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ siglas: nuevaUnionSiglas, nombre_completo: nuevaUnionNombre }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      // Añadir la nueva unión a los maestros y seleccionarla
+      setSindicatosMaestros([...sindicatosMaestros, data]);
+      setSindicatosSeleccionados([...sindicatosSeleccionados, data]);
+      
+      // Limpiar y cerrar
+      setNuevaUnionSiglas('');
+      setNuevaUnionNombre('');
+      setIsUnionModalOpen(false);
+    } catch (err: any) {
+      alert('Error al dar de alta sindicato: ' + err.message);
+    } finally {
+      setAddingUnion(false);
     }
   };
 
@@ -140,6 +174,17 @@ export default function ComiteEmpresaConfigPage() {
                 <h3 className="font-black text-xl text-white uppercase tracking-tight">SINDICATOS QUE CONCURREN</h3>
                 <p className="text-white/40 text-xs font-bold uppercase tracking-widest">BUSCA LOS SINDICATOS QUE SE PRESENTAN</p>
               </div>
+            </div>
+
+            <div className="flex justify-between items-center px-1">
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Busca los sindicatos que se presentan</label>
+              <button 
+                type="button" 
+                onClick={() => setIsUnionModalOpen(true)} 
+                className="flex items-center gap-1 text-[9px] font-bold text-teal-400 hover:text-teal-300 transition-colors bg-teal-400/10 px-3 py-1.5 rounded-full border border-teal-400/20 uppercase tracking-tighter"
+              >
+                Dar de alta nuevo +
+              </button>
             </div>
 
             <div className="relative" ref={dropdownRef}>
@@ -287,6 +332,51 @@ export default function ComiteEmpresaConfigPage() {
       <footer className="relative z-10 mt-12 text-center text-white/20 text-[10px] font-bold uppercase tracking-widest">
         CSIF · SISTEMA DE GESTI&Oacute;N ELECTORAL · PASO 2.1 COMIT&Eacute; DE EMPRESA
       </footer>
+
+      {/* MODAL: Alta de Nuevo Sindicato */}
+      {isUnionModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md">
+          <div className="bg-[#111827] border border-white/10 w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="p-8 space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2 uppercase tracking-tight">
+                  <Plus className="w-5 h-5 text-teal-400" /> Nuevo Sindicato
+                </h2>
+                <button onClick={() => setIsUnionModalOpen(false)} className="text-white/40 hover:text-white"><X className="w-6 h-6" /></button>
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-1">Siglas del sindicato</label>
+                  <input
+                    type="text"
+                    value={nuevaUnionSiglas}
+                    onChange={(e) => setNuevaUnionSiglas(e.target.value.toUpperCase())}
+                    placeholder="EJ: CSIF"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-teal-500 transition-all text-white placeholder:text-white/10 font-bold"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-1">Nombre completo</label>
+                  <input
+                    type="text"
+                    value={nuevaUnionNombre}
+                    onChange={(e) => setNuevaUnionNombre(e.target.value.toUpperCase())}
+                    placeholder="EJ: CENTRAL SINDICAL INDEPENDIENTE Y DE FUNCIONARIOS"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-teal-500 transition-all text-white placeholder:text-white/10 font-bold"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={handleCreateUnion}
+                disabled={addingUnion || !nuevaUnionSiglas.trim() || !nuevaUnionNombre.trim()}
+                className="w-full py-4 bg-teal-600 hover:bg-teal-500 text-white font-black rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 uppercase tracking-widest"
+              >
+                {addingUnion ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Database className="w-5 h-5" /> Grabar Sindicato</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
