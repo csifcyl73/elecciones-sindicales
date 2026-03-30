@@ -129,16 +129,30 @@ export default function ConfigurarEleccionesPage() {
     e.preventDefault();
     setSaving(true);
     setError(null);
+
     try {
-      if (!formData.unidad_id) throw new Error('Debes seleccionar una unidad electoral.');
+      // Validación estricta de campos obligatorios
+      const missingFields = [];
+      if (!formData.provincia_id) missingFields.push("Provincia");
+      if (!formData.sector_id) missingFields.push("Sector");
+      if (!formData.unidad_id) missingFields.push("Unidad Electoral");
+      if (!formData.tipo_organo_id) missingFields.push("Tipo de Órgano");
+
+      if (missingFields.length > 0) {
+        throw new Error(`Faltan campos por completar: ${missingFields.join(", ").toUpperCase()}`);
+      }
+      
+      // Simulación de navegación exitosa
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
         setSaving(false);
+        // Aquí iría el router.push al Paso 2
       }, 1500);
     } catch (err: any) {
       setError(err.message);
       setSaving(false);
+      // Opcional: alert(err.message); // Si prefieres el aviso nativo del navegador
     }
   };
 
