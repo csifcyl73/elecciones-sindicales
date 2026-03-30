@@ -62,7 +62,7 @@ export default function Home() {
           </Link>
 
           <Link
-            href="/mesa/demo-123"
+            href="/interventor"
             className="flex items-center px-6 py-4 hover:bg-[#007a3c] transition-colors w-full group/item"
           >
             <Users className="h-8 w-8 shrink-0 opacity-80 group-hover/item:opacity-100 transition-transform group-hover/item:scale-110" />
