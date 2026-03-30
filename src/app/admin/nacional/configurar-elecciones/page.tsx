@@ -46,12 +46,14 @@ export default function ConfigurarEleccionesPage() {
     const loadMasters = async () => {
       setLoading(true);
       
-      // 1. Verificar sesión
+      // 1. Verificar sesión (Desactivado temporalmente para permitir visualización directa)
+      /*
       const { data: { session } } = await supabase.auth.getSession();
       if (!session || session.user.user_metadata?.role !== 'admin_nacional') {
         router.replace('/admin/nacional');
         return;
       }
+      */
 
       // 2. Cargar Maestros
       const [provRes, sectRes, organRes, unityRes] = await Promise.all([
