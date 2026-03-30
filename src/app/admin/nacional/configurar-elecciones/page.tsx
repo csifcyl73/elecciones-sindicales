@@ -53,18 +53,18 @@ export default function ConfigurarEleccionesPage() {
 
   const loadMasters = async () => {
     setLoading(true);
-    // 1. Cargar Maestros
+    // 1. Cargar Maestros (Unidades desde API segura para saltar RLS)
     const [provRes, sectRes, organRes, unityRes] = await Promise.all([
       supabase.from('provincias').select('*').order('nombre'),
       supabase.from('sectores').select('*').order('nombre'),
       supabase.from('tipos_organos').select('*').order('nombre'),
-      supabase.from('unidades_electorales').select('*').order('nombre')
+      fetch('/api/admin/unidades').then(res => res.json())
     ]);
 
     if (provRes.data) setProvincias(provRes.data);
     if (sectRes.data) setSectores(sectRes.data);
     if (organRes.data) setOrganos(organRes.data);
-    if (unityRes.data) setUnidadesExistentes(unityRes.data);
+    if (unityRes) setUnidadesExistentes(Array.isArray(unityRes) ? unityRes : []);
     
     setLoading(false);
   };

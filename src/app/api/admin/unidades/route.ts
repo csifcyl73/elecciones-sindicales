@@ -18,6 +18,21 @@ const getSupabaseAdmin = () => {
   });
 };
 
+export async function GET() {
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from('unidades_electorales')
+      .select('*')
+      .order('nombre');
+    
+    if (error) throw error;
+    return NextResponse.json(data);
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
