@@ -147,7 +147,14 @@ export default function ConfigurarEleccionesPage() {
       setTimeout(() => {
         setSuccess(false);
         setSaving(false);
-        // Aquí iría el router.push al Paso 2
+        
+        // Redirección condicionada por el tipo de órgano (ID 2 = Comité de Empresa)
+        if (formData.tipo_organo_id === '2') {
+          router.push(`/admin/nacional/configurar-elecciones/comite-empresa?unidad_id=${formData.unidad_id}`);
+        } else {
+          // En el futuro, más redirecciones para Junta de Personal (ID 1), etc.
+          alert('Configuración pendiente para este tipo de órgano.');
+        }
       }, 1500);
     } catch (err: any) {
       setError(err.message);
