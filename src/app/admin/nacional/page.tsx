@@ -22,10 +22,11 @@ export default function AdminNacionalLogin() {
     setError('');
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data: { user }, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
-      setError('Usuario o contraseña incorrectos. Inténtalo de nuevo.');
+    if (error || user?.user_metadata?.role !== 'admin_nacional') {
+      setError('Acceso denegado. No tienes permisos de Administrador Nacional.');
+      if (!error) await supabase.auth.signOut(); // Si el login fue exitoso pero el rol es incorrecto
       setLoading(false);
     } else {
       router.push('/admin/nacional/dashboard');

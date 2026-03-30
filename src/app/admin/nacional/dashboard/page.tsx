@@ -75,7 +75,7 @@ export default function AdminNacionalDashboard() {
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      if (!session || session.user.user_metadata?.role !== 'admin_nacional') {
         router.replace('/admin/nacional');
       } else {
         setUserEmail(session.user.email ?? null);
