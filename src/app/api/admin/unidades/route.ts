@@ -44,7 +44,6 @@ export async function POST(request: Request) {
 
     const supabase = getSupabaseAdmin();
 
-    // Inserción bypassando RLS
     const { data, error } = await supabase
       .from('unidades_electorales')
       .insert([{
@@ -57,10 +56,30 @@ export async function POST(request: Request) {
       .single();
 
     if (error) throw error;
-
     return NextResponse.json(data);
   } catch (err: any) {
-    console.error('Error en API unidades:', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'El ID es obligatorio' }, { status: 400 });
+    }
+
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from('unidades_electorales')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
