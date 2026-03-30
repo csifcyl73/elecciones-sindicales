@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     const { nombre, provincia_id, sector_id } = body;
 
     if (!nombre) {
-      return NextResponse.json({ error: 'El nombre es obligatorio' }, { status:400 });
+      return NextResponse.json({ error: 'El nombre es obligatorio' }, { status: 400 });
     }
 
     const supabase = getSupabaseAdmin();
