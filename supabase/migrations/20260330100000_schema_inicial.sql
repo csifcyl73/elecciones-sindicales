@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS public.usuarios (
     rol rol_usuario NOT NULL,
     ccaa_id INT REFERENCES public.ccaa(id),
     nombre_completo TEXT NOT NULL,
-    dni TEXT,
+    dni TEXT NULL, -- Opcional para cumplimiento RGPD según decisión del usuario
     telefono TEXT,
     email TEXT UNIQUE,
     pin_acceso TEXT -- Para acceso de interventores en mesa

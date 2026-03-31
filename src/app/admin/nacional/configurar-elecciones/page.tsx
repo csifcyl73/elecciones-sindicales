@@ -92,7 +92,7 @@ export default function ConfigurarEleccionesPage() {
       const response = await fetch('/api/admin/unidades', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre: nuevaUnidadNombre, provincia_id: formData.provincia_id, sector_id: formData.sector_id }),
+        body: JSON.stringify({ nombre: nuevaUnidadNombre }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
@@ -141,6 +141,24 @@ export default function ConfigurarEleccionesPage() {
       if (missingFields.length > 0) {
         throw new Error(`Faltan campos por completar: ${missingFields.join(", ").toUpperCase()}`);
       }
+
+      // Validación de coherencia (Solicitud Usuario)
+      const selectedUnit = unidadesExistentes.find(u => u.id === formData.unidad_id);
+      const selectedOrgan = organos.find(o => o.id === parseInt(formData.tipo_organo_id) || o.id === formData.tipo_organo_id);
+
+      if (selectedUnit && selectedOrgan) {
+        const unitName = selectedUnit.nombre.toUpperCase();
+        const organName = selectedOrgan.nombre.toUpperCase();
+
+        if (
+          (unitName.includes("JUNTA DE PERSONAL") && organName.includes("COMITÉ DE EMPRESA")) ||
+          (unitName.includes("COMITÉ DE EMPRESA") && organName.includes("JUNTA DE PERSONAL"))
+        ) {
+          alert("INCOHERENCIA ENTRE UNIDAD ELECTORAL Y TIPO DE ÓRGANO");
+          setSaving(false);
+          return;
+        }
+      }
       
       // Simulación de navegación exitosa
       setSuccess(true);
@@ -148,11 +166,12 @@ export default function ConfigurarEleccionesPage() {
         setSuccess(false);
         setSaving(false);
         
-        // Redirección condicionada por el tipo de órgano (ID 2 = Comité de Empresa)
-        if (formData.tipo_organo_id === '2') {
+        // Redirección condicionada por el tipo de órgano
+        if (formData.tipo_organo_id === '2') { // Comité de Empresa
           router.push(`/admin/nacional/configurar-elecciones/comite-empresa?unidad_id=${formData.unidad_id}`);
+        } else if (formData.tipo_organo_id === '1') { // Junta de Personal
+          router.push(`/admin/nacional/configurar-elecciones/junta-personal?unidad_id=${formData.unidad_id}`);
         } else {
-          // En el futuro, más redirecciones para Junta de Personal (ID 1), etc.
           alert('Configuración pendiente para este tipo de órgano.');
         }
       }, 1500);
@@ -257,7 +276,6 @@ export default function ConfigurarEleccionesPage() {
                       <div className="p-6 text-center text-white/20 italic text-sm">NO HAY UNIDADES CARGADAS</div>
                     ) : (
                       unidadesExistentes
-                        .filter(u => (!formData.provincia_id || u.provincia_id === parseInt(formData.provincia_id)))
                         .map(u => (
                           <div 
                             key={u.id}

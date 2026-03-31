@@ -21,8 +21,8 @@ const supabase = createClient(
 const menuItems = [
   {
     id: 'alta-autonomico',
-    label: 'Alta administrador autonómico',
-    description: 'Registrar un nuevo administrador de comunidad autónoma',
+    label: 'Gestionar administradores autonómicos',
+    description: 'Registrar y administrar administradores de comunidad autónoma',
     icon: UserPlus,
     color: 'from-emerald-500 to-teal-600',
     shadow: 'shadow-emerald-500/30',
@@ -63,6 +63,15 @@ const menuItems = [
     color: 'from-rose-500 to-pink-600',
     shadow: 'shadow-rose-500/30',
     href: '/admin/nacional/visualizar',
+  },
+  {
+    id: 'gestion-sindicatos',
+    label: 'Gestión Sindicatos',
+    description: 'Administrar el listado de organizaciones sindicales',
+    icon: Settings2,
+    color: 'from-orange-400 to-amber-600',
+    shadow: 'shadow-orange-500/30',
+    href: '/admin/nacional/gestion-sindicatos',
   },
 ];
 

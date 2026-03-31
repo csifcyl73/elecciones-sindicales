@@ -4,11 +4,16 @@ import path from 'path';
 
 const { Client } = pg;
 
-const CONNECTION_STRING = "postgresql://postgres:_3x%2A3mffrhu%235BT@db.wzorazeafxxaopkvieow.supabase.co:5432/postgres";
+// En lugar de un string hardcodeado, usaremos la información del proyecto nuevo
+// Password: y3JNG7Ci#BQBjL* -> Codificado: y3JNG7Ci%23BQBjL%2A
+const DB_HOST = "db.hnzbqgytvwfsxgsyakyc.supabase.co";
+const DB_PASS = "y3JNG7Ci%23BQBjL%2A";
+const CONNECTION_STRING = `postgresql://postgres:${DB_PASS}@${DB_HOST}:5432/postgres`;
 
 async function applyMigration() {
   const client = new Client({
     connectionString: CONNECTION_STRING,
+    ssl: { rejectUnauthorized: false } // Requerido por Supabase para conexiones directas
   });
 
   try {
@@ -31,9 +36,13 @@ async function applyMigration() {
     if (err.message.includes('getaddrinfo')) {
       console.log('TIP: Host resolution failed. Attempting with direct IPv6 if available...');
       // Trying with the IPv6 address from nslookup before
-      const ipv6String = "postgresql://postgres:_3x%2A3mffrhu%235BT@[2a05:d01c:30c:9d2d:871:334a:b16c:914b]:5432/postgres";
-      const clientV6 = new Client({ connectionString: ipv6String });
+      const ipv6String = "postgresql://postgres:y3JNG7Ci%23BQBjL%2A@[2a05:d014:1c06:5f46:341:ded5:db4f:8f8b]:5432/postgres";
+      const clientV6 = new Client({ 
+        connectionString: ipv6String,
+        ssl: { rejectUnauthorized: false }
+      });
       try {
+        console.log('Attempting IPv6 connection...');
         await clientV6.connect();
         await clientV6.query(fs.readFileSync(path.resolve('supabase/migrations/20260330100000_schema_inicial.sql'), 'utf8'));
         console.log('✅ Migration applied successfully via IPv6!');

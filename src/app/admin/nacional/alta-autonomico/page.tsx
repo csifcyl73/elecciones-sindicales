@@ -158,13 +158,21 @@ export default function AltaAdministradorAutonomico() {
             <h1 className="text-lg font-bold text-white leading-tight">Administrador Nacional</h1>
           </div>
         </div>
-        <button
-          onClick={() => router.push('/admin/nacional/dashboard')}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white/70 hover:text-white font-semibold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Volver
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push('/admin/nacional/alta-autonomico/gestion')}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 hover:border-blue-500/60 text-blue-400 hover:text-blue-300 font-bold text-xs uppercase tracking-widest transition-all duration-200 hover:scale-105 active:scale-95"
+          >
+            GESTIONAR ADMINISTRADORES
+          </button>
+          <button
+            onClick={() => router.push('/admin/nacional/dashboard')}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white/70 hover:text-white font-semibold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Volver
+          </button>
+        </div>
       </header>
 
       {/* Contenido */}
@@ -172,11 +180,11 @@ export default function AltaAdministradorAutonomico() {
         {/* Título */}
         <div className="mb-8">
           <p className="text-emerald-400 font-semibold mb-1 tracking-wide uppercase text-sm">Gestión de usuarios</p>
-          <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight flex items-center gap-3">
+          <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight flex items-center gap-3 uppercase">
             <UserPlus className="w-9 h-9 text-emerald-400" />
-            Alta Administrador Autonómico
+            Gestionar Administradores Autonómicos
           </h2>
-          <p className="mt-2 text-white/50">Rellena el formulario para crear un nuevo administrador de comunidad autónoma.</p>
+          <p className="mt-2 text-white/50 uppercase text-[10px] font-bold tracking-widest">REGISTRO DE NUEVOS RESPONSABLES DE COMUNIDAD AUT&Oacute;NOMA</p>
         </div>
 
         {/* Formulario */}

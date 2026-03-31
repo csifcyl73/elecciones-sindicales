@@ -20,7 +20,7 @@ import {
   Database
 } from 'lucide-react';
 
-function ComiteEmpresaConfigContent() {
+function JuntaPersonalConfigContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -32,10 +32,7 @@ function ComiteEmpresaConfigContent() {
   
   // Estado Formulario
   const [sindicatosSeleccionados, setSindicatosSeleccionados] = useState<any[]>([]);
-  const [colegioTipo, setColegioTipo] = useState('UNICO'); // UNICO | DOS
-  const [delegadosUnico, setDelegadosUnico] = useState('');
-  const [delegadosTecnicos, setDelegadosTecnicos] = useState('');
-  const [delegadosEspecialistas, setDelegadosEspecialistas] = useState('');
+  const [delegados, setDelegados] = useState('');
   
   // Modal y Gestión de Sindicatos
   const [isUnionModalOpen, setIsUnionModalOpen] = useState(false);
@@ -61,7 +58,6 @@ function ComiteEmpresaConfigContent() {
   const loadData = async () => {
     setLoading(true);
     try {
-      // Cargar Maestros (Unidades desde API segura para saltar RLS)
       const [unionRes, unityRes] = await Promise.all([
         supabase.from('sindicatos').select('*').order('orden_prioridad', { ascending: true }),
         fetch('/api/admin/unidades').then(res => res.json())
@@ -89,11 +85,9 @@ function ComiteEmpresaConfigContent() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
 
-      // Añadir la nueva unión a los maestros y seleccionarla
       setSindicatosMaestros([...sindicatosMaestros, data]);
       setSindicatosSeleccionados([...sindicatosSeleccionados, data]);
       
-      // Limpiar y cerrar
       setNuevaUnionSiglas('');
       setNuevaUnionNombre('');
       setIsUnionModalOpen(false);
@@ -121,24 +115,23 @@ function ComiteEmpresaConfigContent() {
     setSindicatosSeleccionados(sindicatosSeleccionados.filter(s => s.id !== id));
   };
 
-  const handleFinish = async (e: React.FormEvent) => {
+  const handleNext = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validación de número impar de delegados (Solicitud Usuario)
-    let totalDelegados = 0;
-    if (colegioTipo === 'UNICO') {
-      totalDelegados = parseInt(delegadosUnico) || 0;
-    } else {
-      totalDelegados = (parseInt(delegadosTecnicos) || 0) + (parseInt(delegadosEspecialistas) || 0);
-    }
-
-    if (totalDelegados % 2 === 0) {
+    // Validación de número impar de delegados
+    const d = parseInt(delegados);
+    if (isNaN(d) || d % 2 === 0) {
       alert("EL NÚMERO DE DELEGADOS TOTAL TIENE QUE SER IMPAR");
       return;
     }
 
-    alert('Parámetros validados. Continuando al siguiente paso de configuración...');
-    // Lógica futura de persistencia de configuración de Comité
+    if (sindicatosSeleccionados.length === 0) {
+      alert("DEBES SELECCIONAR AL MENOS UN SINDICATO");
+      return;
+    }
+
+    alert('Parámetros de Junta de Personal validados. Continuando al siguiente formulario (Asignar Interventor)...');
+    // Futura redirección al paso de asignar interventor
     router.push('/admin/nacional/dashboard');
   };
 
@@ -168,7 +161,7 @@ function ComiteEmpresaConfigContent() {
           </Link>
           <div className="text-right">
             <h1 className="text-2xl md:text-3xl font-black tracking-tight text-emerald-400 uppercase">
-              COMIT&Eacute; DE EMPRESA
+              JUNTA DE PERSONAL
             </h1>
             <p className="text-white/40 text-[10px] mt-1 uppercase font-bold tracking-widest">
               UNIDAD: <span className="text-white/80">{currentUnitName}</span>
@@ -191,7 +184,7 @@ function ComiteEmpresaConfigContent() {
             </div>
 
             <div className="flex justify-between items-center px-1">
-              <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Busca los sindicatos que se presentan</label>
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Añade los sindicatos participantes</label>
               <button 
                 type="button" 
                 onClick={() => setIsUnionModalOpen(true)} 
@@ -249,102 +242,41 @@ function ComiteEmpresaConfigContent() {
 
           <div className="h-px bg-white/5" />
 
-          {/* SECCIÓN 2: COLEGIOS Y DELEGADOS */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20">
-                  <Users className="w-6 h-6 text-blue-400" />
-                </div>
-                <div>
-                  <h3 className="font-black text-xl text-white uppercase tracking-tight">COLEGIOS</h3>
-                  <p className="text-white/40 text-xs font-bold uppercase tracking-widest">TIPO DE DISTRIBUCI&Oacute;N</p>
-                </div>
+          {/* SECCIÓN 2: DELEGADOS */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-teal-500/10 rounded-2xl border border-teal-500/20">
+                <Users className="w-6 h-6 text-teal-400" />
               </div>
-
-              <div className="flex flex-col gap-3">
-                <button 
-                  type="button"
-                  onClick={() => setColegioTipo('UNICO')}
-                  className={`flex items-center justify-between px-6 py-5 rounded-[20px] border transition-all ${colegioTipo === 'UNICO' ? 'bg-blue-500/10 border-blue-500 text-blue-400 shadow-lg' : 'bg-white/5 border-white/5 text-white/40 hover:bg-white/10'}`}
-                >
-                  <span className="font-black tracking-widest text-sm">COLEGIO &Uacute;NICO</span>
-                  {colegioTipo === 'UNICO' && <CheckCircle2 className="w-5 h-5" />}
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => setColegioTipo('DOS')}
-                  className={`flex items-center justify-between px-6 py-5 rounded-[20px] border transition-all ${colegioTipo === 'DOS' ? 'bg-blue-500/10 border-blue-500 text-blue-400 shadow-lg' : 'bg-white/5 border-white/5 text-white/40 hover:bg-white/10'}`}
-                >
-                  <span className="font-black tracking-widest text-sm">DOS COLEGIOS</span>
-                  {colegioTipo === 'DOS' && <CheckCircle2 className="w-5 h-5" />}
-                </button>
+              <div>
+                <h3 className="font-black text-xl text-white uppercase tracking-tight">DELEGADOS</h3>
+                <p className="text-white/40 text-xs font-bold uppercase tracking-widest">N&Uacute;MERO TOTAL DE DELEGADOS A ELEGIR</p>
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-teal-500/10 rounded-2xl border border-teal-500/20">
-                  <Building2 className="w-6 h-6 text-teal-400" />
-                </div>
-                <div>
-                  <h3 className="font-black text-xl text-white uppercase tracking-tight">DELEGADOS</h3>
-                  <p className="text-white/40 text-xs font-bold uppercase tracking-widest">A ELEGIR POR COLEGIO</p>
-                </div>
-              </div>
-
-              <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                {colegioTipo === 'UNICO' ? (
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-1 text-center block">GENERAL</label>
-                    <input
-                      type="number"
-                      placeholder="N&Uacute;MERO DE DELEGADOS"
-                      value={delegadosUnico}
-                      onChange={(e) => setDelegadosUnico(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-[20px] px-8 py-5 focus:outline-none focus:border-teal-500 transition-all text-white text-center font-black text-2xl"
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-1 text-center block">T&Eacute;CNICOS Y ADMINISTRATIVOS</label>
-                      <input
-                        type="number"
-                        placeholder="0"
-                        value={delegadosTecnicos}
-                        onChange={(e) => setDelegadosTecnicos(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-[20px] px-8 py-5 focus:outline-none focus:border-blue-500 transition-all text-white text-center font-black text-2xl"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-1 text-center block">ESPECIALISTAS Y NO CUALIFICADOS</label>
-                      <input
-                        type="number"
-                        placeholder="0"
-                        value={delegadosEspecialistas}
-                        onChange={(e) => setDelegadosEspecialistas(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-[20px] px-8 py-5 focus:outline-none focus:border-teal-500 transition-all text-white text-center font-black text-2xl"
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
+            <div className="max-w-xs mx-auto space-y-2">
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-1 text-center block tracking-[4px]">VALOR NUM&Eacute;RICO</label>
+              <input
+                type="number"
+                placeholder="0"
+                value={delegados}
+                onChange={(e) => setDelegados(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-[24px] px-8 py-6 focus:outline-none focus:border-teal-500 transition-all text-white text-center font-black text-4xl shadow-inner shadow-black/20"
+              />
             </div>
           </div>
 
           <button
-            onClick={handleFinish}
-            className="w-full py-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-2xl rounded-3xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 uppercase tracking-widest"
+            onClick={handleNext}
+            className="w-full py-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-2xl rounded-3xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 uppercase tracking-widest mt-10"
           >
-            SIGUIENTE
+            SIGUIENTE <ChevronRight className="w-6 h-6" />
           </button>
         </div>
       </div>
 
       <footer className="relative z-10 mt-12 text-center text-white/20 text-[10px] font-bold uppercase tracking-widest">
-        CSIF · SISTEMA DE GESTI&Oacute;N ELECTORAL · PASO 2.1 COMIT&Eacute; DE EMPRESA
+        CSIF · SISTEMA DE GESTI&Oacute;N ELECTORAL · PASO 2.2 JUNTA DE PERSONAL
       </footer>
 
       {/* MODAL: Alta de Nuevo Sindicato */}
@@ -395,14 +327,14 @@ function ComiteEmpresaConfigContent() {
   );
 }
 
-export default function ComiteEmpresaConfigPage() {
+export default function JuntaPersonalConfigPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-[#0a0f1c]">
         <Loader2 className="w-12 h-12 text-emerald-400 animate-spin" />
       </div>
     }>
-      <ComiteEmpresaConfigContent />
+      <JuntaPersonalConfigContent />
     </Suspense>
   );
 }
