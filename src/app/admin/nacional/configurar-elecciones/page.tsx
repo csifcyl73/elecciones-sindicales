@@ -242,10 +242,15 @@ function ConfigurarEleccionesSPA() {
 
       if (saveError) throw saveError;
 
-      // 1.5 Update Sindicatos
+      // 1.5 Update Sindicatos (Limpiando duplicados locales en el array antes de subir)
+      const sindicatosUnicos = Array.from(new Set(sindicatosSeleccionados));
+      
+      // Primero limpiamos los antiguos para esta unidad
       await supabase.from('unidades_sindicatos').delete().eq('unidad_id', formData.unidad_id);
+      
+      // Insertamos los nuevos
       const { error: sindicatosErr } = await supabase.from('unidades_sindicatos').insert(
-          sindicatosSeleccionados.map(sId => ({
+          sindicatosUnicos.map(sId => ({
               unidad_id: formData.unidad_id,
               sindicato_id: sId
           }))
