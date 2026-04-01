@@ -12,7 +12,7 @@ Configurar y preparar el entorno de desarrollo para el sistema de gestión de el
 
 ## Restricciones y Casos Borde
 - **Python**: En este sistema, Python no se encuentra en el PATH. Por tanto, se deben usar scripts de Node.js (.mjs) para las tareas de automatización y mantenimiento.
-- **Errores de Red**: Si la instalación de dependencias falla, reintentar con el caché limpio.
+- **Detección de Error (Actualización 01/04/26)**: La conexión directa por PostgreSQL (puerto 5432/6543) puede fallar con `ENOTFOUND` (problemas de IPv6) o `Tenant not found` en algunos entornos. Se recomienda priorizar el uso de scripts que utilicen el cliente de Supabase (@supabase/supabase-js) vía HTTP para operaciones de datos, ya que estas no se ven afectadas por dichas restricciones de red.
 - **Supabase**: Las claves API deben tener permisos suficientes para ejecutar scripts de administración si se están poblando tablas protegidas.
 - **Compatibilidad**: Asegurar que la versión de Node.js sea compatible con Next.js 15+ (v18.17 o v20.x).
 

@@ -11,6 +11,7 @@ import {
   LogOut,
   ChevronRight,
   Loader2,
+  Database,
 } from 'lucide-react';
 
 const supabase = createClient(
@@ -54,6 +55,15 @@ const menuItems = [
     color: 'from-amber-500 to-orange-600',
     shadow: 'shadow-amber-500/30',
     href: '/admin/nacional/informes',
+  },
+  {
+    id: 'unidades',
+    label: 'Gestión Unidades',
+    description: 'Administrar elecciones activas y en configuración',
+    icon: Database,
+    color: 'from-emerald-500 to-teal-600',
+    shadow: 'shadow-emerald-500/30',
+    href: '/admin/nacional/gestion-unidades',
   },
   {
     id: 'visualizar-elecciones',

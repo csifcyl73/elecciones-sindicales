@@ -6,9 +6,10 @@ const { Client } = pg;
 
 // En lugar de un string hardcodeado, usaremos la información del proyecto nuevo
 // Password: y3JNG7Ci#BQBjL* -> Codificado: y3JNG7Ci%23BQBjL%2A
-const DB_HOST = "db.hnzbqgytvwfsxgsyakyc.supabase.co";
+const DB_HOST = "aws-0-eu-west-1.pooler.supabase.com"; 
+const DB_USER = "postgres.hnzbqgytvwfsxgsyakyc";
 const DB_PASS = "y3JNG7Ci%23BQBjL%2A";
-const CONNECTION_STRING = `postgresql://postgres:${DB_PASS}@${DB_HOST}:5432/postgres`;
+const CONNECTION_STRING = `postgresql://${DB_USER}:${DB_PASS}@${DB_HOST}:6543/postgres`;
 
 async function applyMigration() {
   const client = new Client({

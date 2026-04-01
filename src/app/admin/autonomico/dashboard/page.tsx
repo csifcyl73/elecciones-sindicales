@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Loader2,
   MapPin,
+  Database,
 } from 'lucide-react';
 
 const supabase = createClient(
@@ -42,9 +43,18 @@ const menuItems = [
     label: 'Ejecutar informes',
     description: 'Generar y exportar informes del proceso electoral',
     icon: BarChart3,
-    color: 'from-amber-500 to-orange-600',
+    color: 'from-amber-400 to-orange-600',
     shadow: 'shadow-amber-500/30',
     href: '/admin/autonomico/informes',
+  },
+  {
+    id: 'unidades',
+    label: 'Gestión Unidades',
+    description: 'Administrar elecciones locales activas',
+    icon: Database,
+    color: 'from-emerald-500 to-teal-600',
+    shadow: 'shadow-emerald-500/30',
+    href: '/admin/autonomico/gestion-unidades',
   },
   {
     id: 'visualizar-elecciones',

@@ -3,34 +3,27 @@
 ## Objetivo
 Implementar un formulario robusto para que el administrador nacional configure nuevas unidades electorales con parámetros geográficos, sectoriales y orgánicos.
 
-## Estructura del Formulario
-1.  **Provincia**: Desplegable vinculado a la tabla `provincias`.
-2.  **Sector**: Desplegable con opciones predefinidas (AGE, AGCA, Educación, Sanidad, Justicia, Local, EPE, Privada).
-3.  **Unidad Electoral**: 
-    - Desplegable global (NO se filtra por provincia ni sector).
-    - Botón de acción para crear una nueva unidad. Las nuevas unidades se graban sin vinculación geográfica/sectorial para estar disponibles en todo el sistema.
-4.  **Tipo de Órgano**: Desplegable (Junta de Personal, Comité de Empresa, Representante de los trabajadores).
-
-## Reglas de Validación de Coherencia
-Es obligatorio validar que el nombre de la unidad electoral sea coherente con el tipo de órgano antes de permitir el paso al siguiente nivel:
-- **Alerta "INCOHERENCIA ENTRE UNIDAD ELECTORAL Y TIPO DE ÓRGANO" si**:
-    - Se selecciona una Unidad que contenga "JUNTA DE PERSONAL" y un Órgano tipo "COMITÉ DE EMPRESA".
-    - Se selecciona una Unidad que conenga "COMITÉ DE EMPRESA" y un Órgano tipo "JUNTA DE PERSONAL".
-
-## Reglas para Comité de Empresa (Paso 2.1)
-- **Delegados**: El número total de delegados (Colegio Único o suma de Dos Colegios) DEBE SER IMPAR.
-- **Acción**: Si es par, mostrar alerta: `"EL NÚMERO DE DELEGADOS TOTAL TIENE QUE SER IMPAR"`.
-
-## Reglas para Junta de Personal (Paso 2.2)
-- **Sindicatos**: Configuración idéntica al Comité de Empresa. Sindicatos globales.
-- **Número de Delegados**: Valor numérico libre.
-- **Validación**: DEBE SER IMPAR. Si es par, mostrar alerta: `"EL NÚMERO DE DELEGADOS TOTAL TIENE QUE SER IMPAR"`.
-- **Botón**: "SIGUIENTE".
+## Estructura de la Single Page Application (Todo en un paso)
+- **Provincia**: Buscador desplegable de provincias.
+- **Localidad**: Buscador desplegable de municipios españoles (`municipios.json`).
+- **Unidad Electoral**: Desplegable global (NO se filtra por provincia ni sector). Incluye botón de creación de nueva unidad. Alerta de Incoherencia si difiere con Órgano.
+- **Tipo de Órgano**: Desplegable (Junta de Personal, Comité de Empresa, etc).
+- **Delegados**: 
+  - Si "COMITÉ DE EMPRESA": Mostrar radio/botones para "COLEGIO ÚNICO" o "DOS COLEGIOS".
+    - Si "COLEGIO ÚNICO": un campo numérico.
+    - Si "DOS COLEGIOS": dos campos numéricos.
+  - Si "JUNTA DE PERSONAL": un campo numérico.
+  - **Validación Estricta**: La suma/valor total DEBE SER IMPAR.
+- **Asignar Interventor**: Buscador desplegable de usuarios con rol `interventor`.
+- **Botón Grabar**: Guarda todas las elecciones de una y envía email de notificación al interventor.
 
 ## Flujo de Datos
-- **Lectura**: Al cargar la página, se deben obtener los maestros de Supabase.
-- **Escritura**: Al guardar, se crea un registro en `unidades_electorales` con estado `configuracion`.
-- **UI/UX**: Uso de `shadcn/ui` (o componentes Tailwind personalizados) con animaciones de entrada y feedback de carga.
+- **Lectura**: Obtención masiva de maestros por Supabase y el JSON de `municipios`.
+- **Escritura**: 
+  1. `unidades_electorales` (update con total delegados, provincia, tipo de órgano).
+  2. `mesas_electorales` (creación de MESA 1 base y asignación de interventor).
+  3. POST a la API (o simulación) de envío de email al interventor.
+- **UI/UX**: Unificación de flujo, sin subrutas ni pasos intermedios. Usar `shadcn/ui` custom styling con esmeraldas y transparencias para el estilo Premium CSIF.
 
 ## Seguridad
 - Validar sesión activa de Administrador Nacional.
