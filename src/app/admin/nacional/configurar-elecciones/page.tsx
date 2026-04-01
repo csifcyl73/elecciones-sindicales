@@ -13,7 +13,8 @@ import {
   Mail,
   CheckCircle2,
   ShieldCheck,
-  X
+  X,
+  Users
 } from 'lucide-react';
 
 const SearchableCombobox = ({ options, value, onChange, placeholder }: { options: any[], value: string, onChange: (v: string) => void, placeholder: string }) => {
@@ -70,6 +71,7 @@ function ConfigurarEleccionesSPA() {
   const [organos, setOrganos] = useState<any[]>([]);
   const [unidadesExistentes, setUnidadesExistentes] = useState<any[]>([]);
   const [interventores, setInterventores] = useState<any[]>([]);
+  const [sindicatos, setSindicatos] = useState<any[]>([]);
   
   const [formData, setFormData] = useState({
     provincia_id: '',
@@ -85,6 +87,7 @@ function ConfigurarEleccionesSPA() {
   });
 
   const [mesas, setMesas] = useState([{ id: Math.random().toString(), nombre: 'MESA 1', interventor_id: '', pin: Math.floor(100000 + Math.random() * 900000).toString() }]);
+  const [sindicatosSeleccionados, setSindicatosSeleccionados] = useState<number[]>([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [nuevaUnidadNombre, setNuevaUnidadNombre] = useState('');
@@ -130,13 +133,14 @@ function ConfigurarEleccionesSPA() {
   const loadMasters = async () => {
     setLoading(true);
     try {
-      const [provRes, sectRes, organRes, unityRes, muniRes, intRes] = await Promise.all([
+      const [provRes, sectRes, organRes, unityRes, muniRes, intRes, sindRes] = await Promise.all([
         supabase.from('provincias').select('*').order('nombre'),
         supabase.from('sectores').select('*').order('nombre'),
         supabase.from('tipos_organos').select('*').order('nombre'),
         fetch('/api/admin/unidades').then(res => res.json()),
         fetch('/municipios.json').then(res => res.json()).catch(() => []),
-        supabase.from('usuarios').select('*').eq('rol', 'interventor').order('nombre_completo')
+        supabase.from('usuarios').select('*').eq('rol', 'interventor').order('nombre_completo'),
+        supabase.from('sindicatos').select('*').order('orden_prioridad')
       ]);
 
       if (provRes.data) setProvincias(provRes.data);
@@ -145,6 +149,7 @@ function ConfigurarEleccionesSPA() {
       if (unityRes) setUnidadesExistentes(unityRes);
       if (muniRes && muniRes.length) setMunicipios(muniRes.map((m: any) => ({ id: m.id, nombre: m.nm })));
       if (intRes.data) setInterventores(intRes.data);
+      if (sindRes.data) setSindicatos(sindRes.data);
 
       if (unitIdFromUrl) {
          const { data: u } = await supabase.from('unidades_electorales').select('*').eq('id', unitIdFromUrl).single();
@@ -197,6 +202,11 @@ function ConfigurarEleccionesSPA() {
         return;
     }
 
+    if (sindicatosSeleccionados.length === 0) {
+        setError("DEBES SELECCIONAR AL MENOS UN SINDICATO CONCURRENTE");
+        return;
+    }
+
     const { valid, total } = validateDelegados();
     if (!valid) {
        setError("EL NÚMERO TOTAL DE DELEGADOS DEBE SER IMPAR.");
@@ -226,6 +236,16 @@ function ConfigurarEleccionesSPA() {
         .eq('id', formData.unidad_id);
 
       if (saveError) throw saveError;
+
+      // 1.5 Update Sindicatos
+      await supabase.from('unidades_sindicatos').delete().eq('unidad_id', formData.unidad_id);
+      const { error: sindicatosErr } = await supabase.from('unidades_sindicatos').insert(
+          sindicatosSeleccionados.map(sId => ({
+              unidad_id: formData.unidad_id,
+              sindicato_id: sId
+          }))
+      );
+      if (sindicatosErr) throw sindicatosErr;
 
       // 2. Mesas
       for (const mesa of mesas) {
@@ -411,6 +431,38 @@ function ConfigurarEleccionesSPA() {
                   </div>
               )}
 
+              {/* BLOQUE SINDICATOS CONCURRENTES */}
+              <div className="md:col-span-2 space-y-6 pt-4 border-t border-white/5 animate-in fade-in zoom-in-95 duration-300">
+                 <div className="flex items-center justify-between px-4">
+                     <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] flex items-center gap-2">
+                        <Users className="w-4 h-4 text-emerald-500/50" />
+                        <span>Sindicatos Concurrentes</span>
+                     </label>
+                 </div>
+                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                     {sindicatos.map(s => {
+                         const isSelected = sindicatosSeleccionados.includes(s.id);
+                         return (
+                             <div 
+                                 key={s.id} 
+                                 onClick={() => {
+                                     if (isSelected) setSindicatosSeleccionados(prev => prev.filter(x => x !== s.id));
+                                     else setSindicatosSeleccionados(prev => [...prev, s.id]);
+                                 }}
+                                 className={`p-4 rounded-3xl border cursor-pointer transition-all flex items-center justify-between shadow-inner ${isSelected ? 'bg-emerald-500/20 border-emerald-500/50' : 'bg-black/40 border-white/5 hover:border-white/20'}`}
+                             >
+                                 <div className="flex flex-col">
+                                     <span className={`font-black uppercase text-sm ${isSelected ? 'text-emerald-400' : 'text-white'}`}>{s.siglas}</span>
+                                 </div>
+                                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-emerald-500 bg-emerald-500' : 'border-white/10 bg-black/50'}`}>
+                                     {isSelected && <CheckCircle2 className="w-3 h-3 text-black" />}
+                                 </div>
+                             </div>
+                         )
+                     })}
+                 </div>
+              </div>
+
               <div className="md:col-span-2 space-y-6 pt-4 border-t border-white/5 animate-in fade-in zoom-in-95 duration-300">
                  <div className="flex items-center justify-between px-4">
                      <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] flex items-center gap-2">
@@ -461,7 +513,7 @@ function ConfigurarEleccionesSPA() {
               </div>
             )}
 
-            <button type="submit" disabled={saving || !!warning || !formData.tipo_organo_id || !formData.unidad_id || mesas.some(m => !m.interventor_id)} className="group w-full py-10 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-black text-3xl rounded-[40px] shadow-[0_25px_60px_rgba(16,185,129,0.3)] transition-all active:scale-95 flex items-center justify-center gap-4 disabled:opacity-50 disabled:grayscale uppercase tracking-widest">
+            <button type="submit" disabled={saving || !!warning || !formData.tipo_organo_id || !formData.unidad_id || mesas.some(m => !m.interventor_id) || sindicatosSeleccionados.length === 0} className="group w-full py-10 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-black text-3xl rounded-[40px] shadow-[0_25px_60px_rgba(16,185,129,0.3)] transition-all active:scale-95 flex items-center justify-center gap-4 disabled:opacity-50 disabled:grayscale uppercase tracking-widest">
                {saving ? <Loader2 className="animate-spin w-8 h-8" /> : <>Grabar y Notificar <Mail className="w-8 h-8 opacity-80" /></>}
             </button>
           </form>
