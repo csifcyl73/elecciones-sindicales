@@ -24,7 +24,7 @@ export default function AdminNacionalLogin() {
 
     const { data: { user }, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error || user?.user_metadata?.role !== 'admin_nacional') {
+    if (error || user?.user_metadata?.role !== 'super_nacional') {
       setError('Acceso denegado. No tienes permisos de Administrador Nacional.');
       if (!error) await supabase.auth.signOut(); // Si el login fue exitoso pero el rol es incorrecto
       setLoading(false);
