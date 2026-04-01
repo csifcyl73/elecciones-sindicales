@@ -32,7 +32,7 @@ export default function AdminAutonomicoLogin() {
 
     // Verificar que el usuario tiene el rol correcto
     const role = data.user?.user_metadata?.role;
-    if (role !== 'admin_autonomico') {
+    if (role !== 'super_autonomico') {
       await supabase.auth.signOut();
       setError('Acceso denegado. Esta área es exclusiva para administradores autonómicos.');
       setLoading(false);

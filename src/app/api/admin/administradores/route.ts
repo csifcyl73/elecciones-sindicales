@@ -18,7 +18,7 @@ export async function GET() {
     if (error) throw error;
 
     // Filtrar solo administradores autonómicos
-    const admins = users.filter((u: any) => u.user_metadata?.role === 'admin_autonomico');
+    const admins = users.filter((u: any) => u.user_metadata?.role === 'super_autonomico');
     
     return NextResponse.json(admins);
   } catch (err: any) {
@@ -39,7 +39,7 @@ export async function PATCH(req: NextRequest) {
         nombre: nombre?.toUpperCase(),
         apellidos: apellidos?.toUpperCase(),
         comunidad: comunidad?.toUpperCase(),
-        role: 'admin_autonomico'
+        role: 'super_autonomico'
       }
     };
 

@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
         nombre: nombre.toUpperCase(),
         apellidos: apellidos.toUpperCase(),
         comunidad: comunidad.toUpperCase(),
-        role: 'admin_autonomico',
+        role: 'super_autonomico',
       },
     });
 

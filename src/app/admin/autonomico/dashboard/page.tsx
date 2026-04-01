@@ -71,7 +71,7 @@ export default function AdminAutonomicoDashboard() {
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session || session.user.user_metadata?.role !== 'admin_autonomico') {
+      if (!session || session.user.user_metadata?.role !== 'super_autonomico') {
         router.replace('/admin/autonomico');
       } else {
         setUserData({
