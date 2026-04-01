@@ -92,6 +92,11 @@ function ConfigurarEleccionesSPA() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [nuevaUnidadNombre, setNuevaUnidadNombre] = useState('');
   const [addingUnit, setAddingUnit] = useState(false);
+  
+  const [isModalSindicatoOpen, setIsModalSindicatoOpen] = useState(false);
+  const [nuevaUnionSiglas, setNuevaUnionSiglas] = useState('');
+  const [nuevaUnionNombre, setNuevaUnionNombre] = useState('');
+  const [addingUnion, setAddingUnion] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
@@ -431,35 +436,40 @@ function ConfigurarEleccionesSPA() {
                   </div>
               )}
 
-              {/* BLOQUE SINDICATOS CONCURRENTES */}
+              {/* BLOQUE SINDICATOS CONCURRENTES (LISTA Y COMBO) */}
               <div className="md:col-span-2 space-y-6 pt-4 border-t border-white/5 animate-in fade-in zoom-in-95 duration-300">
                  <div className="flex items-center justify-between px-4">
                      <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] flex items-center gap-2">
                         <Users className="w-4 h-4 text-emerald-500/50" />
                         <span>Sindicatos Concurrentes</span>
                      </label>
+                     <button type="button" onClick={() => setIsModalSindicatoOpen(true)} className="px-5 py-3 bg-emerald-500/10 text-emerald-400 font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-emerald-500 hover:text-black transition-all border border-emerald-500/20 shadow-lg active:scale-95 flex gap-2 items-center">
+                        Nuevo +
+                     </button>
                  </div>
-                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                     {sindicatos.map(s => {
-                         const isSelected = sindicatosSeleccionados.includes(s.id);
-                         return (
-                             <div 
-                                 key={s.id} 
-                                 onClick={() => {
-                                     if (isSelected) setSindicatosSeleccionados(prev => prev.filter(x => x !== s.id));
-                                     else setSindicatosSeleccionados(prev => [...prev, s.id]);
-                                 }}
-                                 className={`p-4 rounded-3xl border cursor-pointer transition-all flex items-center justify-between shadow-inner ${isSelected ? 'bg-emerald-500/20 border-emerald-500/50' : 'bg-black/40 border-white/5 hover:border-white/20'}`}
-                             >
-                                 <div className="flex flex-col">
-                                     <span className={`font-black uppercase text-sm ${isSelected ? 'text-emerald-400' : 'text-white'}`}>{s.siglas}</span>
+                 
+                 <div className="flex flex-col gap-6 bg-black/20 p-8 rounded-3xl border border-white/5 shadow-inner">
+                     <SearchableCombobox 
+                        options={sindicatos.filter(s => !sindicatosSeleccionados.includes(s.id))} 
+                        value={""} 
+                        onChange={(val) => setSindicatosSeleccionados([...sindicatosSeleccionados, parseInt(val)])} 
+                        placeholder="BUSCAR Y AÑADIR SINDICATO..." 
+                     />
+                     <div className="flex flex-wrap gap-3">
+                         {sindicatosSeleccionados.map(sId => {
+                             const s = sindicatos.find(x => x.id === sId);
+                             if (!s) return null;
+                             return (
+                                 <div key={s.id} className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/30 pl-5 pr-2 py-2 rounded-2xl animate-in zoom-in duration-200 shadow-lg">
+                                     <span className="text-emerald-400 font-black text-sm uppercase tracking-widest">{s.siglas}</span>
+                                     <button type="button" onClick={() => setSindicatosSeleccionados(sindicatosSeleccionados.filter(x => x !== s.id))} className="text-emerald-400/50 hover:text-rose-500 bg-black/40 hover:bg-rose-500/20 p-2 rounded-xl transition-all">
+                                         <X className="w-4 h-4" />
+                                     </button>
                                  </div>
-                                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-emerald-500 bg-emerald-500' : 'border-white/10 bg-black/50'}`}>
-                                     {isSelected && <CheckCircle2 className="w-3 h-3 text-black" />}
-                                 </div>
-                             </div>
-                         )
-                     })}
+                             );
+                         })}
+                         {sindicatosSeleccionados.length === 0 && <p className="text-[10px] font-black text-white/20 uppercase tracking-widest w-full text-center py-4">NINGÚN SINDICATO SELECCIONADO.</p>}
+                     </div>
                  </div>
               </div>
 
@@ -539,6 +549,38 @@ function ConfigurarEleccionesSPA() {
                    } catch (err: any) { setError(err.message); setIsModalOpen(false); } finally { setAddingUnit(false); }
                 }} className="flex-[2] py-5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl uppercase text-[12px] tracking-widest transition-all">
                    {addingUnit ? <Loader2 className="animate-spin text-center w-full" /> : "Grabar Rápidamente"}
+                </button>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {isModalSindicatoOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="bg-[#111827] border border-white/10 w-full max-w-lg rounded-[50px] p-12 space-y-8 relative overflow-hidden text-center">
+             <div className="absolute top-0 left-0 w-full h-[150px] bg-emerald-500/10 blur-[50px] -translate-y-1/2" />
+             <h2 className="text-3xl font-black text-white uppercase tracking-tighter relative z-10">Nuevo Sindicato</h2>
+             
+             <div className="space-y-4 relative z-10">
+                 <input type="text" value={nuevaUnionSiglas} onChange={(e) => setNuevaUnionSiglas(e.target.value.toUpperCase())} placeholder="SIGLAS (EJ: CSIF)" className="w-full bg-black/40 border-2 border-white/10 rounded-3xl px-8 py-5 text-emerald-400 font-black uppercase text-2xl focus:outline-none focus:border-emerald-500 transition-all text-center tracking-widest placeholder:text-white/20 placeholder:text-sm" />
+                 <input type="text" value={nuevaUnionNombre} onChange={(e) => setNuevaUnionNombre(e.target.value.toUpperCase())} placeholder="NOMBRE COMPLETO" className="w-full bg-black/40 border-2 border-white/10 rounded-3xl px-8 py-4 text-white font-black uppercase text-xs focus:outline-none focus:border-emerald-500 transition-all text-center placeholder:text-white/20 tracking-wider" />
+             </div>
+
+             <div className="flex gap-4 relative z-10">
+                <button onClick={() => { setIsModalSindicatoOpen(false); setNuevaUnionNombre(''); setNuevaUnionSiglas(''); }} className="flex-1 py-4 bg-white/5 hover:bg-white/10 rounded-2xl font-black uppercase text-[10px] transition-all">Cancelar</button>
+                <button disabled={addingUnion || !nuevaUnionSiglas || !nuevaUnionNombre} onClick={async () => {
+                   setAddingUnion(true);
+                   try {
+                     const { data, error } = await supabase.from('sindicatos').insert({ siglas: nuevaUnionSiglas, nombre_completo: nuevaUnionNombre, orden_prioridad: 99 }).select().single();
+                     if (error) throw error;
+                     setSindicatos([...sindicatos, data]);
+                     setSindicatosSeleccionados([...sindicatosSeleccionados, data.id]);
+                     setIsModalSindicatoOpen(false);
+                     setNuevaUnionSiglas('');
+                     setNuevaUnionNombre('');
+                   } catch (err: any) { alert(err.message); } finally { setAddingUnion(false); }
+                }} className="flex-[2] py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl uppercase text-[12px] tracking-widest transition-all disabled:opacity-50">
+                   {addingUnion ? <Loader2 className="animate-spin mx-auto w-5 h-5" /> : "Grabar Sindicato"}
                 </button>
              </div>
           </div>
