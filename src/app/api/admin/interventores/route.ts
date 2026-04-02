@@ -26,11 +26,13 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { nombre, email, password, telefono, provincia_id } = await req.json();
+    let { nombre, email, password, telefono, provincia_id } = await req.json();
 
     if (!nombre || !email || !password) {
       return NextResponse.json({ error: 'Nombre, Email y Contraseña son obligatorios.' }, { status: 400 });
     }
+
+    email = email.trim().toLowerCase();
 
     const supabaseAdmin = getSupabaseAdmin();
 
@@ -73,7 +75,6 @@ export async function DELETE(req: NextRequest) {
 
     const supabaseAdmin = getSupabaseAdmin();
     
-    // Borrar perfil (trigger CASCADE borrará el auth user si está configurado, o lo hacemos manual)
     await supabaseAdmin.from('usuarios').delete().eq('id', id);
     const { error } = await supabaseAdmin.auth.admin.deleteUser(id);
     
@@ -86,17 +87,19 @@ export async function DELETE(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const { id, nombre, email, password, telefono } = await req.json();
+    let { id, nombre, email, password, telefono } = await req.json();
 
     if (!id || !nombre || !email) {
       return NextResponse.json({ error: 'ID, Nombre y Email son obligatorios.' }, { status: 400 });
     }
 
+    email = email.trim().toLowerCase();
+
     const supabaseAdmin = getSupabaseAdmin();
 
-    // 1. Update en Auth
     const attrsToUpdate: any = {
       email,
+      email_confirm: true,
       user_metadata: {
         nombre: nombre.toUpperCase(),
         role: 'interventor',
@@ -110,7 +113,6 @@ export async function PUT(req: NextRequest) {
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, attrsToUpdate);
     if (authError) throw authError;
 
-    // 2. Update en public.usuarios
     const { error: profileError } = await supabaseAdmin.from('usuarios').update({
       email: email,
       nombre_completo: nombre.toUpperCase(),
