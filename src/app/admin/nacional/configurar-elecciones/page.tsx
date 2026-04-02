@@ -263,15 +263,21 @@ function ConfigurarEleccionesSPA() {
 
       // 2. Mesas
       for (const mesa of mesas) {
+          // Actualizamos PIN del asignado
           await supabase.from('usuarios').update({ pin_acceso: mesa.pin }).eq('id', mesa.interventor_id);
           
+          // Guardamos o actualizamos la Mesa de forma condicional segura
           const { error: mesaErr } = await supabase.from('mesas_electorales').upsert({
               unidad_id: formData.unidad_id,
               nombre_identificador: mesa.nombre,
               interventor_id: mesa.interventor_id,
               estado: 'pendiente'
-          });
-          if (mesaErr) throw mesaErr;
+          }, { onConflict: 'unidad_id,nombre_identificador' });
+          
+          if (mesaErr) {
+             console.error("Error guardando mesa:", mesaErr);
+             throw mesaErr;
+          }
 
           const selectedInterventor = interventores.find(i => i.id === mesa.interventor_id);
           const selectedUnit = unidadesExistentes.find(u => u.id === formData.unidad_id);
