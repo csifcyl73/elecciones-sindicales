@@ -6,9 +6,9 @@ const getClient = () => createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-     const mesa_id = params.id;
+     const mesa_id = (await params).id;
      if (!mesa_id) return NextResponse.json({ error: 'ID faltante' }, { status: 400 });
 
      const supabaseAdmin = getClient();
@@ -37,9 +37,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-     const mesa_id = params.id;
+     const mesa_id = (await params).id;
      const body = await req.json();
      const supabaseAdmin = getClient();
 
