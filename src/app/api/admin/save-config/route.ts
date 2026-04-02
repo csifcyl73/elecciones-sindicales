@@ -44,11 +44,9 @@ export async function POST(req: NextRequest) {
         if (sindicatosErr) throw sindicatosErr;
     }
 
-    // 3. Update Mesas y Usuarios(PIN)
+    // 3. Update Mesas
     if (mesas && mesas.length > 0) {
         for (const mesa of mesas) {
-             await supabaseAdmin.from('usuarios').update({ pin_acceso: mesa.pin }).eq('id', mesa.interventor_id);
-             
              const { error: mesaErr } = await supabaseAdmin.from('mesas_electorales').upsert({
                  unidad_id: unidad_id,
                  nombre_identificador: mesa.nombre,

@@ -86,7 +86,7 @@ function ConfigurarEleccionesSPA() {
     ccaa_id: ''
   });
 
-  const [mesas, setMesas] = useState([{ id: Math.random().toString(), nombre: 'MESA 1', interventor_id: '', pin: Math.floor(100000 + Math.random() * 900000).toString() }]);
+  const [mesas, setMesas] = useState<{ id: string; nombre: string; interventor_id: string; interventor_email?: string }[]>([{ id: Math.random().toString(), nombre: 'MESA 1', interventor_id: '' }]);
   const [sindicatosSeleccionados, setSindicatosSeleccionados] = useState<number[]>([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -267,7 +267,6 @@ function ConfigurarEleccionesSPA() {
                     body: JSON.stringify({
                        email: selectedInterventor.email,
                        nombre: selectedInterventor.nombre_completo,
-                       pin: mesa.pin,
                        unidad: selectedUnit.nombre
                     })
                  });
@@ -471,7 +470,7 @@ function ConfigurarEleccionesSPA() {
                         <ShieldCheck className="w-4 h-4 text-emerald-500/50" />
                         <span>Mesas e Interventores</span>
                      </label>
-                     <button type="button" onClick={() => setMesas([...mesas, { id: Math.random().toString(), nombre: `MESA ${mesas.length + 1}`, interventor_id: '', pin: Math.floor(100000 + Math.random() * 900000).toString() }])} className="px-5 py-3 bg-emerald-500/10 text-emerald-400 font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-emerald-500 hover:text-black transition-all border border-emerald-500/20 shadow-lg active:scale-95 flex gap-2 items-center">
+                     <button type="button" onClick={() => setMesas([...mesas, { id: Math.random().toString(), nombre: `MESA ${mesas.length + 1}`, interventor_id: '' }])} className="px-5 py-3 bg-emerald-500/10 text-emerald-400 font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-emerald-500 hover:text-black transition-all border border-emerald-500/20 shadow-lg active:scale-95 flex gap-2 items-center">
                         Añadir Mesa +
                      </button>
                  </div>
@@ -483,13 +482,9 @@ function ConfigurarEleccionesSPA() {
                                  <label className="text-[9px] font-black text-white/30 uppercase tracking-widest px-2">Nombre Mesa</label>
                                  <input type="text" value={m.nombre} onChange={(e) => { const newM = [...mesas]; newM[idx].nombre = e.target.value.toUpperCase(); setMesas(newM); }} className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-[11px] font-black text-white uppercase focus:border-emerald-500 focus:outline-none transition-all shadow-inner" />
                              </div>
-                             <div className="md:col-span-6 space-y-2 z-50">
+                             <div className="md:col-span-8 space-y-2 z-50">
                                  <label className="text-[9px] font-black text-white/30 uppercase tracking-widest px-2">Interventor Asignado</label>
                                  <SearchableCombobox options={interventores} value={m.interventor_id} onChange={(val) => { const newM = [...mesas]; newM[idx].interventor_id = val; setMesas(newM); }} placeholder="BUSCAR INTERVENTOR..." />
-                             </div>
-                             <div className="md:col-span-2 space-y-2">
-                                 <label className="text-[9px] font-black text-emerald-400/50 uppercase tracking-widest px-2">PIN Acceso</label>
-                                 <div className="w-full bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-4 py-4 text-emerald-400 font-black text-[14px] tracking-[0.2em] text-center font-mono">{m.pin}</div>
                              </div>
                              <div className="md:col-span-1 pt-6 text-center">
                                  {mesas.length > 1 && (
@@ -501,7 +496,7 @@ function ConfigurarEleccionesSPA() {
                          </div>
                      ))}
                  </div>
-                 <p className="text-[9px] font-bold text-white/20 uppercase text-center mt-4 tracking-widest px-8">Los interventores asignados recibirán un correo automático con sus contraseñas (PIN) respectivas al grabar.</p>
+                 <p className="text-[9px] font-bold text-white/20 uppercase text-center mt-4 tracking-widest px-8">Los interventores asignados recibirán un correo automático informando de que han sido adscritos a esta elección oficial.</p>
               </div>
 
             </div>

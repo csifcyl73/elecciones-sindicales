@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       from: 'Elecciones Sindicales API <onboarding@resend.dev>', 
       to: [email],
       subject: 'Asignación de Interventor - Elecciones Sindicales',
-      text: `Hola ${nombre},\n\nHas sido asignado como interventor en la Unidad Electoral: ${unidad}.\n\nTu PIN seguro de acceso para las votaciones es: ${pin}\n\nGracias,\nEquipo Administración Nacional.`,
+      text: `Hola ${nombre},\n\nHas sido asignado como interventor en la Unidad Electoral: ${unidad}.\n\nPuedes acceder ya a tu panel de control utilizando tus credenciales vigentes (email corporativo y contraseña de autenticación).\n\nGracias,\nEquipo Administración Nacional.`,
     });
 
     if (error) {
