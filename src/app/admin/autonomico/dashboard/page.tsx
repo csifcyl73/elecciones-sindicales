@@ -49,7 +49,7 @@ const menuItems = [
   },
   {
     id: 'unidades',
-    label: 'Gestión Unidades',
+    label: 'Gestor de procesos electorales activos',
     description: 'Administrar elecciones locales activas',
     icon: Database,
     color: 'from-emerald-500 to-teal-600',
