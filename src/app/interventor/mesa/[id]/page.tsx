@@ -78,7 +78,7 @@ export default function FormularioEscrutinio() {
               censo_real: censo === '' ? 0 : censo,
               votos_blancos: votosBlancos === '' ? 0 : votosBlancos,
               votos_nulos: votosNulos === '' ? 0 : votosNulos,
-              // observaciones: observaciones, // Descomentar cuando la DB soporte Text
+              observaciones: observaciones,
               votos_candidaturas: Object.entries(votosCandidaturas).map(([sId, votos]) => ({
                   sindicato_id: parseInt(sId),
                   votos_obtenidos: votos

@@ -47,15 +47,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
          censo_real: body.censo_real,
          votos_blancos: body.votos_blancos,
          votos_nulos: body.votos_nulos,
+         observaciones: body.observaciones,
          estado: 'enviada',
          fecha_envio: new Date().toISOString()
      };
-     
-     if (body.observaciones !== undefined) {
-         // Intentaremos guardar observaciones, si falla saltará el catch.
-         // El usuario deberá añadir la columna en Supabase.
-         // toUpdate.observaciones = body.observaciones; 
-     }
 
      if (body.acta_url !== undefined) {
          toUpdate.acta_url = body.acta_url;
