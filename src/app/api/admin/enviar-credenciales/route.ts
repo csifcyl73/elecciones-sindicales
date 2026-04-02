@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-// Resend Instance (Requires RESEND_API_KEY in .env.local)
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(req: NextRequest) {
   try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
     const { email, nombre, password, pin } = await req.json();
 
     if (!email || !nombre || !password) {
