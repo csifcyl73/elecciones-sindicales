@@ -30,13 +30,13 @@ const menuItems = [
     href: '/admin/nacional/alta-autonomico',
   },
   {
-    id: 'alta-interventor',
+    id: 'gestion-interventores',
     label: 'Alta interventor',
     description: 'Dar de alta a un interventor de mesa electoral',
     icon: ShieldCheck,
     color: 'from-blue-500 to-indigo-600',
     shadow: 'shadow-blue-500/30',
-    href: '/admin/nacional/alta-interventor',
+    href: '/admin/nacional/gestion-interventores',
   },
   {
     id: 'configurar-elecciones',

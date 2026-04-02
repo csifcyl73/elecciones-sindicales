@@ -21,13 +21,13 @@ const supabase = createClient(
 
 const menuItems = [
   {
-    id: 'alta-interventor',
+    id: 'gestion-interventores',
     label: 'Alta de interventor',
     description: 'Dar de alta a un interventor de mesa electoral en tu comunidad',
     icon: ShieldCheck,
     color: 'from-blue-500 to-indigo-600',
     shadow: 'shadow-blue-500/30',
-    href: '/admin/autonomico/alta-interventor',
+    href: '/admin/autonomico/gestion-interventores',
   },
   {
     id: 'configurar-elecciones',

@@ -83,3 +83,44 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
+export async function PUT(req: NextRequest) {
+  try {
+    const { id, nombre, email, password, telefono } = await req.json();
+
+    if (!id || !nombre || !email) {
+      return NextResponse.json({ error: 'ID, Nombre y Email son obligatorios.' }, { status: 400 });
+    }
+
+    const supabaseAdmin = getSupabaseAdmin();
+
+    // 1. Update en Auth
+    const attrsToUpdate: any = {
+      email,
+      user_metadata: {
+        nombre: nombre.toUpperCase(),
+        role: 'interventor',
+        telefono
+      }
+    };
+    if (password) {
+       attrsToUpdate.password = password;
+    }
+
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, attrsToUpdate);
+    if (authError) throw authError;
+
+    // 2. Update en public.usuarios
+    const { error: profileError } = await supabaseAdmin.from('usuarios').update({
+      email: email,
+      nombre_completo: nombre.toUpperCase(),
+      telefono: telefono
+    }).eq('id', id);
+
+    if (profileError) throw profileError;
+
+    return NextResponse.json({ success: true, user: authData.user });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}

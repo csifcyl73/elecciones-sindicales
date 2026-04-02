@@ -24,6 +24,7 @@ export default function AltaInterventorPage() {
   
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     nombre: '',
     email: '',
@@ -51,22 +52,47 @@ export default function AltaInterventorPage() {
     }
   };
 
-  const handleAlta = async (e: React.FormEvent) => {
+  const generatePassword = () => {
+     const p = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase() + '#';
+     setFormData({ ...formData, password: p });
+  };
+
+  const openNew = () => {
+     setEditingId(null);
+     setFormData({ nombre: '', email: '', password: '', telefono: '', enviarEmail: true });
+     setIsModalOpen(true);
+  };
+
+  const openEdit = (u: any) => {
+     setEditingId(u.id);
+     setFormData({
+        nombre: u.user_metadata?.nombre || '',
+        email: u.email || '',
+        password: '',
+        telefono: u.user_metadata?.telefono || '',
+        enviarEmail: false // Default to false when editing unless explicitly checked
+     });
+     setIsModalOpen(true);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setErrorMsg('');
     try {
+      if (!editingId && !formData.password) throw new Error("La contraseña es obligatoria para nuevos interventores");
+      
+      const method = editingId ? 'PUT' : 'POST';
       const response = await fetch('/api/admin/interventores', {
-        method: 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(editingId ? { id: editingId, ...formData } : formData),
       });
       const data = await response.json();
       
       if (!response.ok) throw new Error(data.error);
 
-      // 2. Si el checkbox está marcado, enviar el email
-      if (formData.enviarEmail) {
+      if (formData.enviarEmail && formData.password) {
         await fetch('/api/admin/enviar-credenciales', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -74,12 +100,11 @@ export default function AltaInterventorPage() {
              email: formData.email,
              nombre: formData.nombre,
              password: formData.password,
-             pin: 'PENDIENTE' // El PIN se asigna después en el Paso 3
+             pin: 'PENDIENTE'
           }),
         });
       }
 
-      // Reset y recargar
       setFormData({ nombre: '', email: '', password: '', telefono: '', enviarEmail: true });
       setIsModalOpen(false);
       loadInterventores();
@@ -132,7 +157,7 @@ export default function AltaInterventorPage() {
           </div>
 
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={openNew}
             className="flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white font-black py-5 px-10 rounded-[30px] shadow-[0_10px_40px_rgba(37,99,235,0.3)] transition-all hover:scale-105 active:scale-95 uppercase tracking-widest text-sm"
           >
             <UserPlus className="w-6 h-6" /> Dar de alta nuevo
@@ -165,15 +190,15 @@ export default function AltaInterventorPage() {
             ))
           ) : filtered.length > 0 ? (
             filtered.map((u) => (
-              <div key={u.id} className="group bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-[35px] hover:bg-white/10 transition-all duration-300 relative overflow-hidden hover:shadow-2xl hover:shadow-blue-500/10">
+              <div key={u.id} onClick={() => openEdit(u)} className="group cursor-pointer bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-[35px] hover:bg-white/10 transition-all duration-300 relative overflow-hidden hover:shadow-2xl hover:shadow-blue-500/10">
                 <div className="relative z-10 flex flex-col justify-between h-full space-y-6">
                    <div className="flex items-start justify-between">
                       <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20">
                          <ShieldCheck className="w-6 h-6 text-blue-400" />
                       </div>
                       <button 
-                        onClick={() => deleteInterventor(u.id, u.email)}
-                        className="p-2 rounded-xl text-white/20 hover:text-rose-500 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100"
+                        onClick={(e) => { e.stopPropagation(); deleteInterventor(u.id, u.email); }}
+                        className="p-2 rounded-xl text-white/20 hover:text-rose-500 hover:bg-rose-500/10 transition-all z-20"
                       >
                          <Trash2 className="w-5 h-5" />
                       </button>
@@ -235,7 +260,7 @@ export default function AltaInterventorPage() {
                     </div>
                  )}
 
-                 <form onSubmit={handleAlta} className="space-y-6">
+                  <form onSubmit={handleSave} className="space-y-6">
                     <div className="space-y-2">
                        <label className="text-[11px] font-black text-white/40 uppercase tracking-widest px-2">Nombre completo</label>
                        <input 
@@ -261,14 +286,19 @@ export default function AltaInterventorPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[11px] font-black text-white/40 uppercase tracking-widest px-2">Contraseña acceso</label>
-                        <input 
-                          required
-                          type="password" 
-                          value={formData.password}
-                          onChange={(e) => setFormData({...formData, password: e.target.value})}
-                          className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 focus:outline-none focus:border-blue-500 transition-all text-white font-bold"
-                        />
+                        <label className="text-[11px] font-black text-white/40 uppercase tracking-widest px-2 text-ellipsis overflow-hidden whitespace-nowrap block">
+                           {editingId ? "Nueva Password (vacía = no cambia)" : "Contraseña acceso"}
+                        </label>
+                        <div className="relative">
+                           <input 
+                              required={!editingId}
+                              type="text" 
+                              value={formData.password}
+                              onChange={(e) => setFormData({...formData, password: e.target.value})}
+                              className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 pr-28 focus:outline-none focus:border-blue-500 transition-all text-white font-bold"
+                           />
+                           <button type="button" onClick={generatePassword} className="absolute right-3 top-1/2 -translate-y-1/2 bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 px-3 py-2 rounded-xl text-[10px] font-black transition-all uppercase tracking-widest">Generar</button>
+                        </div>
                       </div>
                     </div>
 
@@ -297,9 +327,9 @@ export default function AltaInterventorPage() {
 
                     <button 
                       disabled={saving}
-                      className="w-full py-6 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white font-black text-xl rounded-3xl transition-all shadow-xl disabled:opacity-50 uppercase tracking-widest mt-4"
+                      className="w-full py-6 flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white font-black text-xl rounded-3xl transition-all shadow-xl disabled:opacity-50 uppercase tracking-widest mt-4"
                     >
-                      {saving ? <Loader2 className="w-8 h-8 animate-spin mx-auto" /> : "Grabar interventor"}
+                      {saving ? <Loader2 className="w-8 h-8 animate-spin" /> : editingId ? "Guardar Cambios" : "Grabar interventor"}
                     </button>
                  </form>
               </div>
