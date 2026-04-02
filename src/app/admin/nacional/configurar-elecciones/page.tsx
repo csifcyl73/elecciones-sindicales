@@ -243,19 +243,23 @@ function ConfigurarEleccionesSPA() {
       if (saveError) throw saveError;
 
       // 1.5 Update Sindicatos (Limpiando duplicados locales en el array antes de subir)
-      const sindicatosUnicos = Array.from(new Set(sindicatosSeleccionados));
+      const sindicatosUnicos = Array.from(new Set(sindicatosSeleccionados.map(s => Number(s))));
       
-      // Primero limpiamos los antiguos para esta unidad
-      await supabase.from('unidades_sindicatos').delete().eq('unidad_id', formData.unidad_id);
+      // Primero limpiamos los antiguos para esta unidad y comprobamos errores
+      const { error: delError } = await supabase.from('unidades_sindicatos').delete().eq('unidad_id', formData.unidad_id);
+      if (delError) throw delError;
       
-      // Insertamos los nuevos
-      const { error: sindicatosErr } = await supabase.from('unidades_sindicatos').insert(
-          sindicatosUnicos.map(sId => ({
-              unidad_id: formData.unidad_id,
-              sindicato_id: sId
-          }))
-      );
-      if (sindicatosErr) throw sindicatosErr;
+      // Insertamos los nuevos utilizando upsert para aguantar doble-clicks o problemas de red
+      if (sindicatosUnicos.length > 0) {
+          const { error: sindicatosErr } = await supabase.from('unidades_sindicatos').upsert(
+              sindicatosUnicos.map(sId => ({
+                  unidad_id: formData.unidad_id,
+                  sindicato_id: sId
+              })),
+              { onConflict: 'unidad_id,sindicato_id' }
+          );
+          if (sindicatosErr) throw sindicatosErr;
+      }
 
       // 2. Mesas
       for (const mesa of mesas) {
