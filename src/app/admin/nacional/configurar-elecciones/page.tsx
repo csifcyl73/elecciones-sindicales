@@ -232,58 +232,30 @@ function ConfigurarEleccionesSPA() {
         if (p) finalCcaaId = p.ccaa_id?.toString();
       }
 
-      // 1. Update Unit
-      const { error: saveError } = await supabase
-        .from('unidades_electorales')
-        .update({
-           provincia_id: formData.provincia_id ? parseInt(formData.provincia_id) : null,
-           sector_id: formData.sector_id ? parseInt(formData.sector_id) : null,
-           tipo_organo_id: parseInt(formData.tipo_organo_id),
-           delegados_a_elegir: total,
-           ccaa_id: finalCcaaId ? parseInt(finalCcaaId) : null,
-           estado: 'activa'
-        })
-        .eq('id', formData.unidad_id);
-
-      if (saveError) throw saveError;
-
-      // 1.5 Update Sindicatos (Limpiando duplicados locales en el array antes de subir)
       const sindicatosUnicos = Array.from(new Set(sindicatosSeleccionados.map(s => Number(s))));
-      
-      // Primero limpiamos los antiguos para esta unidad y comprobamos errores
-      const { error: delError } = await supabase.from('unidades_sindicatos').delete().eq('unidad_id', formData.unidad_id);
-      if (delError) throw delError;
-      
-      // Insertamos los nuevos utilizando upsert para aguantar doble-clicks o problemas de red
-      if (sindicatosUnicos.length > 0) {
-          const { error: sindicatosErr } = await supabase.from('unidades_sindicatos').upsert(
-              sindicatosUnicos.map(sId => ({
-                  unidad_id: formData.unidad_id,
-                  sindicato_id: sId
-              })),
-              { onConflict: 'unidad_id,sindicato_id' }
-          );
-          if (sindicatosErr) throw sindicatosErr;
+
+      const saveResp = await fetch('/api/admin/save-config', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({
+            unidad_id: formData.unidad_id,
+            provincia_id: formData.provincia_id,
+            sector_id: formData.sector_id,
+            tipo_organo_id: formData.tipo_organo_id,
+            total_delegados: total,
+            finalCcaaId: finalCcaaId,
+            sindicatosUnicos,
+            mesas
+         })
+      });
+
+      if (!saveResp.ok) {
+         const d = await saveResp.json();
+         throw new Error(d.error || "Error crítico conectando con el backend");
       }
 
-      // 2. Mesas
+      // 3. Envío de Correos
       for (const mesa of mesas) {
-          // Actualizamos PIN del asignado
-          await supabase.from('usuarios').update({ pin_acceso: mesa.pin }).eq('id', mesa.interventor_id);
-          
-          // Guardamos o actualizamos la Mesa de forma condicional segura
-          const { error: mesaErr } = await supabase.from('mesas_electorales').upsert({
-              unidad_id: formData.unidad_id,
-              nombre_identificador: mesa.nombre,
-              interventor_id: mesa.interventor_id,
-              estado: 'pendiente'
-          }, { onConflict: 'unidad_id,nombre_identificador' });
-          
-          if (mesaErr) {
-             console.error("Error guardando mesa:", mesaErr);
-             throw mesaErr;
-          }
-
           const selectedInterventor = interventores.find(i => i.id === mesa.interventor_id);
           const selectedUnit = unidadesExistentes.find(u => u.id === formData.unidad_id);
 
