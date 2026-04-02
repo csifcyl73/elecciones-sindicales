@@ -152,7 +152,12 @@ function ConfigurarEleccionesSPA() {
       if (sectRes.data) setSectores(sectRes.data);
       if (organRes.data) setOrganos(organRes.data);
       if (unityRes) setUnidadesExistentes(unityRes);
-      if (muniRes && muniRes.length) setMunicipios(muniRes.map((m: any) => ({ id: m.id, nombre: m.nm })));
+      if (muniRes && muniRes.length) {
+          setMunicipios([
+             { id: 'NO_PROCEDE', nombre: 'NO PROCEDE' },
+             ...muniRes.map((m: any) => ({ id: m.id, nombre: m.nm }))
+          ]);
+      }
       if (intRes.data) setInterventores(intRes.data);
       if (sindRes.data) setSindicatos(sindRes.data);
 
