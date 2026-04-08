@@ -731,8 +731,13 @@ function ConfigurarEleccionesSPA() {
                 <button disabled={addingUnion || !nuevaUnionSiglas || !nuevaUnionNombre} onClick={async () => {
                    setAddingUnion(true);
                    try {
-                     const { data, error } = await supabase.from('sindicatos').insert({ siglas: nuevaUnionSiglas, nombre_completo: nuevaUnionNombre, orden_prioridad: 99 }).select().single();
-                     if (error) throw error;
+                     const resp = await fetch('/api/admin/sindicatos', {
+                       method: 'POST',
+                       headers: { 'Content-Type': 'application/json' },
+                       body: JSON.stringify({ siglas: nuevaUnionSiglas, nombre_completo: nuevaUnionNombre })
+                     });
+                     const data = await resp.json();
+                     if (!resp.ok) throw new Error(data.error || 'Error al guardar el sindicato');
                      setSindicatos([...sindicatos, data]);
                      setSindicatosSeleccionados([...sindicatosSeleccionados, data.id]);
                      setIsModalSindicatoOpen(false);
