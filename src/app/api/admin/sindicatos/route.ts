@@ -33,9 +33,21 @@ export async function POST(request: Request) {
 
     const supabase = getSupabaseAdmin();
 
+    // Fix for duplicate key value violates unique constraint "sindicatos_pkey"
+    // Fetch max ID to manually assign the next one 
+    const { data: maxRecord } = await supabase
+      .from('sindicatos')
+      .select('id')
+      .order('id', { ascending: false })
+      .limit(1)
+      .single();
+    
+    const nextId = (maxRecord?.id || 0) + 1;
+
     const { data, error } = await supabase
       .from('sindicatos')
       .insert([{
+        id: nextId,
         siglas: siglas.toUpperCase(),
         nombre_completo: nombre_completo.toUpperCase(),
         orden_prioridad: 50 // Prioridad estándar para nuevos
