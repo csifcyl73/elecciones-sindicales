@@ -23,6 +23,27 @@ const mesasEscutadas = [
 export default function Dashboard() {
   const [actaModal, setActaModal] = useState<string | null>(null);
 
+  const handleDescargarPDF = async () => {
+    try {
+      const html2pdf = (await import('html2pdf.js')).default;
+      const element = document.getElementById('dashboard-main-content');
+      if (!element) return;
+
+      const opt = {
+        margin: [10, 10, 10, 10] as [number, number, number, number],
+        filename: 'Informe_Electoral_Global.pdf',
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#f9fafb' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' as const }
+      };
+
+      html2pdf().from(element).set(opt).save();
+    } catch (e) {
+      console.error(e);
+      alert("Error al generar el PDF");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-neutral-50 font-sans">
       {/* Header Realtime */}
@@ -36,14 +57,24 @@ export default function Dashboard() {
             ACTUALIZACIÓN EN TIEMPO REAL
           </span>
         </div>
-        <div className="max-w-7xl mx-auto flex flex-col items-start gap-2 relative z-10 pt-4">
-          <h1 className="text-3xl md:text-5xl font-black tracking-tight" style={{ fontFamily: "Inter, sans-serif" }}>
-            Escrutinio Sindical 2026
-          </h1>
-          <p className="text-blue-200 text-lg md:text-xl font-light">Visualizador de Resultados Consolidado</p>
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10 pt-4">
+          <div>
+            <h1 className="text-3xl md:text-5xl font-black tracking-tight" style={{ fontFamily: "Inter, sans-serif" }}>
+              Escrutinio Sindical 2026
+            </h1>
+            <p className="text-blue-200 text-lg md:text-xl font-light">Visualizador de Resultados Consolidado</p>
+          </div>
+          <Button 
+            onClick={handleDescargarPDF}
+            className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-md rounded-xl font-bold py-6 px-6 shadow-2xl flex items-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-file-down"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></svg>
+            DESCARGAR INFORME PDF
+          </Button>
         </div>
       </header>
 
+      <div id="dashboard-main-content">
       <main className="max-w-7xl mx-auto p-4 md:p-8 space-y-8 mt-[-2rem] relative z-20">
         
         {/* Cascade Filters */}
@@ -196,6 +227,7 @@ export default function Dashboard() {
           </Card>
         </div>
       </main>
+      </div>
 
       {/* Modal Visor de Actas (Basic pure react implementation) */}
       {actaModal && (

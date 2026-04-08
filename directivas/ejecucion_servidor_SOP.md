@@ -10,9 +10,10 @@ Iniciar y mantener operativo el servidor de desarrollo local de Next.js para per
 4. **Monitoreo de Errores**: Capturar y diagnosticar logs de error en la consola del servidor.
 
 ## Restricciones y Casos Borde
+- **Ausencia de Python**: En este entorno específico, Python no está disponible en el PATH. **DEBES usar scripts de Node.js (.mjs)** en su lugar para delegar tareas, a pesar de la regla general de Python.
 - **Puerto Ocupado**: Si el puerto 3000 está ocupado, buscar y liberar el proceso o iniciar en un puerto alternativo.
 - **Errores de Compilación**: Reportar inmediatamente errores de TypeScript o de compilación de Next.js.
 - **Acceso Remoto**: El servidor local suele ser accesible solo desde la máquina del usuario; si se requiere acceso externo, usar túneles (ej. `ngrok`) si el equipo lo permite.
 
 ## Script de Automatización
-Cualquier script que encapsule el comando `npm run dev` servirá como punto de entrada bajo este SOP.
+Se debe usar `node scripts/ejecutar_servidor.mjs` para iniciar el entorno.

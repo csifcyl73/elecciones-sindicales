@@ -115,6 +115,16 @@ export default function FormularioEscrutinio() {
   const sindicatos = mesa.unidades_electorales?.unidades_sindicatos?.map((u: any) => u.sindicatos) || [];
   const provinciaStr = mesa.unidades_electorales?.provincias?.nombre || 'General';
 
+  let colegioLabel = null;
+  let cleanMesaName = mesa?.nombre_identificador || '';
+  if (cleanMesaName.toUpperCase().includes('[TÉCNICOS]')) {
+      colegioLabel = 'Colegio de Técnicos y Administrativos';
+      cleanMesaName = cleanMesaName.replace(/\[TÉCNICOS\]\s*/i, '');
+  } else if (cleanMesaName.toUpperCase().includes('[ESPECIALISTAS]')) {
+      colegioLabel = 'Colegio de Especialistas y No Cualificados';
+      cleanMesaName = cleanMesaName.replace(/\[ESPECIALISTAS\]\s*/i, '');
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Navbar Superior */}
@@ -146,18 +156,25 @@ export default function FormularioEscrutinio() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Provincia</label>
-                   <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex items-center gap-3">
-                      <MapPin className="text-emerald-600 w-5 h-5 opacity-70" />
+                   <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex items-center gap-3 h-full">
+                      <MapPin className="text-emerald-600 w-5 h-5 opacity-70 shrink-0" />
                       <span className="font-semibold text-gray-700">{provinciaStr}</span>
                    </div>
                 </div>
-                {/* No tenemos municipio directamente en unidades en este nivel sin cruzar con config, usamos el organo como ref para la Unit */}
+                
                 <div className="md:col-span-2">
                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Unidad Electoral & Mesa</label>
-                   <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex items-center gap-3">
-                      <Building2 className="text-emerald-600 w-5 h-5 opacity-70" />
-                      <span className="font-semibold text-gray-700 line-clamp-1 flex-1">{mesa.unidades_electorales?.nombre}</span>
-                      <span className="px-3 py-1 bg-gray-200 rounded-lg text-xs font-bold whitespace-nowrap">{mesa.nombre_identificador}</span>
+                   <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col gap-2 relative overflow-hidden">
+                      {colegioLabel && (
+                          <div className="absolute top-0 right-0 py-1 border-b border-l border-emerald-500/20 px-3 bg-emerald-50 text-[9px] font-black uppercase tracking-widest text-emerald-600 rounded-bl-xl shadow-sm">
+                              {colegioLabel}
+                          </div>
+                      )}
+                      <div className="flex items-center gap-3">
+                         <Building2 className="text-emerald-600 w-5 h-5 opacity-70 shrink-0" />
+                         <span className="font-semibold text-gray-700 line-clamp-1 flex-1">{mesa.unidades_electorales?.nombre}</span>
+                         <span className="px-3 py-1 bg-gray-200 rounded-lg text-xs font-bold whitespace-nowrap mt-4 md:mt-0 shadow-sm border border-gray-300">{cleanMesaName}</span>
+                      </div>
                    </div>
                 </div>
             </div>

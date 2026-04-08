@@ -43,6 +43,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
      const body = await req.json();
      const supabaseAdmin = getClient();
 
+     // Verificamos si la unidad matriz está "congelada" o no. Si está congelada, bloqueamos y abortamos.
+     const { data: currentMesa, error: currentErr } = await supabaseAdmin
+         .from('mesas_electorales')
+         .select('unidad_id, unidades_electorales(estado)')
+         .eq('id', mesa_id)
+         .single();
+         
+     if (currentErr) throw currentErr;
+     
+     // @ts-ignore
+     if (currentMesa?.unidades_electorales?.estado === 'congelada') {
+         return NextResponse.json({ error: 'La elección ha sido bloqueada. No se admiten escrutinios.' }, { status: 403 });
+     }
+
      const toUpdate: any = {
          censo_real: body.censo_real,
          votos_blancos: body.votos_blancos,
@@ -56,8 +70,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
          toUpdate.acta_url = body.acta_url;
      }
 
+     // Guardar actualización de la mesa
      const { error: mesaErr } = await supabaseAdmin.from('mesas_electorales').update(toUpdate).eq('id', mesa_id);
      if (mesaErr) throw mesaErr;
+     
+     // Y además disparamos el flag de 'escrutinio' sobre la propia unidad para levantarla automáticamente en los paneles interactivos
+     await supabaseAdmin.from('unidades_electorales').update({ estado: 'escrutinio' }).eq('id', currentMesa.unidad_id);
 
      // Guardar votos
      if (body.votos_candidaturas && body.votos_candidaturas.length > 0) {
