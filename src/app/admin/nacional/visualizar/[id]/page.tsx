@@ -334,7 +334,7 @@ export default function DetalleEleccionPage() {
                  <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">Censo / Delegados Globales</p>
                  <div className="flex items-center gap-3">
                     <span className="text-xl font-black text-white">{censoTotal}</span> <span className="text-white/30">|</span>
-                    <span className="text-xl font-black text-rose-400 group flex items-center gap-1" title="Delegados a Elegir Globales"><Users className="w-4 h-4"/> {(unidad.del_tecnicos || 0) + (unidad.del_especialistas || 0) + (isDoble ? 0 : (unidad.delegados_a_elegir||0))}</span>
+                    <span className="text-xl font-black text-rose-400 group flex items-center gap-1" title="Delegados a Elegir Globales"><Users className="w-4 h-4"/> {isDoble ? ((unidad.del_tecnicos || 0) + (unidad.del_especialistas || 0)) : (unidad.delegados_a_elegir || 0)}</span>
                  </div>
               </div>
            </div>
