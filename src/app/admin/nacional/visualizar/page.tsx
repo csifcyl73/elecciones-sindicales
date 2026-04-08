@@ -143,7 +143,7 @@ export default function VisualizarEleccionesPage() {
                     )}
                     
                     {u.proceso && (
-                      <span className="px-3 py-1 rounded-full border border-amber-500/20 bg-amber-500/5 text-amber-400/80 text-[9px] font-black uppercase tracking-widest truncate">
+                      <span className="px-3 py-1 rounded-full border border-amber-500/20 bg-amber-500/5 text-amber-400/80 text-[9px] font-black uppercase tracking-widest break-words line-clamp-2">
                         {u.proceso.nombre}
                       </span>
                     )}
