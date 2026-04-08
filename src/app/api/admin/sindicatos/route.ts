@@ -35,6 +35,19 @@ export async function POST(request: Request) {
     }
 
     const supabase = getSupabaseAdmin();
+    const siglasUpper = siglas.toUpperCase();
+
+    // Check if sindicato with these siglas already exists to prevent sindicatos_siglas_key error
+    const { data: existing } = await supabase
+      .from('sindicatos')
+      .select('*')
+      .eq('siglas', siglasUpper)
+      .maybeSingle();
+
+    if (existing) {
+      // If it exists, gracefully return the existing one so the frontend proceeds without error
+      return NextResponse.json(existing);
+    }
 
     // Fix for duplicate key value violates unique constraint "sindicatos_pkey"
     // Fetch max ID to manually assign the next one 
@@ -43,7 +56,7 @@ export async function POST(request: Request) {
       .select('id')
       .order('id', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
     
     const nextId = (maxRecord?.id || 0) + 1;
 
