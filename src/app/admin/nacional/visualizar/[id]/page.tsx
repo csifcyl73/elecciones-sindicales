@@ -190,7 +190,7 @@ export default function DetalleEleccionPage() {
   };
 
   if (consolidados.length === 0 && votosCandidaturasTotales > 0) {
-     modoReparto = "provisional";
+     modoReparto = isBloqueada ? "definitivo" : "provisional";
 
      if (!isDoble) {
         delegadosARepartirGlobal = repartirHare(votosPorSindicatoGlobal, votosCandidaturasTotales, unidad.delegados_a_elegir || 0);
@@ -344,7 +344,9 @@ export default function DetalleEleccionPage() {
         <div className="mb-10 space-y-6">
            <h3 className={`text-xl font-black uppercase tracking-widest pl-2 border-l-4 ${modoReparto === 'provisional' ? 'border-amber-400 text-amber-400' : 'border-emerald-400 text-white/80'} shadow-sm flex items-center gap-2`}>
               <Target className="w-6 h-6" /> 
-              {modoReparto === 'provisional' ? (isDoble ? 'Repartos Provisionales (Cocientes y Restos)' : 'Reparto Provisional Único') : 'Reparto de Delegados Oficial Consolidado'}
+              {modoReparto === 'provisional' 
+                 ? (isDoble ? 'Repartos Provisionales (Cocientes y Restos)' : 'Reparto Provisional Único') 
+                 : 'REPARTO DEFINITIVO DE DELEGADOS'}
            </h3>
 
            {!isDoble ? (

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { ArrowLeft, Loader2, Save, CheckCircle2, ShieldCheck, Mail, Users, Inbox, Building2, UploadCloud, MapPin } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, CheckCircle2, ShieldCheck, Mail, Users, Inbox, Building2, UploadCloud, MapPin, Lock } from 'lucide-react';
 
 export default function FormularioEscrutinio() {
   const router = useRouter();
@@ -110,6 +110,30 @@ export default function FormularioEscrutinio() {
 
   if (!mesa) {
      return <div className="min-h-screen flex items-center justify-center font-black text-gray-400">Mesa no encontrada</div>;
+  }
+
+  // Bloqueo: si la unidad electoral está congelada, no permitir escrutinio
+  const isCongelada = mesa.unidades_electorales?.estado === 'congelada';
+  if (isCongelada) {
+     return (
+       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
+         <div className="bg-white p-12 rounded-3xl shadow-lg border-2 border-blue-200 max-w-lg w-full text-center space-y-6">
+           <div className="p-4 bg-blue-50 rounded-2xl inline-block mx-auto">
+             <Lock className="w-12 h-12 text-blue-600" />
+           </div>
+           <h2 className="text-2xl font-black text-gray-800 uppercase tracking-tight">Elección Bloqueada</h2>
+           <p className="text-gray-500 font-medium">
+             Los resultados de <span className="font-black text-gray-700">{mesa.unidades_electorales?.nombre}</span> han sido bloqueados oficialmente por el Administrador Nacional. No se admiten más modificaciones.
+           </p>
+           <button
+             onClick={() => router.push('/interventor/dashboard')}
+             className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl uppercase text-xs tracking-widest transition-colors"
+           >
+             Volver al Panel
+           </button>
+         </div>
+       </div>
+     );
   }
 
   const sindicatos = mesa.unidades_electorales?.unidades_sindicatos?.map((u: any) => u.sindicatos) || [];

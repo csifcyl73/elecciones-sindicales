@@ -15,3 +15,11 @@ Implementar tres mejoras en la aplicación:
 -   *Responsividad:* No romper la vista de escritorio al arreglar la vista móvil.
 -   *Base de datos Sindicatos:* Verificar los campos requeridos (`nombre`, `siglas`, `color`, `logo_url`).
 -   *Datos relacionales Interventores:* Asegurar que la query hacia `mesas` traiga los datos de `unidades` (provincia, localidad/municipio).
+-   **CRÍTICO - RLS:** Las tablas `unidades_electorales` y `procesos_electorales` NO tienen políticas de lectura pública. NUNCA usar `createClient()` (anon key del navegador) para consultar estas tablas. SIEMPRE usar `fetch('/api/admin/...')` que emplea la `service_role_key` vía API routes del servidor. El visualizador original fallaba por esto.
+-   **CRÍTICO - Bloqueo (congelada):** Cuando se bloquea una elección (`estado = 'congelada'`):
+    1.  El texto del reparto debe cambiar de "Repartos Provisionales" a "REPARTO DEFINITIVO DE DELEGADOS".
+    2.  Los formularios del interventor deben desaparecer. Hay 3 puntos de control:
+        -   `mis-mesas` API: debe devolver `unidades_electorales.estado`.
+        -   `interventor/dashboard`: reemplazar el botón "Acceder al Formulario" por "Resultados Bloqueados Oficialmente".
+        -   `interventor/mesa/[id]`: mostrar pantalla de bloqueo en lugar del formulario (guarda con `isCongelada`).
+        -   `interventor/mesa/[id]` API POST: ya tenía guarda de `congelada` (rechaza con 403).

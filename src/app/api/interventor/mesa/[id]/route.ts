@@ -18,6 +18,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         *,
         unidades_electorales (
            nombre,
+           estado,
            tipo_organo_id,
            provincias (nombre),
            unidades_sindicatos (

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { LogOut, User, ClipboardList, LayoutDashboard, Loader2, ArrowRight } from 'lucide-react';
+import { LogOut, User, ClipboardList, LayoutDashboard, Loader2, ArrowRight, Lock, CheckCircle2 } from 'lucide-react';
 
 export default function InterventorDashboard() {
   const router = useRouter();
@@ -87,35 +87,51 @@ export default function InterventorDashboard() {
             </div>
          ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-               {mesas.map(m => (
-                 <div key={m.id} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col space-y-4 hover:shadow-xl hover:border-emerald-200 transition-all group">
-                   <div className="flex justify-between items-start">
-                     <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600 group-hover:scale-110 transition-transform">
-                        <ClipboardList className="w-6 h-6" />
-                     </div>
-                     <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${m.estado === 'completado' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
-                        {m.estado || 'PENDIENTE'}
-                     </span>
-                   </div>
-                   <div>
-                     <h3 className="text-lg font-black text-gray-800 line-clamp-1" title={m.unidades_electorales?.nombre}>{m.unidades_electorales?.nombre}</h3>
-                     <p className="text-emerald-700 font-bold uppercase text-xs tracking-widest mt-1">{m.nombre_identificador}</p>
-                     
-                     <div className="flex flex-wrap items-center gap-2 mt-2">
-                       {m.unidades_electorales?.provincias?.nombre && (
-                         <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-[10px] font-bold uppercase tracking-widest">
-                           Provincia: {m.unidades_electorales?.provincias?.nombre}
-                         </span>
-                       )}
-                     </div>
-                   </div>
-                   <div className="pt-4 border-t border-gray-100">
-                     <button onClick={() => router.push(`/interventor/mesa/${m.id}`)} className="w-full py-4 bg-gray-50 hover:bg-emerald-50 text-gray-700 hover:text-emerald-700 font-black rounded-2xl transition-colors uppercase text-xs tracking-widest flex items-center justify-center gap-2">
-                        Acceder al Formulario <ArrowRight className="w-4 h-4" />
-                     </button>
-                   </div>
-                 </div>
-               ))}
+               {mesas.map(m => {
+                 const isCongelada = m.unidades_electorales?.estado === 'congelada';
+                 
+                 return (
+                  <div key={m.id} className={`bg-white p-6 rounded-3xl shadow-sm border flex flex-col space-y-4 transition-all group ${isCongelada ? 'border-blue-200 opacity-80' : 'border-gray-100 hover:shadow-xl hover:border-emerald-200'}`}>
+                    <div className="flex justify-between items-start">
+                      <div className={`p-3 rounded-2xl ${isCongelada ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600 group-hover:scale-110'} transition-transform`}>
+                         {isCongelada ? <Lock className="w-6 h-6" /> : <ClipboardList className="w-6 h-6" />}
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${
+                        isCongelada 
+                          ? 'bg-blue-100 text-blue-700' 
+                          : m.estado === 'enviada' 
+                            ? 'bg-emerald-100 text-emerald-700' 
+                            : 'bg-amber-100 text-amber-700'
+                      }`}>
+                         {isCongelada ? 'BLOQUEADA' : m.estado === 'enviada' ? 'ENVIADA' : 'PENDIENTE'}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-gray-800 line-clamp-1" title={m.unidades_electorales?.nombre}>{m.unidades_electorales?.nombre}</h3>
+                      <p className={`font-bold uppercase text-xs tracking-widest mt-1 ${isCongelada ? 'text-blue-600' : 'text-emerald-700'}`}>{m.nombre_identificador}</p>
+                      
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        {m.unidades_electorales?.provincias?.nombre && (
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-[10px] font-bold uppercase tracking-widest">
+                            Provincia: {m.unidades_electorales?.provincias?.nombre}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="pt-4 border-t border-gray-100">
+                      {isCongelada ? (
+                        <div className="w-full py-4 bg-blue-50 text-blue-600 font-black rounded-2xl uppercase text-xs tracking-widest flex items-center justify-center gap-2 border border-blue-200">
+                           <Lock className="w-4 h-4" /> Resultados Bloqueados Oficialmente
+                        </div>
+                      ) : (
+                        <button onClick={() => router.push(`/interventor/mesa/${m.id}`)} className="w-full py-4 bg-gray-50 hover:bg-emerald-50 text-gray-700 hover:text-emerald-700 font-black rounded-2xl transition-colors uppercase text-xs tracking-widest flex items-center justify-center gap-2">
+                           Acceder al Formulario <ArrowRight className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                 );
+               })}
             </div>
          )}
       </main>

@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
           estado,
           unidades_electorales (
              nombre,
+             estado,
              tipo_organo_id,
              delegados_a_elegir,
              provincias (nombre)
