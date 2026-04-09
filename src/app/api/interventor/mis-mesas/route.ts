@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
           id,
           nombre_identificador,
           estado,
+          fecha_envio,
           unidades_electorales (
              nombre,
              estado,
@@ -30,7 +31,19 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
 
-    return NextResponse.json(data || []);
+    // Auto-expiración: ocultar mesas de elecciones congeladas con más de 30 días desde el envío
+    const DIAS_EXPIRACION = 30;
+    const ahora = new Date();
+    const mesasFiltradas = (data || []).filter((m: any) => {
+      if (m.unidades_electorales?.estado === 'congelada' && m.fecha_envio) {
+        const fechaEnvio = new Date(m.fecha_envio);
+        const diasTranscurridos = (ahora.getTime() - fechaEnvio.getTime()) / (1000 * 60 * 60 * 24);
+        return diasTranscurridos < DIAS_EXPIRACION;
+      }
+      return true; // Mesas activas siempre se muestran
+    });
+
+    return NextResponse.json(mesasFiltradas);
   } catch (error: any) {
     console.error("Mis mesas API error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

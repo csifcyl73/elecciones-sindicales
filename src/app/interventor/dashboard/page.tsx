@@ -2,15 +2,18 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { LogOut, User, ClipboardList, LayoutDashboard, Loader2, ArrowRight, Lock, CheckCircle2 } from 'lucide-react';
+import { LogOut, ClipboardList, Loader2, ArrowRight, Lock, Trash2 } from 'lucide-react';
 
 export default function InterventorDashboard() {
   const router = useRouter();
   const supabase = createClient();
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const [mesas, setMesas] = useState<any[]>([]);
   const [loadingMesas, setLoadingMesas] = useState(true);
+  const [ocultandoId, setOcultandoId] = useState<string | null>(null);
+  const [showConfirmOcultar, setShowConfirmOcultar] = useState<string | null>(null);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -19,18 +22,19 @@ export default function InterventorDashboard() {
         router.replace('/interventor');
       } else {
         setUserEmail(session.user.email ?? null);
+        setUserId(session.user.id);
         loadMesas(session.user.id);
       }
     };
     checkSession();
   }, [router, supabase]);
 
-  const loadMesas = async (userId: string) => {
+  const loadMesas = async (uid: string) => {
     try {
       const res = await fetch('/api/interventor/mis-mesas', {
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify({ userId })
+         body: JSON.stringify({ userId: uid })
       });
       const data = await res.json();
       if (res.ok) setMesas(data);
@@ -41,10 +45,41 @@ export default function InterventorDashboard() {
     }
   };
 
+  const handleOcultarMesa = async (mesaId: string) => {
+    if (!userId) return;
+    setOcultandoId(mesaId);
+    try {
+      const res = await fetch('/api/interventor/ocultar-mesa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mesaId, userId })
+      });
+      if (res.ok) {
+        setMesas(prev => prev.filter(m => m.id !== mesaId));
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Error al ocultar la mesa');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Error de conexión');
+    } finally {
+      setOcultandoId(null);
+      setShowConfirmOcultar(null);
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/interventor');
   };
+
+  // Ordenar: editables primero, bloqueadas al final
+  const mesasOrdenadas = [...mesas].sort((a, b) => {
+    const aCongelada = a.unidades_electorales?.estado === 'congelada' ? 1 : 0;
+    const bCongelada = b.unidades_electorales?.estado === 'congelada' ? 1 : 0;
+    return aCongelada - bCongelada;
+  });
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -79,7 +114,7 @@ export default function InterventorDashboard() {
          <h2 className="text-xl font-bold mb-6 text-gray-800">Procesos Electorales Asignados</h2>
          {loadingMesas ? (
             <div className="flex justify-center py-20"><Loader2 className="w-10 h-10 animate-spin text-emerald-500" /></div>
-         ) : mesas.length === 0 ? (
+         ) : mesasOrdenadas.length === 0 ? (
             <div className="bg-white p-12 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center text-center space-y-4 max-w-xl mx-auto mt-10">
               <ClipboardList className="w-16 h-16 text-gray-300" />
               <h3 className="text-xl font-bold text-gray-500">No hay procesos activos</h3>
@@ -87,24 +122,26 @@ export default function InterventorDashboard() {
             </div>
          ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-               {mesas.map(m => {
+               {mesasOrdenadas.map(m => {
                  const isCongelada = m.unidades_electorales?.estado === 'congelada';
                  
                  return (
-                  <div key={m.id} className={`bg-white p-6 rounded-3xl shadow-sm border flex flex-col space-y-4 transition-all group ${isCongelada ? 'border-blue-200 opacity-80' : 'border-gray-100 hover:shadow-xl hover:border-emerald-200'}`}>
+                  <div key={m.id} className={`bg-white p-6 rounded-3xl shadow-sm border flex flex-col space-y-4 transition-all group relative ${isCongelada ? 'border-blue-200 opacity-75' : 'border-gray-100 hover:shadow-xl hover:border-emerald-200'}`}>
                     <div className="flex justify-between items-start">
                       <div className={`p-3 rounded-2xl ${isCongelada ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600 group-hover:scale-110'} transition-transform`}>
                          {isCongelada ? <Lock className="w-6 h-6" /> : <ClipboardList className="w-6 h-6" />}
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${
-                        isCongelada 
-                          ? 'bg-blue-100 text-blue-700' 
-                          : m.estado === 'enviada' 
-                            ? 'bg-emerald-100 text-emerald-700' 
-                            : 'bg-amber-100 text-amber-700'
-                      }`}>
-                         {isCongelada ? 'BLOQUEADA' : m.estado === 'enviada' ? 'ENVIADA' : 'PENDIENTE'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${
+                          isCongelada 
+                            ? 'bg-blue-100 text-blue-700' 
+                            : m.estado === 'enviada' 
+                              ? 'bg-emerald-100 text-emerald-700' 
+                              : 'bg-amber-100 text-amber-700'
+                        }`}>
+                           {isCongelada ? 'BLOQUEADA' : m.estado === 'enviada' ? 'ENVIADA' : 'PENDIENTE'}
+                        </span>
+                      </div>
                     </div>
                     <div>
                       <h3 className="text-lg font-black text-gray-800 line-clamp-1" title={m.unidades_electorales?.nombre}>{m.unidades_electorales?.nombre}</h3>
@@ -120,8 +157,18 @@ export default function InterventorDashboard() {
                     </div>
                     <div className="pt-4 border-t border-gray-100">
                       {isCongelada ? (
-                        <div className="w-full py-4 bg-blue-50 text-blue-600 font-black rounded-2xl uppercase text-xs tracking-widest flex items-center justify-center gap-2 border border-blue-200">
-                           <Lock className="w-4 h-4" /> Resultados Bloqueados Oficialmente
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 py-4 bg-blue-50 text-blue-600 font-black rounded-2xl uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 border border-blue-200">
+                             <Lock className="w-3.5 h-3.5" /> Resultados Bloqueados
+                          </div>
+                          <button 
+                            onClick={() => setShowConfirmOcultar(m.id)}
+                            disabled={ocultandoId === m.id}
+                            className="p-3.5 bg-red-50 hover:bg-red-100 border border-red-200 text-red-400 hover:text-red-600 rounded-2xl transition-all active:scale-95 disabled:opacity-50 shrink-0"
+                            title="Eliminar del panel"
+                          >
+                            {ocultandoId === m.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                          </button>
                         </div>
                       ) : (
                         <button onClick={() => router.push(`/interventor/mesa/${m.id}`)} className="w-full py-4 bg-gray-50 hover:bg-emerald-50 text-gray-700 hover:text-emerald-700 font-black rounded-2xl transition-colors uppercase text-xs tracking-widest flex items-center justify-center gap-2">
@@ -135,6 +182,38 @@ export default function InterventorDashboard() {
             </div>
          )}
       </main>
+
+      {/* Modal de confirmación para ocultar mesa */}
+      {showConfirmOcultar && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-md rounded-3xl p-8 space-y-6 shadow-2xl text-center">
+            <div className="p-4 bg-red-50 rounded-2xl inline-block mx-auto">
+              <Trash2 className="w-10 h-10 text-red-500" />
+            </div>
+            <h2 className="text-xl font-black text-gray-800 uppercase tracking-tight">
+              ¿Eliminar del panel?
+            </h2>
+            <p className="text-gray-500 text-sm font-medium">
+              Esta mesa bloqueada desaparecerá de tu lista. Los resultados electorales <span className="font-black text-gray-700">NO se borrarán</span> y seguirán visibles para la administración.
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setShowConfirmOcultar(null)}
+                className="flex-1 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-black rounded-2xl uppercase text-xs tracking-widest transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => handleOcultarMesa(showConfirmOcultar)}
+                disabled={!!ocultandoId}
+                className="flex-[2] py-4 bg-red-500 hover:bg-red-400 text-white font-black rounded-2xl uppercase text-xs tracking-widest transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {ocultandoId ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirmar Eliminación'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
