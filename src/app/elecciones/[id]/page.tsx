@@ -37,19 +37,21 @@ const SemicircleChart = ({ data }: { data: { siglas: string; delegados: number; 
   const total = data.reduce((acc, d) => acc + d.delegados, 0);
   if (total === 0) return null;
 
-  const cx = 200;
-  const cy = 190;
-  const outerR = 170;
-  const innerR = 100;
-  const gapAngle = 1.5; // grados entre sectores
+  const svgW = 400;
+  const svgH = 240;
+  const cx = svgW / 2;
+  const cy = svgH - 30;
+  const outerR = 150;
+  const innerR = 85;
+  const gapAngle = data.length > 1 ? 1.5 : 0;
 
-  let currentAngle = 180; // comienza en la izquierda (180°)
+  let currentAngle = 180;
 
   const sectors = data.map((d, i) => {
     const fraction = d.delegados / total;
-    const sweepDeg = fraction * 180 - (data.length > 1 ? gapAngle : 0);
-    const startDeg = currentAngle + (data.length > 1 ? gapAngle / 2 : 0);
-    const endDeg = startDeg + sweepDeg;
+    const sweepDeg = fraction * 180 - gapAngle;
+    const startDeg = currentAngle + gapAngle / 2;
+    const endDeg = startDeg + Math.max(sweepDeg, 0.5);
     currentAngle += fraction * 180;
 
     const toRad = (deg: number) => (deg * Math.PI) / 180;
@@ -72,7 +74,6 @@ const SemicircleChart = ({ data }: { data: { siglas: string; delegados: number; 
       'Z'
     ].join(' ');
 
-    // Label position (centro del arco)
     const midDeg = (startDeg + endDeg) / 2;
     const labelR = (outerR + innerR) / 2;
     const lx = cx + labelR * Math.cos(toRad(midDeg));
@@ -83,55 +84,62 @@ const SemicircleChart = ({ data }: { data: { siglas: string; delegados: number; 
 
   return (
     <div className="w-full flex flex-col items-center">
-      <svg viewBox="0 0 400 210" className="w-full max-w-md">
-        <defs>
-          {sectors.map((s) => (
-            <filter key={`shadow-${s.i}`} id={`drop-${s.i}`}>
-              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor={s.color} floodOpacity="0.3" />
-            </filter>
-          ))}
-        </defs>
+      <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full max-w-lg" style={{ overflow: 'visible' }}>
         {sectors.map((s) => (
           <g key={s.i}>
             <path
               d={s.path}
               fill={s.color}
-              filter={`url(#drop-${s.i})`}
-              className="transition-all duration-500 hover:opacity-80"
-              style={{ transformOrigin: `${cx}px ${cy}px` }}
+              stroke="rgba(10,16,31,0.6)"
+              strokeWidth="2"
+              className="transition-all duration-500 hover:brightness-125 cursor-pointer"
             />
-            {s.sweepDeg > 15 && (
-              <text
-                x={s.lx}
-                y={s.ly}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fill="white"
-                fontWeight="900"
-                fontSize="13"
-                className="pointer-events-none"
-                style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}
-              >
-                {s.delegados}
-              </text>
+            {s.sweepDeg > 12 && (
+              <>
+                <text
+                  x={s.lx}
+                  y={s.ly - 7}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fill="white"
+                  fontWeight="900"
+                  fontSize="14"
+                  className="pointer-events-none"
+                >
+                  {s.delegados}
+                </text>
+                <text
+                  x={s.lx}
+                  y={s.ly + 8}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fill="white"
+                  fontWeight="700"
+                  fontSize="8"
+                  opacity="0.7"
+                  className="pointer-events-none"
+                >
+                  {s.siglas}
+                </text>
+              </>
             )}
           </g>
         ))}
         {/* Centro: total */}
-        <text x={cx} y={cy - 8} textAnchor="middle" fill="white" fontWeight="900" fontSize="28" opacity="0.9">
+        <text x={cx} y={cy - 12} textAnchor="middle" fill="white" fontWeight="900" fontSize="32" opacity="0.95">
           {total}
         </text>
-        <text x={cx} y={cy + 12} textAnchor="middle" fill="white" fontWeight="700" fontSize="8" opacity="0.4" letterSpacing="3">
+        <text x={cx} y={cy + 10} textAnchor="middle" fill="white" fontWeight="800" fontSize="8" opacity="0.35" letterSpacing="3">
           DELEGADOS
         </text>
       </svg>
 
       {/* Leyenda */}
-      <div className="flex flex-wrap items-center justify-center gap-4 mt-4">
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-6 px-4">
         {data.map((d, i) => (
           <div key={i} className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full shadow-md" style={{ backgroundColor: d.color }} />
-            <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">{d.siglas}: {d.delegados}</span>
+            <span className="w-3.5 h-3.5 rounded-full shadow-lg ring-2 ring-white/10" style={{ backgroundColor: d.color }} />
+            <span className="text-[11px] font-black text-white/70 uppercase tracking-wider">{d.siglas}: {d.delegados}</span>
           </div>
         ))}
       </div>
@@ -174,7 +182,6 @@ export default function DetalleEleccionPublicaPage() {
 
   const { unidad, mesas, votos, consolidados } = datos;
 
-  // Cálculos
   const isBloqueada = unidad.estado === 'congelada';
   const censoTotal = mesas.reduce((acc: number, m: any) => acc + (m.censo_real || 0), 0);
   const votosBlancosTotales = mesas.reduce((acc: number, m: any) => acc + (m.votos_blancos || 0), 0);
@@ -184,7 +191,6 @@ export default function DetalleEleccionPublicaPage() {
   const votosEmitidosTotales = votosValidosTotales + votosNulosTotales;
   const abstencionTotal = censoTotal > 0 ? censoTotal - votosEmitidosTotales : 0;
   const abstencionPct = censoTotal > 0 ? ((abstencionTotal / censoTotal) * 100).toFixed(2) : '0.00';
-
   const isDoble = unidad.modo_colegio === 'doble';
 
   const getColegio = (mesaId: string) => {
@@ -195,7 +201,6 @@ export default function DetalleEleccionPublicaPage() {
     return 'unico';
   };
 
-  // Agrupaciones de votos
   const votosPorSindicatoGlobal: Record<string, { siglas: string; votos: number }> = {};
   const votosSindicatoTec: Record<string, { siglas: string; votos: number }> = {};
   const votosSindicatoEsp: Record<string, { siglas: string; votos: number }> = {};
@@ -222,7 +227,6 @@ export default function DetalleEleccionPublicaPage() {
     }
   });
 
-  // Reparto Hare
   let modoReparto = "oficial";
   let delegadosARepartirGlobal = [...consolidados];
   let delegadosTecnicos: any[] = [];
@@ -289,7 +293,6 @@ export default function DetalleEleccionPublicaPage() {
     }
   }
 
-  // ── Datos para el gráfico semicírculo ──
   let extraColorIdx = 0;
   const chartData = delegadosARepartirGlobal
     .filter((d: any) => d.delegados_totales > 0)
@@ -300,13 +303,13 @@ export default function DetalleEleccionPublicaPage() {
     });
 
   // Componente de Grid de Sindicatos
-  const SindicatosGridBox = ({ arrayDels }: { arrayDels: any[] }) => {
-    if (arrayDels.length === 0) return <div className="p-8 bg-white/5 border border-white/10 rounded-3xl text-center"><p className="text-xs uppercase font-black tracking-widest text-white/40">Sin cálculo disponible</p></div>;
+  const SindicatosGridBox = ({ arrayDels, compact }: { arrayDels: any[]; compact?: boolean }) => {
+    if (arrayDels.length === 0) return <div className="p-6 bg-white/5 border border-white/10 rounded-2xl text-center"><p className="text-xs uppercase font-black tracking-widest text-white/40">Sin cálculo disponible</p></div>;
     
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className={`grid ${compact ? 'grid-cols-2 gap-3' : 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'}`}>
         {arrayDels.map((c: any) => (
-          <div key={c.sindicato_id} className={`group relative p-6 rounded-3xl border text-center ${c.sindicatos.siglas === 'CSIF' ? 'bg-gradient-to-b from-emerald-500/20 to-emerald-900/40 border-emerald-500/50 hover:border-emerald-500' : 'bg-white/5 border-white/10 hover:border-white/30'} transition-colors cursor-default`}>
+          <div key={c.sindicato_id} className={`group relative ${compact ? 'p-4' : 'p-5'} rounded-2xl border text-center ${c.sindicatos.siglas === 'CSIF' ? 'bg-gradient-to-b from-emerald-500/20 to-emerald-900/40 border-emerald-500/50 hover:border-emerald-500' : 'bg-white/5 border-white/10 hover:border-white/30'} transition-colors cursor-default`}>
             {c.detalle_reparto && (
               <div className="absolute -top-[88px] left-1/2 -translate-x-1/2 bg-[#0f172a] text-white px-5 py-3 rounded-2xl opacity-0 group-hover:opacity-100 group-hover:-translate-y-2 transition-all duration-300 scale-95 group-hover:scale-100 whitespace-nowrap pointer-events-none z-20 border border-white/10 shadow-2xl">
                 <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1 border-b border-white/10 pb-1">Desglose</p>
@@ -324,8 +327,8 @@ export default function DetalleEleccionPublicaPage() {
                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 border-x-[8px] border-x-transparent border-t-[8px] border-t-white/10" />
               </div>
             )}
-            <p className={`text-xl font-black mb-2 ${c.sindicatos.siglas === 'CSIF' ? 'text-emerald-400' : 'text-white'}`}>{c.sindicatos.siglas}</p>
-            <p className={`text-4xl font-black ${c.sindicatos.siglas === 'CSIF' ? 'text-emerald-400' : 'text-white/80'}`}>{c.delegados_totales}</p>
+            <p className={`${compact ? 'text-base' : 'text-xl'} font-black mb-1 ${c.sindicatos.siglas === 'CSIF' ? 'text-emerald-400' : 'text-white'}`}>{c.sindicatos.siglas}</p>
+            <p className={`${compact ? 'text-2xl' : 'text-4xl'} font-black ${c.sindicatos.siglas === 'CSIF' ? 'text-emerald-400' : 'text-white/80'}`}>{c.delegados_totales}</p>
             <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mt-1">Delegados</p>
           </div>
         ))}
@@ -356,9 +359,15 @@ export default function DetalleEleccionPublicaPage() {
 
   return (
     <div className="min-h-screen bg-[#0a101f] text-white p-4 md:p-8 overflow-hidden relative">
-      <div className="max-w-7xl mx-auto relative z-10 space-y-8">
+      {/* Fondos decorativos */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-600/5 rounded-full blur-[120px] -translate-y-1/3 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-600/5 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/3" />
+      </div>
+
+      <div className="max-w-7xl mx-auto relative z-10 space-y-10">
         
-        {/* ENCABEZADO */}
+        {/* ═══ ENCABEZADO ═══ */}
         <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-6">
           <div className="space-y-4">
             <Link href="/elecciones" className="inline-flex items-center gap-2 text-white/30 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">
@@ -380,8 +389,8 @@ export default function DetalleEleccionPublicaPage() {
           </div>
         </div>
 
-        {/* INFO UNIDAD */}
-        <div className="bg-[#111827]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative">
+        {/* ═══ INFO UNIDAD ═══ */}
+        <div className="bg-[#111827]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative">
           {isDoble && <div className="absolute top-0 right-8 bg-amber-500/20 text-amber-500 font-black text-[10px] px-4 py-1 rounded-b-xl tracking-widest border border-amber-500/30 uppercase border-t-0">Modo Dos Colegios</div>}
           <h2 className="text-2xl font-black uppercase tracking-tighter mb-6">{unidad.nombre}</h2>
           
@@ -408,77 +417,88 @@ export default function DetalleEleccionPublicaPage() {
           </div>
         </div>
 
-        {/* GRÁFICO SEMICÍRCULO + REPARTO */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {/* Semicírculo */}
-          <div className="bg-[#111827]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
-            <h3 className="text-[11px] font-black text-white/50 uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
-              <BarChart className="w-4 h-4 text-emerald-400" /> Reparto de Delegados
-            </h3>
-            {chartData.length > 0 ? (
+        {/* ═══ GRÁFICO SEMICÍRCULO (ancho completo, prominente) ═══ */}
+        <div className="bg-[#111827]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-10">
+          <h3 className="text-[11px] font-black text-white/50 uppercase tracking-[0.3em] mb-8 flex items-center gap-2">
+            <BarChart className="w-4 h-4 text-emerald-400" /> Reparto Visual de Delegados
+          </h3>
+          {chartData.length > 0 ? (
+            <div className="max-w-2xl mx-auto">
               <SemicircleChart data={chartData} />
-            ) : (
-              <div className="py-12 text-center">
-                <p className="text-white/30 font-black uppercase text-xs tracking-widest">Pendiente de datos</p>
-              </div>
-            )}
-          </div>
-
-          {/* Bloques de reparto */}
-          <div className="space-y-6">
-            <h3 className={`text-xl font-black uppercase tracking-widest pl-2 border-l-4 ${modoReparto === 'provisional' ? 'border-amber-400 text-amber-400' : 'border-emerald-400 text-white/80'} shadow-sm flex items-center gap-2`}>
-              <Target className="w-6 h-6" /> 
-              {modoReparto === 'provisional' 
-                ? (isDoble ? 'Repartos Provisionales (Cocientes y Restos)' : 'Reparto Provisional Único') 
-                : 'REPARTO DEFINITIVO DE DELEGADOS'}
-            </h3>
-
-            {!isDoble ? (
-              <div className="bg-black/20 p-6 rounded-3xl border border-white/5">
-                <h4 className="text-[10px] font-black text-emerald-400/80 uppercase tracking-widest mb-4">Comité Total / Junta General</h4>
-                <SindicatosGridBox arrayDels={delegadosARepartirGlobal} />
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="bg-emerald-900/10 p-6 rounded-3xl border border-emerald-500/20">
-                  <h4 className="text-[10px] font-black text-emerald-400/80 uppercase tracking-widest mb-4">Reparto Global (Suma de Ambos Colegios)</h4>
-                  <SindicatosGridBox arrayDels={delegadosARepartirGlobal} />
-                </div>
-                {modoReparto !== 'oficial' && (
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                    <div className="bg-black/20 p-6 rounded-3xl border border-white/5">
-                      <h4 className="text-[9px] font-black text-white/50 uppercase tracking-[0.2em] mb-4">Colegio Técnicos <span className="font-mono bg-white/10 px-2 py-0.5 rounded text-white ml-2">{unidad.del_tecnicos || 0} Del</span></h4>
-                      <SindicatosGridBox arrayDels={delegadosTecnicos} />
-                    </div>
-                    <div className="bg-black/20 p-6 rounded-3xl border border-white/5">
-                      <h4 className="text-[9px] font-black text-white/50 uppercase tracking-[0.2em] mb-4">Colegio Especialistas <span className="font-mono bg-white/10 px-2 py-0.5 rounded text-white ml-2">{unidad.del_especialistas || 0} Del</span></h4>
-                      <SindicatosGridBox arrayDels={delegadosEspecialistas} />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="py-16 text-center">
+              <p className="text-white/30 font-black uppercase text-xs tracking-widest">Pendiente de datos de escrutinio</p>
+            </div>
+          )}
         </div>
 
-        {/* VOTOS Y MÉTRICAS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Votos candidaturas */}
-          <div className="bg-white/5 border border-white/10 rounded-3xl p-8">
+        {/* ═══ REPARTO DE DELEGADOS ═══ */}
+        <div className="space-y-6">
+          <h3 className={`text-xl font-black uppercase tracking-widest pl-3 border-l-4 ${modoReparto === 'provisional' ? 'border-amber-400 text-amber-400' : 'border-emerald-400 text-white/80'} flex items-center gap-2`}>
+            <Target className="w-6 h-6" /> 
+            {modoReparto === 'provisional' 
+              ? (isDoble ? 'Repartos Provisionales (Cocientes y Restos)' : 'Reparto Provisional Único') 
+              : 'REPARTO DEFINITIVO DE DELEGADOS'}
+          </h3>
+
+          {!isDoble ? (
+            <div className="bg-[#111827]/40 p-6 md:p-8 rounded-3xl border border-white/5">
+              <h4 className="text-[10px] font-black text-emerald-400/80 uppercase tracking-widest mb-5">Comité Total / Junta General</h4>
+              <SindicatosGridBox arrayDels={delegadosARepartirGlobal} />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Reparto Global */}
+              <div className="bg-emerald-900/10 p-6 md:p-8 rounded-3xl border border-emerald-500/20 relative overflow-hidden">
+                <div className="absolute top-0 right-0 bg-emerald-500/20 px-3 py-1 rounded-bl-xl border-b border-l border-emerald-500/30">
+                  <p className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Suma Agregada Comité</p>
+                </div>
+                <h4 className="text-[10px] font-black text-emerald-400/80 uppercase tracking-widest mb-5">Reparto Global (Suma de Ambos Colegios)</h4>
+                <SindicatosGridBox arrayDels={delegadosARepartirGlobal} />
+              </div>
+
+              {/* Sub-colegios lado a lado en escritorio, apilados en móvil */}
+              {modoReparto !== 'oficial' && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-[#111827]/40 p-6 rounded-3xl border border-white/5">
+                    <h4 className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] mb-5 flex items-center justify-between">
+                      <span>Colegio Técnicos y Administrativos</span>
+                      <span className="font-mono bg-white/10 px-3 py-1 rounded-lg text-white text-[11px]">{unidad.del_tecnicos || 0} Delegados</span>
+                    </h4>
+                    <SindicatosGridBox arrayDels={delegadosTecnicos} compact />
+                  </div>
+                  <div className="bg-[#111827]/40 p-6 rounded-3xl border border-white/5">
+                    <h4 className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] mb-5 flex items-center justify-between">
+                      <span>Colegio Especialistas No Cualificados</span>
+                      <span className="font-mono bg-white/10 px-3 py-1 rounded-lg text-white text-[11px]">{unidad.del_especialistas || 0} Delegados</span>
+                    </h4>
+                    <SindicatosGridBox arrayDels={delegadosEspecialistas} compact />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ═══ VOTOS Y MÉTRICAS ═══ */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Votos */}
+          <div className="bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8">
             <h4 className="text-[11px] font-black text-white/50 uppercase tracking-[0.3em] mb-6">Totales de Votos a Candidaturas</h4>
             {!isDoble ? (
               <VotosList mapVotos={votosPorSindicatoGlobal} total={votosCandidaturasTotales} colUmbral={votosCandidaturasTotales * 0.05} />
             ) : (
-              <div className="space-y-6">
-                <div className="bg-black/40 p-4 rounded-2xl border border-white/5">
+              <div className="space-y-5">
+                <div className="bg-black/30 p-4 rounded-2xl border border-white/5">
                   <h5 className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-3 border-b border-white/10 pb-2">Global Sumado</h5>
                   <VotosList mapVotos={votosPorSindicatoGlobal} total={votosCandidaturasTotales} colUmbral={votosCandidaturasTotales * 0.05} />
                 </div>
-                <div className="bg-black/20 p-4 rounded-2xl border border-white/5">
+                <div className="bg-black/15 p-4 rounded-2xl border border-white/5">
                   <h5 className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-3">Técnicos y Administrativos</h5>
                   <VotosList mapVotos={votosSindicatoTec} total={votosCandTec} colUmbral={votosCandTec * 0.05} />
                 </div>
-                <div className="bg-black/20 p-4 rounded-2xl border border-white/5">
+                <div className="bg-black/15 p-4 rounded-2xl border border-white/5">
                   <h5 className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-3">Especialistas y No C.</h5>
                   <VotosList mapVotos={votosSindicatoEsp} total={votosCandEsp} colUmbral={votosCandEsp * 0.05} />
                 </div>
@@ -487,8 +507,8 @@ export default function DetalleEleccionPublicaPage() {
           </div>
 
           {/* Métricas */}
-          <div className="bg-white/5 border border-white/10 rounded-3xl p-8">
-            <h4 className="text-[11px] font-black text-white/50 uppercase tracking-[0.3em] mb-4">Métricas Globales</h4>
+          <div className="bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8">
+            <h4 className="text-[11px] font-black text-white/50 uppercase tracking-[0.3em] mb-4">Métricas Globales de la Elección</h4>
             <div className="space-y-3">
               <div className="bg-black/40 rounded-2xl p-4 flex justify-between items-center border border-white/5">
                 <span className="text-xs font-black uppercase text-white/50 tracking-widest">Votos Blancos</span>
