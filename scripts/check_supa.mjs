@@ -9,15 +9,17 @@ const supabase = createClient(
 
 async function run() {
   const { data, error } = await supabase
-    .from('unidades_electorales')
+    .from('mesas_electorales')
     .select(`
       *,
-      provincias(nombre),
-      municipios(nombre),
-      sectores(nombre),
-      proceso:procesos_electorales(nombre)
+      unidades_electorales (
+         nombre,
+         tipo_organo_id,
+         delegados_a_elegir,
+         provincias (nombre)
+      )
     `)
-    .limit(1);
+    .limit(3);
 
   console.log('Error:', error);
   console.log('Data:', data);

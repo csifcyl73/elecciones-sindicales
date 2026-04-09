@@ -25,6 +25,12 @@ export default function GestionSindicatosPage() {
   const [editNombre, setEditNombre] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // Estados Modal Añadir
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newSiglas, setNewSiglas] = useState('');
+  const [newNombre, setNewNombre] = useState('');
+  const [adding, setAdding] = useState(false);
+
   useEffect(() => {
     loadSindicatos();
   }, []);
@@ -72,6 +78,33 @@ export default function GestionSindicatosPage() {
       alert(err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAddNew = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSiglas.trim() || !newNombre.trim()) return;
+    setAdding(true);
+    try {
+      const response = await fetch('/api/admin/sindicatos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          siglas: newSiglas.toUpperCase(), 
+          nombre_completo: newNombre.toUpperCase() 
+        }),
+      });
+      if (!response.ok) throw new Error('Error al añadir');
+      
+      const created = await response.json();
+      setSindicatos([...sindicatos, created]);
+      setIsAddModalOpen(false);
+      setNewSiglas('');
+      setNewNombre('');
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setAdding(false);
     }
   };
 
@@ -124,15 +157,23 @@ export default function GestionSindicatosPage() {
             </div>
           </div>
           
-          <div className="relative w-full md:w-96">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-            <input 
-              type="text" 
-              placeholder="BUSCAR SINDICATO..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:border-orange-500 transition-all text-white font-bold placeholder:text-white/20 uppercase"
-            />
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+            <div className="relative w-full md:w-96">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+              <input 
+                type="text" 
+                placeholder="BUSCAR SINDICATO..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:border-orange-500 transition-all text-white font-bold placeholder:text-white/20 uppercase"
+              />
+            </div>
+            <button 
+              onClick={() => setIsAddModalOpen(true)}
+              className="w-full sm:w-auto px-6 py-4 bg-orange-600 hover:bg-orange-500 text-white font-black rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 uppercase tracking-widest text-sm shrink-0"
+            >
+              <Plus className="w-5 h-5" /> Añadir Nuevo
+            </button>
           </div>
         </div>
 
@@ -232,6 +273,54 @@ export default function GestionSindicatosPage() {
                   className="w-full py-4 bg-orange-600 hover:bg-orange-500 text-white font-black rounded-2xl transition-all shadow-lg shadow-orange-600/20 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 uppercase tracking-widest"
                 >
                   {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle2 className="w-5 h-5" /> Guardar Cambios</>}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* MODAL AÑADIR */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-[#111827] border border-white/10 w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="p-8 space-y-6">
+              <div className="flex justify-between items-center border-b border-white/5 pb-6">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2 uppercase tracking-tight">
+                  <Database className="w-5 h-5 text-emerald-400" /> Añadir Sindicato
+                </h2>
+                <button onClick={() => setIsAddModalOpen(false)} className="p-2 text-white/40 hover:text-white rounded-lg hover:bg-white/5 transition-all"><X className="w-6 h-6" /></button>
+              </div>
+              
+              <form onSubmit={handleAddNew} className="space-y-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-1">Siglas del nuevo sindicato</label>
+                    <input
+                      type="text"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500 transition-all text-white font-bold uppercase"
+                      value={newSiglas}
+                      onChange={(e) => setNewSiglas(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-1">Nombre completo</label>
+                    <textarea
+                      rows={3}
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500 transition-all text-white font-bold uppercase resize-none"
+                      value={newNombre}
+                      onChange={(e) => setNewNombre(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <button
+                  type="submit"
+                  disabled={adding}
+                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl transition-all shadow-lg shadow-emerald-600/20 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 uppercase tracking-widest"
+                >
+                  {adding ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Plus className="w-5 h-5" /> Confirmar Creación</>}
                 </button>
               </form>
             </div>

@@ -100,6 +100,14 @@ export default function InterventorDashboard() {
                    <div>
                      <h3 className="text-lg font-black text-gray-800 line-clamp-1" title={m.unidades_electorales?.nombre}>{m.unidades_electorales?.nombre}</h3>
                      <p className="text-emerald-700 font-bold uppercase text-xs tracking-widest mt-1">{m.nombre_identificador}</p>
+                     
+                     <div className="flex flex-wrap items-center gap-2 mt-2">
+                       {m.unidades_electorales?.provincias?.nombre && (
+                         <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-[10px] font-bold uppercase tracking-widest">
+                           Provincia: {m.unidades_electorales?.provincias?.nombre}
+                         </span>
+                       )}
+                     </div>
                    </div>
                    <div className="pt-4 border-t border-gray-100">
                      <button onClick={() => router.push(`/interventor/mesa/${m.id}`)} className="w-full py-4 bg-gray-50 hover:bg-emerald-50 text-gray-700 hover:text-emerald-700 font-black rounded-2xl transition-colors uppercase text-xs tracking-widest flex items-center justify-center gap-2">

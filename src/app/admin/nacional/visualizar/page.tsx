@@ -61,7 +61,7 @@ export default function VisualizarEleccionesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#0a101f] text-white p-6 md:p-12 relative overflow-hidden">
+    <div className="min-h-screen bg-[#0a101f] text-white p-6 md:p-12 relative overflow-x-hidden">
       {/* Fondos */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-rose-600/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />

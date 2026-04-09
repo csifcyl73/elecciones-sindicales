@@ -21,7 +21,8 @@ export async function POST(req: NextRequest) {
           unidades_electorales (
              nombre,
              tipo_organo_id,
-             delegados_a_elegir
+             delegados_a_elegir,
+             provincias (nombre)
           )
        `)
        .eq('interventor_id', userId);
