@@ -48,7 +48,7 @@ export default function Home() {
     },
     {
       title: "Elecciones",
-      href: "/dashboard",
+      href: "/elecciones",
       icon: PieChart,
       description: "Visualización de resultados y cálculo proporcional."
     }
