@@ -68,9 +68,9 @@ const SemicircleChart = ({ data }: { data: { siglas: string; delegados: number; 
 
     const path = [
       `M ${x1Outer} ${y1Outer}`,
-      `A ${outerR} ${outerR} 0 ${largeArc} 0 ${x2Outer} ${y2Outer}`,
+      `A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2Outer} ${y2Outer}`,
       `L ${x1Inner} ${y1Inner}`,
-      `A ${innerR} ${innerR} 0 ${largeArc} 1 ${x2Inner} ${y2Inner}`,
+      `A ${innerR} ${innerR} 0 ${largeArc} 0 ${x2Inner} ${y2Inner}`,
       'Z'
     ].join(' ');
 
