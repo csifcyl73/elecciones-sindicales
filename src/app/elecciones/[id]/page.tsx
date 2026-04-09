@@ -32,69 +32,74 @@ const getColorSindicato = (siglas: string, idx: number) => {
   return COLORES_EXTRA[idx % COLORES_EXTRA.length];
 };
 
-// ── Componente Semicírculo SVG ──
+// ── Componente Semicírculo SVG (Hemiciclo Parlamentario) ──
 const SemicircleChart = ({ data }: { data: { siglas: string; delegados: number; color: string }[] }) => {
   const total = data.reduce((acc, d) => acc + d.delegados, 0);
   if (total === 0) return null;
 
-  const svgW = 400;
-  const svgH = 240;
+  const svgW = 440;
+  const svgH = 250;
   const cx = svgW / 2;
-  const cy = svgH - 30;
-  const outerR = 150;
-  const innerR = 85;
-  const gapAngle = data.length > 1 ? 1.5 : 0;
+  const cy = svgH - 20; // Centro en la base
+  const outerR = 190;
+  const innerR = 105;
+  const gapRad = data.length > 1 ? 0.025 : 0; // hueco entre sectores (en radianes)
 
-  let currentAngle = 180;
+  // Ángulos en radianes: de π (izquierda) a 0 (derecha), pasando por arriba
+  let currentAngle = Math.PI;
 
   const sectors = data.map((d, i) => {
     const fraction = d.delegados / total;
-    const sweepDeg = fraction * 180 - gapAngle;
-    const startDeg = currentAngle + gapAngle / 2;
-    const endDeg = startDeg + Math.max(sweepDeg, 0.5);
-    currentAngle += fraction * 180;
+    const totalSweep = fraction * Math.PI;
+    const startAngle = currentAngle - gapRad / 2;
+    const endAngle = currentAngle - totalSweep + gapRad / 2;
+    currentAngle -= totalSweep;
 
-    const toRad = (deg: number) => (deg * Math.PI) / 180;
-    const x1Outer = cx + outerR * Math.cos(toRad(startDeg));
-    const y1Outer = cy - outerR * Math.sin(toRad(startDeg));
-    const x2Outer = cx + outerR * Math.cos(toRad(endDeg));
-    const y2Outer = cy - outerR * Math.sin(toRad(endDeg));
-    const x1Inner = cx + innerR * Math.cos(toRad(endDeg));
-    const y1Inner = cy - innerR * Math.sin(toRad(endDeg));
-    const x2Inner = cx + innerR * Math.cos(toRad(startDeg));
-    const y2Inner = cy - innerR * Math.sin(toRad(startDeg));
+    // Puntos en el arco (y = cy - R*sin(θ) → sin positivo = ARRIBA en SVG)
+    const x1o = cx + outerR * Math.cos(startAngle);
+    const y1o = cy - outerR * Math.sin(startAngle);
+    const x2o = cx + outerR * Math.cos(endAngle);
+    const y2o = cy - outerR * Math.sin(endAngle);
+    const x1i = cx + innerR * Math.cos(endAngle);
+    const y1i = cy - innerR * Math.sin(endAngle);
+    const x2i = cx + innerR * Math.cos(startAngle);
+    const y2i = cy - innerR * Math.sin(startAngle);
 
+    const sweepDeg = (totalSweep * 180) / Math.PI;
     const largeArc = sweepDeg > 180 ? 1 : 0;
 
+    // Arco exterior: de startAngle a endAngle (ángulo decrece → CW en math → CCW en SVG → sweep=0)
+    // Arco interior: de endAngle a startAngle (ángulo crece → CCW en math → CW en SVG → sweep=1)
     const path = [
-      `M ${x1Outer} ${y1Outer}`,
-      `A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2Outer} ${y2Outer}`,
-      `L ${x1Inner} ${y1Inner}`,
-      `A ${innerR} ${innerR} 0 ${largeArc} 0 ${x2Inner} ${y2Inner}`,
+      `M ${x1o} ${y1o}`,
+      `A ${outerR} ${outerR} 0 ${largeArc} 0 ${x2o} ${y2o}`,
+      `L ${x1i} ${y1i}`,
+      `A ${innerR} ${innerR} 0 ${largeArc} 1 ${x2i} ${y2i}`,
       'Z'
     ].join(' ');
 
-    const midDeg = (startDeg + endDeg) / 2;
+    // Posición de la etiqueta (centro del arco)
+    const midAngle = (startAngle + endAngle) / 2;
     const labelR = (outerR + innerR) / 2;
-    const lx = cx + labelR * Math.cos(toRad(midDeg));
-    const ly = cy - labelR * Math.sin(toRad(midDeg));
+    const lx = cx + labelR * Math.cos(midAngle);
+    const ly = cy - labelR * Math.sin(midAngle);
 
     return { ...d, path, lx, ly, sweepDeg, i };
   });
 
   return (
     <div className="w-full flex flex-col items-center">
-      <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full max-w-lg" style={{ overflow: 'visible' }}>
+      <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full max-w-xl" style={{ overflow: 'visible' }}>
         {sectors.map((s) => (
           <g key={s.i}>
             <path
               d={s.path}
               fill={s.color}
-              stroke="rgba(10,16,31,0.6)"
+              stroke="rgba(10,16,31,0.8)"
               strokeWidth="2"
-              className="transition-all duration-500 hover:brightness-125 cursor-pointer"
+              className="transition-all duration-300 hover:brightness-125 cursor-pointer"
             />
-            {s.sweepDeg > 12 && (
+            {s.sweepDeg > 14 && (
               <>
                 <text
                   x={s.lx}
@@ -103,20 +108,20 @@ const SemicircleChart = ({ data }: { data: { siglas: string; delegados: number; 
                   dominantBaseline="central"
                   fill="white"
                   fontWeight="900"
-                  fontSize="14"
-                  className="pointer-events-none"
+                  fontSize="16"
+                  className="pointer-events-none drop-shadow-md"
                 >
                   {s.delegados}
                 </text>
                 <text
                   x={s.lx}
-                  y={s.ly + 8}
+                  y={s.ly + 9}
                   textAnchor="middle"
                   dominantBaseline="central"
                   fill="white"
                   fontWeight="700"
-                  fontSize="8"
-                  opacity="0.7"
+                  fontSize="9"
+                  opacity="0.75"
                   className="pointer-events-none"
                 >
                   {s.siglas}
@@ -125,12 +130,15 @@ const SemicircleChart = ({ data }: { data: { siglas: string; delegados: number; 
             )}
           </g>
         ))}
-        {/* Centro: total */}
-        <text x={cx} y={cy - 12} textAnchor="middle" fill="white" fontWeight="900" fontSize="32" opacity="0.95">
+        {/* Total en el centro inferior del arco */}
+        <text x={cx} y={cy - 30} textAnchor="middle" fill="white" fontWeight="900" fontSize="36" opacity="0.95">
           {total}
         </text>
-        <text x={cx} y={cy + 10} textAnchor="middle" fill="white" fontWeight="800" fontSize="8" opacity="0.35" letterSpacing="3">
+        <text x={cx} y={cy - 6} textAnchor="middle" fill="white" fontWeight="800" fontSize="9" opacity="0.35" letterSpacing="3">
           DELEGADOS
+        </text>
+        <text x={cx} y={cy + 14} textAnchor="middle" fill="white" fontWeight="800" fontSize="7" opacity="0.2" letterSpacing="2">
+          A REPARTIR
         </text>
       </svg>
 
