@@ -14,6 +14,150 @@ import {
   FileDown
 } from 'lucide-react';
 
+// ── Colores fijos por sindicato ──
+const COLORES_SINDICATO: Record<string, string> = {
+  'CSIF': '#22c55e',
+  'UGT': '#f87171',
+  'CCOO': '#e879a0',
+  'CGT': '#991b1b',
+};
+
+const COLORES_EXTRA = [
+  '#60a5fa', '#f59e0b', '#a78bfa', '#2dd4bf', '#fb923c',
+  '#818cf8', '#34d399', '#f472b6', '#fbbf24', '#6ee7b7'
+];
+
+const getColorSindicato = (siglas: string, idx: number) => {
+  const upper = siglas.toUpperCase();
+  if (COLORES_SINDICATO[upper]) return COLORES_SINDICATO[upper];
+  return COLORES_EXTRA[idx % COLORES_EXTRA.length];
+};
+
+// ── Componente Semicírculo SVG (Hemiciclo Parlamentario) ──
+const SemicircleChart = ({ data }: { data: { siglas: string; delegados: number; color: string }[] }) => {
+  const total = data.reduce((acc, d) => acc + d.delegados, 0);
+  if (total === 0) return null;
+
+  const svgW = 440;
+  const svgH = 250;
+  const cx = svgW / 2;
+  const cy = svgH - 20;
+  const outerR = 190;
+  const innerR = 105;
+  const gapRad = data.length > 1 ? 0.025 : 0;
+
+  let currentAngle = Math.PI;
+
+  const sectors = data.map((d, i) => {
+    const fraction = d.delegados / total;
+    const totalSweep = fraction * Math.PI;
+    const startAngle = currentAngle - gapRad / 2;
+    const endAngle = currentAngle - totalSweep + gapRad / 2;
+    currentAngle -= totalSweep;
+
+    const x1o = cx + outerR * Math.cos(startAngle);
+    const y1o = cy - outerR * Math.sin(startAngle);
+    const x2o = cx + outerR * Math.cos(endAngle);
+    const y2o = cy - outerR * Math.sin(endAngle);
+    const x1i = cx + innerR * Math.cos(endAngle);
+    const y1i = cy - innerR * Math.sin(endAngle);
+    const x2i = cx + innerR * Math.cos(startAngle);
+    const y2i = cy - innerR * Math.sin(startAngle);
+
+    const sweepDeg = (totalSweep * 180) / Math.PI;
+    const largeArc = sweepDeg > 180 ? 1 : 0;
+
+    const path = [
+      `M ${x1o} ${y1o}`,
+      `A ${outerR} ${outerR} 0 ${largeArc} 0 ${x2o} ${y2o}`,
+      `L ${x1i} ${y1i}`,
+      `A ${innerR} ${innerR} 0 ${largeArc} 1 ${x2i} ${y2i}`,
+      'Z'
+    ].join(' ');
+
+    const midAngle = (startAngle + endAngle) / 2;
+    const labelR = (outerR + innerR) / 2;
+    const lx = cx + labelR * Math.cos(midAngle);
+    const ly = cy - labelR * Math.sin(midAngle);
+
+    return { ...d, path, lx, ly, sweepDeg, i };
+  });
+
+  return (
+    <div className="w-full flex flex-col items-center">
+      <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full max-w-xl" style={{ overflow: 'visible' }}>
+        <style>
+          {`
+            @keyframes chartGrow {
+              from { transform: scale(0.9) translateY(10px); opacity: 0; }
+              to { transform: scale(1) translateY(0); opacity: 1; }
+            }
+            .animate-chart { animation: chartGrow 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+          `}
+        </style>
+        {sectors.map((s) => (
+          <g key={s.i} className="animate-chart" style={{ animationDelay: `${s.i * 50}ms` }}>
+            <path
+              d={s.path}
+              fill={s.color}
+              stroke="rgba(10,16,31,0.8)"
+              strokeWidth="2"
+              className="transition-all duration-300 hover:brightness-125 cursor-pointer"
+            />
+            {s.sweepDeg > 14 && (
+              <>
+                <text
+                  x={s.lx}
+                  y={s.ly - 7}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fill="white"
+                  fontWeight="900"
+                  fontSize="16"
+                  className="pointer-events-none drop-shadow-md"
+                >
+                  {s.delegados}
+                </text>
+                <text
+                  x={s.lx}
+                  y={s.ly + 9}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fill="white"
+                  fontWeight="700"
+                  fontSize="9"
+                  opacity="0.75"
+                  className="pointer-events-none"
+                >
+                  {s.siglas}
+                </text>
+              </>
+            )}
+          </g>
+        ))}
+        <text x={cx} y={cy - 30} textAnchor="middle" fill="white" fontWeight="900" fontSize="36" opacity="0.95">
+          {total}
+        </text>
+        <text x={cx} y={cy - 6} textAnchor="middle" fill="white" fontWeight="800" fontSize="9" opacity="0.35" letterSpacing="3">
+          DELEGADOS
+        </text>
+        <text x={cx} y={cy + 14} textAnchor="middle" fill="white" fontWeight="800" fontSize="7" opacity="0.2" letterSpacing="2">
+          A REPARTIR
+        </text>
+      </svg>
+
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-6 px-4">
+        {data.map((d, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <span className="w-3.5 h-3.5 rounded-full shadow-lg ring-2 ring-white/10" style={{ backgroundColor: d.color }} />
+            <span className="text-[11px] font-black text-white/70 uppercase tracking-wider">{d.siglas}: {d.delegados}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export default function DetalleEleccionPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -48,8 +192,6 @@ export default function DetalleEleccionPage() {
     try {
       const resp = await fetch(`/api/admin/visualizar/${id}`, { method: 'POST' });
       if (!resp.ok) throw new Error("Error al bloquear");
-      
-      // Recargar datos para mostrar estado congelado
       await loadData();
     } catch (err) {
       console.error(err);
@@ -61,10 +203,8 @@ export default function DetalleEleccionPage() {
 
   const handleDescargarPDF = async () => {
     try {
-       // Importamos dinámicamente para evitar problemas de SSR con Next.js
        const html2pdf = (await import('html2pdf.js')).default;
        const element = document.getElementById('dashboard-pdf-content');
-       
        if (!element) throw new Error("Contenedor no encontrado");
 
        const opt = {
@@ -74,7 +214,6 @@ export default function DetalleEleccionPage() {
          html2canvas:  { scale: 2, useCORS: true, letterRendering: true, backgroundColor: '#0a101f' },
          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' as const }
        };
-
        html2pdf().from(element).set(opt).save();
     } catch (e) {
        console.error("Error generando PDF:", e);
@@ -96,7 +235,6 @@ export default function DetalleEleccionPage() {
 
   const { unidad, mesas, votos, consolidados } = datos;
 
-  // Cálculos globales
   const isBloqueada = unidad.estado === 'congelada';
   const censoTotal = mesas.reduce((acc: number, m: any) => acc + (m.censo_real || 0), 0);
   const votosBlancosTotales = mesas.reduce((acc: number, m: any) => acc + (m.votos_blancos || 0), 0);
@@ -118,7 +256,6 @@ export default function DetalleEleccionPage() {
      return 'unico';
   };
 
-  // Agrupaciones
   const votosPorSindicatoGlobal: Record<string, { siglas: string; votos: number }> = {};
   const votosSindicatoTec: Record<string, { siglas: string; votos: number }> = {};
   const votosSindicatoEsp: Record<string, { siglas: string; votos: number }> = {};
@@ -145,8 +282,6 @@ export default function DetalleEleccionPage() {
        votosCandEsp += vObt;
     }
   });
-
-  const umbralElectoralGlobal = votosCandidaturasTotales * 0.05;
 
   let modoReparto = "oficial";
   let delegadosARepartirGlobal = [...consolidados];
@@ -198,7 +333,6 @@ export default function DetalleEleccionPage() {
         delegadosTecnicos = repartirHare(votosSindicatoTec, votosCandTec, unidad.del_tecnicos || 0);
         delegadosEspecialistas = repartirHare(votosSindicatoEsp, votosCandEsp, unidad.del_especialistas || 0);
 
-        // Compute Global
         const dGlobalMap: Record<string, any> = {};
         [...delegadosTecnicos, ...delegadosEspecialistas].forEach(d => {
             if (!dGlobalMap[d.sindicato_id]) {
@@ -208,19 +342,27 @@ export default function DetalleEleccionPage() {
             dGlobalMap[d.sindicato_id].detalle_reparto.directos += d.detalle_reparto.directos;
             dGlobalMap[d.sindicato_id].detalle_reparto.restos += d.detalle_reparto.restos;
         });
-
         delegadosARepartirGlobal = Object.values(dGlobalMap).sort((a:any, b:any) => b.delegados_totales - a.delegados_totales);
      }
   }
 
-  // Componente de Renderizado de un Box Grid de Sindicatos
-  const SindicatosGridBox = ({ arrayDels }: { arrayDels: any[] }) => {
+  // ── Datos para el gráfico ──
+  let extraColorIdx = 0;
+  const chartData = delegadosARepartirGlobal
+    .filter((d: any) => d.delegados_totales > 0)
+    .map((d: any) => {
+      const siglas = d.sindicatos?.siglas || '?';
+      const color = getColorSindicato(siglas, extraColorIdx++);
+      return { siglas, delegados: d.delegados_totales, color };
+    });
+
+  const SindicatosGridBox = ({ arrayDels, compact }: { arrayDels: any[], compact?: boolean }) => {
       if (arrayDels.length === 0) return <div className="p-8 bg-white/5 border border-white/10 rounded-3xl text-center"><p className="text-xs uppercase font-black tracking-widest text-white/40">Sin cálculo disponible</p></div>;
       
       return (
-         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+         <div className={`grid ${compact ? 'grid-cols-2 gap-3' : 'grid-cols-2 lg:grid-cols-4 gap-4'}`}>
             {arrayDels.map((c: any) => (
-                <div key={c.sindicato_id} className={`group relative p-6 rounded-3xl border text-center ${c.sindicatos.siglas === 'CSIF' ? 'bg-gradient-to-b from-emerald-500/20 to-emerald-900/40 border-emerald-500/50 hover:border-emerald-500' : 'bg-white/5 border-white/10 hover:border-white/30'} transition-colors cursor-default`}>
+                <div key={c.sindicato_id} className={`group relative ${compact ? 'p-4' : 'p-6'} rounded-3xl border text-center ${c.sindicatos.siglas === 'CSIF' ? 'bg-gradient-to-b from-emerald-500/20 to-emerald-900/40 border-emerald-500/50 hover:border-emerald-500' : 'bg-white/5 border-white/10 hover:border-white/30'} transition-colors cursor-default`}>
                     {c.detalle_reparto && (
                        <div className="absolute -top-[88px] left-1/2 -translate-x-1/2 bg-[#0f172a] text-white px-5 py-3 rounded-2xl opacity-0 group-hover:opacity-100 group-hover:-translate-y-2 transition-all duration-300 scale-95 group-hover:scale-100 whitespace-nowrap pointer-events-none z-20 border border-white/10 shadow-2xl">
                          <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1 border-b border-white/10 pb-1">Desglose</p>
@@ -236,11 +378,10 @@ export default function DetalleEleccionPage() {
                             </div>
                          </div>
                          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 border-x-[8px] border-x-transparent border-t-[8px] border-t-white/10" />
-                         <div className="absolute -bottom-[7px] left-1/2 -translate-x-1/2 border-x-[8px] border-x-transparent border-t-[8px] border-t-[#0f172a]" />
                        </div>
                     )}
-                    <p className={`text-xl font-black mb-2 ${c.sindicatos.siglas === 'CSIF' ? 'text-emerald-400' : 'text-white'}`}>{c.sindicatos.siglas}</p>
-                    <p className={`text-4xl font-black ${c.sindicatos.siglas === 'CSIF' ? 'text-emerald-400' : 'text-white/80'}`}>{c.delegados_totales}</p>
+                    <p className={`${compact ? 'text-base' : 'text-xl'} font-black mb-1 ${c.sindicatos.siglas === 'CSIF' ? 'text-emerald-400' : 'text-white'}`}>{c.sindicatos.siglas}</p>
+                    <p className={`${compact ? 'text-2xl' : 'text-4xl'} font-black ${c.sindicatos.siglas === 'CSIF' ? 'text-emerald-400' : 'text-white/80'}`}>{c.delegados_totales}</p>
                     <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mt-1">Delegados</p>
                 </div>
             ))}
@@ -345,9 +486,18 @@ export default function DetalleEleccionPage() {
            <h3 className={`text-xl font-black uppercase tracking-widest pl-2 border-l-4 ${modoReparto === 'provisional' ? 'border-amber-400 text-amber-400' : 'border-emerald-400 text-white/80'} shadow-sm flex items-center gap-2`}>
               <Target className="w-6 h-6" /> 
               {modoReparto === 'provisional' 
-                 ? (isDoble ? 'Repartos Provisionales (Cocientes y Restos)' : 'Reparto Provisional Único') 
+                 ? 'Repartos Provisionales' 
                  : 'REPARTO DEFINITIVO DE DELEGADOS'}
            </h3>
+
+           {/* Gráfico Visual */}
+           <div className="bg-white/5 border border-white/10 rounded-[40px] p-8 md:p-12 mb-8 shadow-2xl">
+              <div className="text-center mb-8">
+                <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] mb-2">Visualización de Resultados</h4>
+                <p className="text-2xl font-black uppercase tracking-tighter">Reparto Visual de Delegados</p>
+              </div>
+              <SemicircleChart data={chartData} />
+           </div>
 
            {!isDoble ? (
                <div className="bg-black/20 p-6 rounded-3xl border border-white/5">
@@ -355,29 +505,35 @@ export default function DetalleEleccionPage() {
                    <SindicatosGridBox arrayDels={delegadosARepartirGlobal} />
                </div>
            ) : (
-               <div className="space-y-4">
+               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                   {/* GLOBAL DOBLE */}
-                  <div className="bg-emerald-900/10 p-6 rounded-3xl border border-emerald-500/20 shadow-inner overflow-hidden relative">
+                  <div className="bg-emerald-900/10 p-6 rounded-3xl border border-emerald-500/20 shadow-inner overflow-hidden relative flex flex-col justify-center">
                       <div className="absolute top-0 right-0 bg-emerald-500/20 px-3 py-1 rounded-bl-xl border-b border-l border-emerald-500/30">
-                         <p className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Suma Agregada Comité</p>
+                         <p className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Suma Agregada</p>
                       </div>
-                      <h4 className="text-[10px] font-black text-emerald-400/80 uppercase tracking-widest mb-4">Reparto Global (Suma de Ambos Colegios)</h4>
+                      <h4 className="text-[10px] font-black text-emerald-400/80 uppercase tracking-widest mb-4">Reparto Global (Ambos Colegios)</h4>
                       <SindicatosGridBox arrayDels={delegadosARepartirGlobal} />
                   </div>
                   
                   {/* SUB-COLEGIOS */}
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <div className="space-y-4">
                       {modoReparto === 'provisional' && (
-                         <div className="bg-black/20 p-6 rounded-3xl border border-white/5">
-                             <h4 className="text-[9px] font-black text-white/50 uppercase tracking-[0.2em] mb-4">Colegio Técnicos y Administrativos <span className="font-mono bg-white/10 px-2 py-0.5 rounded text-white ml-2">{unidad.del_tecnicos || 0} Del</span></h4>
-                             <SindicatosGridBox arrayDels={delegadosTecnicos} />
+                         <div className="bg-black/20 p-5 rounded-3xl border border-white/5">
+                             <h4 className="text-[9px] font-black text-white/50 uppercase tracking-[0.2em] mb-3 flex items-center justify-between">
+                                Colegio Técnicos y Administrativos
+                                <span className="font-mono bg-white/10 px-2 py-0.5 rounded text-white">{unidad.del_tecnicos || 0} Del</span>
+                             </h4>
+                             <SindicatosGridBox arrayDels={delegadosTecnicos} compact />
                          </div>
                       )}
                       
                       {modoReparto === 'provisional' && (
-                         <div className="bg-black/20 p-6 rounded-3xl border border-white/5">
-                             <h4 className="text-[9px] font-black text-white/50 uppercase tracking-[0.2em] mb-4">Colegio Especialistas No Cualificados <span className="font-mono bg-white/10 px-2 py-0.5 rounded text-white ml-2">{unidad.del_especialistas || 0} Del</span></h4>
-                             <SindicatosGridBox arrayDels={delegadosEspecialistas} />
+                         <div className="bg-black/20 p-5 rounded-3xl border border-white/5">
+                             <h4 className="text-[9px] font-black text-white/50 uppercase tracking-[0.2em] mb-3 flex items-center justify-between">
+                                Colegio Especialistas No Cualificados
+                                <span className="font-mono bg-white/10 px-2 py-0.5 rounded text-white">{unidad.del_especialistas || 0} Del</span>
+                             </h4>
+                             <SindicatosGridBox arrayDels={delegadosEspecialistas} compact />
                          </div>
                       )}
                   </div>

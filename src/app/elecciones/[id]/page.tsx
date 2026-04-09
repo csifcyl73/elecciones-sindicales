@@ -55,7 +55,6 @@ const SemicircleChart = ({ data }: { data: { siglas: string; delegados: number; 
     const endAngle = currentAngle - totalSweep + gapRad / 2;
     currentAngle -= totalSweep;
 
-    // Puntos en el arco (y = cy - R*sin(θ) → sin positivo = ARRIBA en SVG)
     const x1o = cx + outerR * Math.cos(startAngle);
     const y1o = cy - outerR * Math.sin(startAngle);
     const x2o = cx + outerR * Math.cos(endAngle);
@@ -68,8 +67,6 @@ const SemicircleChart = ({ data }: { data: { siglas: string; delegados: number; 
     const sweepDeg = (totalSweep * 180) / Math.PI;
     const largeArc = sweepDeg > 180 ? 1 : 0;
 
-    // Arco exterior: de startAngle a endAngle (ángulo decrece → CW en math → CCW en SVG → sweep=0)
-    // Arco interior: de endAngle a startAngle (ángulo crece → CCW en math → CW en SVG → sweep=1)
     const path = [
       `M ${x1o} ${y1o}`,
       `A ${outerR} ${outerR} 0 ${largeArc} 0 ${x2o} ${y2o}`,
@@ -78,7 +75,6 @@ const SemicircleChart = ({ data }: { data: { siglas: string; delegados: number; 
       'Z'
     ].join(' ');
 
-    // Posición de la etiqueta (centro del arco)
     const midAngle = (startAngle + endAngle) / 2;
     const labelR = (outerR + innerR) / 2;
     const lx = cx + labelR * Math.cos(midAngle);
@@ -90,8 +86,20 @@ const SemicircleChart = ({ data }: { data: { siglas: string; delegados: number; 
   return (
     <div className="w-full flex flex-col items-center">
       <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full max-w-xl" style={{ overflow: 'visible' }}>
+        <style>
+          {`
+            @keyframes chartGrow {
+              from { transform: scale(0.9) translateY(10px); opacity: 0; }
+              to { transform: scale(1) translateY(0); opacity: 1; }
+            }
+            .animate-chart-sector { 
+              animation: chartGrow 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+              opacity: 0;
+            }
+          `}
+        </style>
         {sectors.map((s) => (
-          <g key={s.i}>
+          <g key={s.i} className="animate-chart-sector" style={{ animationDelay: `${s.i * 70}ms` }}>
             <path
               d={s.path}
               fill={s.color}
