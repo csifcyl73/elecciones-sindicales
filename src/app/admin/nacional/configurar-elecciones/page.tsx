@@ -308,7 +308,10 @@ function ConfigurarEleccionesSPA() {
 
       if (!saveResp.ok) {
          const d = await saveResp.json();
-         throw new Error(d.error || "Error crítico conectando con el backend");      setSuccess(true);
+         throw new Error(d.error || "Error crítico conectando con el backend");
+      }
+
+      setSuccess(true);
       
       // Abrir Outlook / Cliente de Correo
       const selectedUnit = unidadesExistentes.find(u => u.id?.toString() === formData.unidad_id?.toString());
@@ -330,7 +333,7 @@ function ConfigurarEleccionesSPA() {
 
       setTimeout(() => {
          router.push('/admin/nacional/dashboard');
-      }, 3000);     }, 3000);
+      }, 3000);
 
     } catch (err: any) {
       setError(err.message);
