@@ -308,35 +308,29 @@ function ConfigurarEleccionesSPA() {
 
       if (!saveResp.ok) {
          const d = await saveResp.json();
-         throw new Error(d.error || "Error crítico conectando con el backend");
+         throw new Error(d.error || "Error crítico conectando con el backend");      setSuccess(true);
+      
+      // Abrir Outlook / Cliente de Correo
+      const selectedUnit = unidadesExistentes.find(u => u.id?.toString() === formData.unidad_id?.toString());
+      const firstMesa = mesasActivas[0];
+      const selectedInterventor = interventores.find(i => i.id === firstMesa?.interventor_id);
+      
+      if (selectedInterventor && selectedUnit) {
+        const subject = encodeURIComponent(`ASIGNACIÓN INTERVENTOR - ELECCIONES SINDICALES - ${selectedUnit.nombre}`);
+        const body = encodeURIComponent(
+          `HOLA ${selectedInterventor.nombre_completo.toUpperCase()}:\n\n` +
+          `TE INFORMAMOS QUE HAS SIDO ASIGNADO COMO INTERVENTOR PARA EL PROCESO ELECTORAL EN:\n` +
+          `${selectedUnit.nombre.toUpperCase()}\n\n` +
+          `YA PUEDES ACCEDER A TU PANEL DE INTERVENTOR PARA GESTIONAR LOS DATOS Y REPARTOS.\n\n` +
+          `UN SALUDO,\n` +
+          `ADMINISTRACIÓN NACIONAL CSIF`
+        );
+        window.location.href = `mailto:${selectedInterventor.email}?subject=${subject}&body=${body}`;
       }
 
-      // 3. Envío de Correos
-      for (const mesa of mesasActivas) {
-          const selectedInterventor = interventores.find(i => i.id === mesa.interventor_id);
-          const selectedUnit = unidadesExistentes.find(u => u.id === formData.unidad_id);
-
-          if (selectedInterventor && selectedUnit) {
-              try {
-                 await fetch('/api/send-email', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                       email: selectedInterventor.email,
-                       nombre: selectedInterventor.nombre_completo,
-                       unidad: selectedUnit.nombre
-                    })
-                 });
-              } catch(e) {
-                 console.error("No se pudo enviar email pero se guardó", e);
-              }
-          }
-      }
-
-      setSuccess(true);
       setTimeout(() => {
          router.push('/admin/nacional/dashboard');
-      }, 3000);
+      }, 3000);     }, 3000);
 
     } catch (err: any) {
       setError(err.message);
@@ -527,12 +521,11 @@ function ConfigurarEleccionesSPA() {
                                   min="1" 
                                   step="2" 
                                   value={formData.del_unico} 
-                                  readOnly={formData.tipo_organo_id === '3'}
                                   onChange={(e) => setFormData({...formData, del_unico: e.target.value})} 
-                                  className={`w-full bg-black/40 border-2 border-white/10 rounded-3xl px-8 py-6 font-black text-2xl text-center text-emerald-400 focus:outline-none focus:border-emerald-500 transition-all font-mono ${formData.tipo_organo_id === '3' ? 'opacity-50 cursor-not-allowed bg-white/5' : ''}`} 
+                                  className="w-full bg-black/40 border-2 border-white/10 rounded-3xl px-8 py-6 font-black text-2xl text-center text-emerald-400 focus:outline-none focus:border-emerald-500 transition-all font-mono" 
                                />
                                {formData.tipo_organo_id === '3' && (
-                                 <p className="text-[8px] font-black text-emerald-500/50 uppercase text-center tracking-widest mt-1">Bloqueado según normativa para Delegados de Personal</p>
+                                 <p className="text-[8px] font-black text-emerald-500 uppercase text-center tracking-widest mt-1 opacity-40">Delegados de Personal (Introducir cantidad impar)</p>
                                )}
                             </div>
                         ) : formData.tipo_organo_id === '2' && formData.modo_colegio === 'doble' ? (

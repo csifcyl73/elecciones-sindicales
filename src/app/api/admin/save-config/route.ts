@@ -47,10 +47,22 @@ export async function POST(req: NextRequest) {
        updateData.anio = null;
     }
 
-    const { error: saveError } = await supabaseAdmin
+    // 1. Update Unit
+    let { error: saveError } = await supabaseAdmin
       .from('unidades_electorales')
       .update(updateData)
       .eq('id', unidad_id);
+
+    // Si falla por la columna nueva, reintentamos sin ella
+    if (saveError && saveError.message.includes('categoria_personal')) {
+        console.warn("Columna categoria_personal no existe. Reintentando sin ella.");
+        delete updateData.categoria_personal;
+        const retry = await supabaseAdmin
+          .from('unidades_electorales')
+          .update(updateData)
+          .eq('id', unidad_id);
+        saveError = retry.error;
+    }
 
     if (saveError) throw saveError;
 
