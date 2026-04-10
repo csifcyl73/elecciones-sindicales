@@ -9,28 +9,29 @@ const supabaseAdmin = createClient(
 export async function POST(req: NextRequest) {
   try {
     const payload = await req.json();
-    const { 
-      unidad_id, provincia_id, municipio_id, sector_id, tipo_organo_id, total_delegados, finalCcaaId,
-      proceso_electoral_id, anio,
-      modo_colegio, del_tecnicos, del_especialistas,
-      sindicatosUnicos, mesas 
-    } = payload;
+     const { 
+       unidad_id, provincia_id, municipio_id, sector_id, tipo_organo_id, total_delegados, finalCcaaId,
+       proceso_electoral_id, anio,
+       modo_colegio, del_tecnicos, del_especialistas, categoria_personal,
+       sindicatosUnicos, mesas 
+     } = payload;
 
-    if (!unidad_id) return NextResponse.json({ error: 'Falta ID de unidad' }, { status: 400 });
+     if (!unidad_id) return NextResponse.json({ error: 'Falta ID de unidad' }, { status: 400 });
 
-    // 1. Update Unit
-    const updateData: any = {
-       provincia_id: provincia_id ? parseInt(provincia_id) : null,
-       municipio_id: municipio_id ? (municipio_id === 'NO_PROCEDE' ? null : parseInt(municipio_id)) : null,
-       sector_id: sector_id ? parseInt(sector_id) : null,
-       tipo_organo_id: parseInt(tipo_organo_id),
-       delegados_a_elegir: total_delegados,
-       ccaa_id: finalCcaaId ? parseInt(finalCcaaId) : null,
-       modo_colegio: modo_colegio || 'unico',
-       del_tecnicos: del_tecnicos ? parseInt(del_tecnicos) : 0,
-       del_especialistas: del_especialistas ? parseInt(del_especialistas) : 0,
-       estado: 'activa'
-    };
+     // 1. Update Unit
+     const updateData: any = {
+        provincia_id: provincia_id ? parseInt(provincia_id) : null,
+        municipio_id: municipio_id ? (municipio_id === 'NO_PROCEDE' ? null : parseInt(municipio_id)) : null,
+        sector_id: sector_id ? parseInt(sector_id) : null,
+        tipo_organo_id: parseInt(tipo_organo_id),
+        delegados_a_elegir: total_delegados,
+        ccaa_id: finalCcaaId ? parseInt(finalCcaaId) : null,
+        modo_colegio: modo_colegio || 'unico',
+        del_tecnicos: del_tecnicos ? parseInt(del_tecnicos) : 0,
+        del_especialistas: del_especialistas ? parseInt(del_especialistas) : 0,
+        categoria_personal: categoria_personal || null,
+        estado: 'activa'
+     };
 
     // Proceso electoral (nullable UUID or null if NO_PROCEDE / empty)
     if (proceso_electoral_id && proceso_electoral_id !== 'NO_PROCEDE') {

@@ -90,7 +90,8 @@ function ConfigurarEleccionesSPA() {
     del_especialistas: '0',
     ccaa_id: '',
     proceso_electoral_id: '',
-    anio: ''
+    anio: '',
+    categoria_personal: '' // 'Funcionarios' | 'Laborales'
   });
 
   const [mesas, setMesas] = useState<{ id: string; nombre: string; colegio: string; interventor_id: string; interventor_email?: string }[]>([{ id: Math.random().toString(), nombre: 'MESA 1', colegio: 'unico', interventor_id: '' }]);
@@ -195,7 +196,8 @@ function ConfigurarEleccionesSPA() {
               modo_colegio: u.modo_colegio || 'unico',
               del_unico: (u.modo_colegio === 'unico' ? u.delegados_a_elegir?.toString() : '1') || '1',
               del_tecnicos: u.del_tecnicos?.toString() || '1',
-              del_especialistas: u.del_especialistas?.toString() || '0'
+              del_especialistas: u.del_especialistas?.toString() || '0',
+              categoria_personal: u.categoria_personal || ''
             }));
 
             if (u.mesas && u.mesas.length > 0) {
@@ -298,6 +300,7 @@ function ConfigurarEleccionesSPA() {
             modo_colegio: formData.modo_colegio,
             del_tecnicos: formData.del_tecnicos,
             del_especialistas: formData.del_especialistas,
+            categoria_personal: formData.categoria_personal,
             sindicatosUnicos,
             mesas: mesasActivas
          })
@@ -492,6 +495,17 @@ function ConfigurarEleccionesSPA() {
                  </select>
               </div>
 
+              {/* Sub-módulo para Representante de los trabajadores (ID 3) */}
+              {formData.tipo_organo_id === '3' && (
+                <div className="md:col-span-3 space-y-4 pt-4 border-t border-white/5 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <label className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] px-4">Categoría de Personal (Para Delegados de Personal)</label>
+                  <div className="flex gap-4 p-4 bg-black/20 rounded-[35px] border border-white/5">
+                      <button type="button" onClick={() => setFormData({...formData, categoria_personal: 'Funcionarios'})} className={`flex-1 py-4 font-black uppercase text-[11px] rounded-3xl transition-all ${formData.categoria_personal === 'Funcionarios' ? 'bg-emerald-600 text-white' : 'text-white/40 hover:bg-white/5'}`}>Funcionarios</button>
+                      <button type="button" onClick={() => setFormData({...formData, categoria_personal: 'Laborales'})} className={`flex-1 py-4 font-black uppercase text-[11px] rounded-3xl transition-all ${formData.categoria_personal === 'Laborales' ? 'bg-emerald-600 text-white' : 'text-white/40 hover:bg-white/5'}`}>Laborales</button>
+                  </div>
+                </div>
+              )}
+
               {/* BLOQUE DELEGADOS CONDICIONAL */}
               {formData.tipo_organo_id && (
                   <div className="md:col-span-2 space-y-6 pt-4 border-t border-white/5 animate-in fade-in zoom-in-95 duration-300">
@@ -505,10 +519,21 @@ function ConfigurarEleccionesSPA() {
                      )}
 
                      <div className="grid grid-cols-2 gap-6 bg-emerald-500/5 border border-emerald-500/10 p-8 rounded-[40px]">
-                        {(formData.tipo_organo_id === '1' || (formData.tipo_organo_id === '2' && formData.modo_colegio === 'unico')) ? (
+                        {(formData.tipo_organo_id === '1' || formData.tipo_organo_id === '3' || (formData.tipo_organo_id === '2' && formData.modo_colegio === 'unico')) ? (
                             <div className="col-span-2 space-y-4">
                                <label className="text-[9px] font-black text-white/50 uppercase tracking-[0.2em] px-4">Total Delegados Electos</label>
-                               <input type="number" min="1" step="2" value={formData.del_unico} onChange={(e) => setFormData({...formData, del_unico: e.target.value})} className="w-full bg-black/40 border-2 border-white/10 rounded-3xl px-8 py-6 font-black text-2xl text-center text-emerald-400 focus:outline-none focus:border-emerald-500 transition-all font-mono" />
+                               <input 
+                                  type="number" 
+                                  min="1" 
+                                  step="2" 
+                                  value={formData.del_unico} 
+                                  readOnly={formData.tipo_organo_id === '3'}
+                                  onChange={(e) => setFormData({...formData, del_unico: e.target.value})} 
+                                  className={`w-full bg-black/40 border-2 border-white/10 rounded-3xl px-8 py-6 font-black text-2xl text-center text-emerald-400 focus:outline-none focus:border-emerald-500 transition-all font-mono ${formData.tipo_organo_id === '3' ? 'opacity-50 cursor-not-allowed bg-white/5' : ''}`} 
+                               />
+                               {formData.tipo_organo_id === '3' && (
+                                 <p className="text-[8px] font-black text-emerald-500/50 uppercase text-center tracking-widest mt-1">Bloqueado según normativa para Delegados de Personal</p>
+                               )}
                             </div>
                         ) : formData.tipo_organo_id === '2' && formData.modo_colegio === 'doble' ? (
                             <>
