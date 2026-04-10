@@ -230,12 +230,14 @@ function ConfigurarEleccionesSPA() {
   const validateDelegados = (): { valid: boolean; total: number } => {
     const isJunta = formData.tipo_organo_id === '1';
     const isComite = formData.tipo_organo_id === '2';
+    const isPersona = formData.tipo_organo_id === '3';
+    
     const numUnico = parseInt(formData.del_unico) || 0;
     const numTec = parseInt(formData.del_tecnicos) || 0;
     const numEsp = parseInt(formData.del_especialistas) || 0;
 
     let total = 0;
-    if (isJunta || (isComite && formData.modo_colegio === 'unico')) {
+    if (isJunta || isPersona || (isComite && formData.modo_colegio === 'unico')) {
       total = numUnico;
     } else if (isComite && formData.modo_colegio === 'doble') {
       total = numTec + numEsp;
