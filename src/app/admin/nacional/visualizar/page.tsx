@@ -13,7 +13,12 @@ import {
   Building2,
   Layers,
   MapPin,
-  FolderOpen
+  FolderOpen,
+  Trash2,
+  AlertTriangle,
+  X,
+  Bell,
+  Clock
 } from 'lucide-react';
 
 export default function VisualizarEleccionesPage() {
@@ -22,10 +27,40 @@ export default function VisualizarEleccionesPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedProceso, setExpandedProceso] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [unitToDelete, setUnitToDelete] = useState<any>(null);
+  const [deleting, setDeleting] = useState(false);
+  
+  // Notificaciones RT logic
+  const [notificaciones, setNotificaciones] = useState<any[]>([]);
+  const [lastNotifId, setLastNotifId] = useState<string | null>(null);
+  const [isNewNotif, setIsNewNotif] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(true);
 
   useEffect(() => {
     loadData();
+    const interval = setInterval(loadNotifications, 10000); // Polling cada 10s
+    loadNotifications();
+    return () => clearInterval(interval);
   }, []);
+
+  const loadNotifications = async () => {
+    try {
+      const res = await fetch('/api/admin/notifications');
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        // Si hay una notificación más reciente que la anterior, marcar como "nuevo"
+        if (lastNotifId && data[0].id !== lastNotifId) {
+          setIsNewNotif(true);
+          setTimeout(() => setIsNewNotif(false), 5000);
+        }
+        setNotificaciones(data);
+        setLastNotifId(data[0].id);
+      }
+    } catch (err) {
+      console.error("Error cargando notificaciones:", err);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -66,54 +101,70 @@ export default function VisualizarEleccionesPage() {
   });
 
   const renderUnidadCard = (u: any) => (
-    <Link 
-      href={`/admin/nacional/visualizar/${u.id}`} 
-      key={u.id}
-      className="group flex flex-col md:flex-row justify-between md:items-center bg-[#111827]/40 border border-white/5 hover:border-rose-500/30 rounded-[30px] p-5 md:p-6 transition-all hover:bg-[#111827]/80 hover:shadow-[0_10px_40px_rgba(225,29,72,0.1)] gap-4 md:gap-6"
-    >
-      <div className="flex-1 min-w-0">
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          {u.estado === 'congelada' ? (
-             <span className="px-2.5 py-1 rounded-full border border-blue-500/20 bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5">
-               Resultados Oficiales
-             </span>
-          ) : (
-             <span className="px-2.5 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5">
-               <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" /> Escrutinio Abierto
-             </span>
-          )}
-          {u.modo_colegio === 'doble' && (
-             <span className="px-2.5 py-1 rounded-full border border-amber-500/20 bg-amber-500/5 text-amber-500/70 text-[8px] font-black uppercase tracking-widest">
-               Doble Colegio
-             </span>
-          )}
+    <div key={u.id} className="relative group">
+      <Link 
+        href={`/admin/nacional/visualizar/${u.id}`} 
+        className="flex flex-col md:flex-row justify-between md:items-center bg-[#111827]/40 border border-white/5 hover:border-rose-500/30 rounded-[30px] p-5 md:p-6 transition-all hover:bg-[#111827]/80 hover:shadow-[0_10px_40px_rgba(225,29,72,0.1)] gap-4 md:gap-6"
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            {u.estado === 'congelada' ? (
+              <span className="px-2.5 py-1 rounded-full border border-blue-500/20 bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                Resultados Oficiales
+              </span>
+            ) : (
+              <span className="px-2.5 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" /> Escrutinio Abierto
+              </span>
+            )}
+            {u.modo_colegio === 'doble' && (
+              <span className="px-2.5 py-1 rounded-full border border-amber-500/20 bg-amber-500/5 text-amber-500/70 text-[8px] font-black uppercase tracking-widest">
+                Doble Colegio
+              </span>
+            )}
+          </div>
+          
+          <h3 className="text-lg md:text-xl font-black uppercase tracking-tight truncate leading-tight">{u.nombre}</h3>
+          
+          <div className="flex flex-wrap items-center gap-3 mt-4">
+            <div className="flex items-center gap-1.5 text-white/40 text-[9px] font-bold uppercase tracking-widest">
+              <MapPin className="w-3 h-3 text-rose-400/50" /> {u.provincias?.nombre || 'General'}
+            </div>
+            <div className="flex items-center gap-1.5 text-white/40 text-[9px] font-bold uppercase tracking-widest">
+              <Building2 className="w-3 h-3 text-rose-400/50" /> {u.sectores?.nombre || 'General'}
+            </div>
+            <div className="flex items-center gap-1.5 text-white/40 text-[9px] font-bold uppercase tracking-widest">
+              <Layers className="w-3 h-3 text-rose-400/50" /> {u.tipos_organos?.nombre || 'General'}
+            </div>
+          </div>
         </div>
         
-        <h3 className="text-lg md:text-xl font-black uppercase tracking-tight truncate leading-tight">{u.nombre}</h3>
-        
-        <div className="flex flex-wrap items-center gap-3 mt-4">
-          <div className="flex items-center gap-1.5 text-white/40 text-[9px] font-bold uppercase tracking-widest">
-             <MapPin className="w-3 h-3 text-rose-400/50" /> {u.provincias?.nombre || 'General'}
+        <div className="flex items-center justify-between md:justify-end gap-6 md:pl-6 md:border-l border-white/5 shrink-0 pt-4 md:pt-0 border-t md:border-t-0 border-white/5">
+          
+          {/* Botón de Eliminación - Nueva Posición */}
+          <button 
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setUnitToDelete(u);
+              setDeleteModalOpen(true);
+            }}
+            className="p-3 rounded-2xl bg-white/5 border border-white/5 text-white/20 hover:text-rose-500 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100 shadow-xl backdrop-blur-md"
+            title="Eliminar esta elección"
+          >
+            <Trash2 className="w-5 h-5" />
+          </button>
+
+          <div className="text-left md:text-center">
+            <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Delegados</p>
+            <p className="text-2xl font-black text-rose-400">{u.delegados_a_elegir}</p>
           </div>
-          <div className="flex items-center gap-1.5 text-white/40 text-[9px] font-bold uppercase tracking-widest">
-             <Building2 className="w-3 h-3 text-rose-400/50" /> {u.sectores?.nombre || 'General'}
-          </div>
-          <div className="flex items-center gap-1.5 text-white/40 text-[9px] font-bold uppercase tracking-widest">
-             <Layers className="w-3 h-3 text-rose-400/50" /> {u.tipos_organos?.nombre || 'General'}
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-rose-500 transition-colors">
+            <ChevronRight className="w-5 h-5 md:w-6 md:h-6 text-white/30 group-hover:text-white transition-colors" />
           </div>
         </div>
-      </div>
-      
-      <div className="flex items-center justify-between md:justify-end gap-6 md:pl-6 md:border-l border-white/5 shrink-0 pt-4 md:pt-0 border-t md:border-t-0 border-white/5">
-        <div className="text-left md:text-center">
-          <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Delegados</p>
-          <p className="text-2xl font-black text-rose-400">{u.delegados_a_elegir}</p>
-        </div>
-        <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-rose-500 transition-colors">
-          <ChevronRight className="w-5 h-5 md:w-6 md:h-6 text-white/30 group-hover:text-white transition-colors" />
-        </div>
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 
   return (
@@ -145,11 +196,84 @@ export default function VisualizarEleccionesPage() {
                 <p className="text-[10px] font-black text-white/30 uppercase tracking-widest leading-none">Activas / Escrutadas</p>
                 <p className="text-4xl font-black text-white leading-none mt-1">{unidades.length}</p>
              </div>
+             {!showNotifications && (
+               <button 
+                 onClick={() => setShowNotifications(true)}
+                 className="p-4 bg-white/5 hover:bg-emerald-500/20 border border-white/10 rounded-3xl backdrop-blur-3xl shadow-lg transition-all active:scale-95 group relative"
+                 title="Restaurar Notificaciones"
+               >
+                  <Bell className={`w-6 h-6 ${isNewNotif ? 'text-emerald-400 animate-bounce' : 'text-white/30 group-hover:text-white'}`} />
+                  {isNewNotif && <div className="absolute top-3 right-3 w-2 h-2 bg-emerald-500 rounded-full animate-ping" />}
+               </button>
+             )}
              <div className="p-4 bg-white/5 rounded-3xl border border-white/10 backdrop-blur-3xl shadow-[0_0_30px_rgba(225,29,72,0.1)]">
                 <Database className="w-10 h-10 text-rose-400" />
              </div>
           </div>
         </div>
+
+        {/* MÓDULO DE NOTIFICACIONES RT */}
+        {showNotifications && (
+          <div className={`mb-12 transition-all duration-700 ${isNewNotif ? 'scale-[1.02]' : 'scale-100'}`}>
+             <div className={`bg-[#111827]/60 backdrop-blur-3xl border ${isNewNotif ? 'border-emerald-500/50 shadow-[0_0_50px_rgba(16,185,129,0.2)]' : 'border-white/5'} rounded-[40px] p-8 md:p-10 relative overflow-hidden group`}>
+                {isNewNotif && (
+                  <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500 animate-pulse" />
+                )}
+                
+                {/* Botón Minimizar */}
+                <button 
+                  onClick={() => setShowNotifications(false)}
+                  className="absolute top-6 right-6 p-2 rounded-xl bg-white/5 border border-white/5 text-white/20 hover:text-white hover:bg-white/10 transition-all active:scale-95 z-10"
+                  title="Minimizar Notificaciones"
+                >
+                   <X className="w-4 h-4" />
+                </button>
+
+                <div className="flex items-center justify-between mb-8">
+                 <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-2xl border transition-colors ${isNewNotif ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-white/5 border-white/5'}`}>
+                       <Bell className={`w-6 h-6 ${isNewNotif ? 'text-emerald-400 animate-bounce' : 'text-white/30'}`} />
+                    </div>
+                    <div>
+                      <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 leading-none mb-1">Actividad Reciente</h2>
+                      <p className="text-xl font-black uppercase tracking-tight">Entrada de Datos Interventores</p>
+                    </div>
+                 </div>
+                 {isNewNotif && (
+                   <span className="px-4 py-1.5 bg-emerald-500 text-black font-black text-[9px] uppercase tracking-widest rounded-full animate-bounce">
+                     Nuevo Envío Detectado
+                   </span>
+                 )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                 {notificaciones.length > 0 ? notificaciones.map((n: any, idx: number) => {
+                    const timeStr = n.fecha_envio ? new Date(n.fecha_envio).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+                    return (
+                      <div key={n.id} className={`p-5 rounded-3xl border transition-all ${idx === 0 && isNewNotif ? 'bg-emerald-500/5 border-emerald-500/30' : 'bg-white/5 border-white/5 hover:border-white/10'}`}>
+                         <div className="flex items-center justify-between mb-3">
+                            <span className="text-[9px] font-black text-rose-400 bg-rose-400/10 px-2 py-0.5 rounded-md uppercase tracking-widest flex items-center gap-1.5">
+                               <Clock className="w-3 h-3" /> {timeStr}
+                            </span>
+                            <span className="text-[10px] font-bold text-white/20">#{n.id.slice(-4).toUpperCase()}</span>
+                         </div>
+                         <p className="text-[11px] font-black uppercase text-white tracking-tight truncate mb-1">
+                            {n.unidad?.nombre}
+                         </p>
+                         <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest truncate">
+                            {n.nombre_identificador} - {n.interventor?.nombre_completo || 'SISTEMA'}
+                         </p>
+                      </div>
+                    );
+                 }) : (
+                    <div className="md:col-span-3 py-10 text-center border border-dashed border-white/5 rounded-3xl">
+                       <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Esperando actividad de interventores...</p>
+                    </div>
+                 )}
+              </div>
+           </div>
+        </div>
+      )}
 
         {/* Buscador */}
         <div className="mb-10 relative group">
@@ -233,6 +357,66 @@ export default function VisualizarEleccionesPage() {
           </div>
         )}
       </div>
+
+      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
+      {deleteModalOpen && unitToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
+           <div className="bg-[#111827] border border-white/10 w-full max-w-lg rounded-[50px] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.7)] relative">
+              <div className="absolute top-0 left-0 w-full h-1 bg-rose-500" />
+              
+              <div className="p-12 text-center space-y-8">
+                 <div className="w-24 h-24 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto border border-rose-500/20">
+                    <AlertTriangle className="w-12 h-12 text-rose-500" />
+                 </div>
+                 
+                 <div className="space-y-4">
+                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter">¿Eliminar Elección?</h2>
+                    <p className="text-white/40 text-sm font-medium leading-relaxed">
+                       Estás a punto de borrar definitivamente la unidad <br />
+                       <span className="text-white font-black uppercase text-base tracking-tight">{unitToDelete.nombre}</span>.
+                    </p>
+                    <div className="bg-rose-500/5 border border-rose-500/10 p-5 rounded-2xl text-[10px] font-black text-rose-400 uppercase tracking-widest">
+                       ⚠️ Esta acción borrará mesas, interventores y votos asociados de forma irreversible.
+                    </div>
+                 </div>
+
+                 <div className="flex flex-col gap-4">
+                    <button 
+                      onClick={async () => {
+                        setDeleting(true);
+                        try {
+                          const res = await fetch(`/api/admin/unidades/${unitToDelete.id}`, { method: 'DELETE' });
+                          if (res.ok) {
+                            setUnidades(unidades.filter(u => u.id !== unitToDelete.id));
+                            setDeleteModalOpen(false);
+                            setUnitToDelete(null);
+                          } else {
+                            const data = await res.json();
+                            alert(`Error al eliminar: ${data.error || 'Inténtalo de nuevo'}`);
+                          }
+                        } catch (err: any) {
+                          console.error(err);
+                          alert(`Error de red: ${err.message}`);
+                        } finally {
+                          setDeleting(false);
+                        }
+                      }}
+                      disabled={deleting}
+                      className="w-full py-6 bg-rose-600 hover:bg-rose-500 text-white font-black rounded-2xl uppercase tracking-[0.2em] text-sm transition-all shadow-xl active:scale-95 disabled:opacity-50"
+                    >
+                       {deleting ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : "ELIMINAR DEFINITIVAMENTE"}
+                    </button>
+                    <button 
+                      onClick={() => { setDeleteModalOpen(false); setUnitToDelete(null); }}
+                      className="w-full py-5 text-white/30 hover:text-white font-black uppercase tracking-[0.2em] text-[10px] transition-all"
+                    >
+                       CANCELAR Y VOLVER
+                    </button>
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 }

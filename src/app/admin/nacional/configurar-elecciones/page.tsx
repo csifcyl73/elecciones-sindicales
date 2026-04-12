@@ -35,12 +35,12 @@ const SearchableCombobox = ({ options, value, onChange, placeholder }: { options
   }, []);
 
   const selected = options.find(o => o.id?.toString() === value?.toString());
-  const filtered = options.filter(o => (o.nombre || o.nombre_completo || '').toUpperCase().includes(term.toUpperCase()));
+  const filtered = options.filter(o => (o.siglas || o.nombre || o.nombre_completo || '').toUpperCase().includes(term.toUpperCase()));
 
   return (
     <div className="relative" ref={ref}>
       <div onClick={() => setIsOpen(!isOpen)} className="w-full bg-black/40 border-2 border-white/5 rounded-[30px] px-8 py-6 flex items-center justify-between cursor-pointer focus:outline-none hover:border-emerald-500/50 appearance-none transition-all shadow-inner">
-         <span className={`font-black text-sm uppercase ${selected ? 'text-white' : 'text-white/40'}`}>{selected ? (selected.nombre || selected.nombre_completo).toUpperCase() : placeholder}</span>
+         <span className={`font-black text-sm uppercase ${selected ? 'text-white' : 'text-white/40'}`}>{selected ? (selected.siglas || selected.nombre || selected.nombre_completo).toUpperCase() : placeholder}</span>
          <ChevronDown className={`w-6 h-6 opacity-30 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </div>
       {isOpen && (
@@ -52,7 +52,12 @@ const SearchableCombobox = ({ options, value, onChange, placeholder }: { options
           <div className="max-h-[300px] overflow-y-auto hidden-scrollbar">
              {filtered.length > 0 ? filtered.slice(0, 100).map(o => (
                <div key={o.id} onClick={() => { onChange(o.id.toString()); setIsOpen(false); setTerm(""); }} className="px-8 py-5 hover:bg-emerald-500/10 cursor-pointer border-b border-white/5 font-black uppercase text-[12px] text-white/50 hover:text-white transition-all flex justify-between items-center">
-                 <span>{o.nombre || o.nombre_completo}</span>
+                 <div className="flex flex-col">
+                   <span className="text-white text-sm">{o.siglas || o.nombre || o.nombre_completo}</span>
+                   {o.siglas && (o.nombre || o.nombre_completo) && (
+                     <span className="text-[9px] text-white/30 lowercase">{(o.nombre || o.nombre_completo)}</span>
+                   )}
+                 </div>
                  {value === o.id?.toString() && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
                </div>
              )) : <div className="p-8 text-center text-white/30 text-[10px] uppercase font-black">SIN COINCIDENCIAS</div>}
@@ -315,22 +320,28 @@ function ConfigurarEleccionesSPA() {
 
       setSuccess(true);
       
-      // Abrir Outlook / Cliente de Correo
+      // Protocolo de Notificación: Abrir Outlook / Cliente de Correo
       const selectedUnit = unidadesExistentes.find(u => u.id?.toString() === formData.unidad_id?.toString());
-      const firstMesa = mesasActivas[0];
-      const selectedInterventor = interventores.find(i => i.id === firstMesa?.interventor_id);
+      const allInterventorIds = Array.from(new Set(mesasActivas.map(m => m.interventor_id)));
+      const selectedInterventors = interventores.filter(i => allInterventorIds.includes(i.id));
+      const emails = selectedInterventors.map(i => i.email).join(',');
       
-      if (selectedInterventor && selectedUnit) {
-        const subject = encodeURIComponent(`ASIGNACIÓN INTERVENTOR - ELECCIONES SINDICALES - ${selectedUnit.nombre}`);
+      if (selectedInterventors.length > 0 && selectedUnit) {
+        const names = selectedInterventors.map(i => i.nombre_completo).join(', ');
+        const subject = encodeURIComponent(`Notificación de asignación: Interventor/a para elecciones sindicales - ${selectedUnit.nombre}`);
         const body = encodeURIComponent(
-          `HOLA ${selectedInterventor.nombre_completo.toUpperCase()}:\n\n` +
-          `TE INFORMAMOS QUE HAS SIDO ASIGNADO COMO INTERVENTOR PARA EL PROCESO ELECTORAL EN:\n` +
-          `${selectedUnit.nombre.toUpperCase()}\n\n` +
-          `YA PUEDES ACCEDER A TU PANEL DE INTERVENTOR PARA GESTIONAR LOS DATOS Y REPARTOS.\n\n` +
-          `UN SALUDO,\n` +
-          `ADMINISTRACIÓN NACIONAL CSIF`
+          `Hola, ${names}:\n\n` +
+          `Te escribimos para comunicarte que ya figuras como interventor/a asignado/a para el proceso de elecciones sindicales de este año. Estos son los detalles de la unidad correspondiente:\n\n` +
+          `📌 Unidad electoral: ${selectedUnit.nombre.toUpperCase()}\n` +
+          `📅 Año: ${formData.anio || '2026'}\n\n` +
+          `Como el proceso ya está configurado en el sistema, puedes acceder desde ahora mismo a tu Panel de Interventor. Allí podrás realizar el seguimiento, la carga de datos y toda la gestión de las mesas que tienes asignadas.\n\n` +
+          `Próximo paso: Por favor, accede al portal oficial con tus credenciales para confirmar que toda la información sea correcta.\n\n` +
+          `Agradecemos de antemano tu tiempo y tu implicación en este proceso. Si tienes cualquier duda, estamos aquí para ayudarte.\n\n` +
+          `Un saludo cordial,\n\n` +
+          `Departamento de Elecciones Sindicales\n` +
+          `CSIF`
         );
-        window.location.href = `mailto:${selectedInterventor.email}?subject=${subject}&body=${body}`;
+        window.location.href = `mailto:${emails}?subject=${subject}&body=${body}`;
       }
 
       setTimeout(() => {

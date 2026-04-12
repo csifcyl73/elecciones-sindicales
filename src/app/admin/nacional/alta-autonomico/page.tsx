@@ -92,6 +92,7 @@ export default function AltaAdministradorAutonomico() {
     usuario: '',
     password: '',
   });
+  const [enviarEmail, setEnviarEmail] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
@@ -128,6 +129,23 @@ export default function AltaAdministradorAutonomico() {
 
       if (res.ok) {
         setStatus({ type: 'success', msg: `✅ Administrador autonómico "${form.nombre} ${form.apellidos}" dado de alta correctamente.` });
+        
+        if (enviarEmail) {
+          const subject = encodeURIComponent(`Credenciales de Administrador Autonómico - CSIF`);
+          const body = encodeURIComponent(
+            `Hola, ${form.nombre.toUpperCase()}:\n\n` +
+            `Se ha completado tu alta como Administrador Autonómico para la comunidad de ${form.comunidad}.\n\n` +
+            `🌐 Acceso: https://elecciones-sindicales.vercel.app\n` +
+            `📧 Usuario: ${form.usuario}\n` +
+            `🔑 Contraseña: ${form.password}\n\n` +
+            `Ya puedes acceder para comenzar con la gestión de tu comunidad autónoma.\n\n` +
+            `Atentamente,\n\n` +
+            `Departamento de Elecciones Sindicales\n` +
+            `CSIF`
+          );
+          window.location.href = `mailto:${form.usuario}?subject=${subject}&body=${body}`;
+        }
+
         setForm({ nombre: '', apellidos: '', comunidad: '', usuario: '', password: '' });
       } else {
         setStatus({ type: 'error', msg: data.error || 'Error al crear el usuario.' });
@@ -305,6 +323,19 @@ export default function AltaAdministradorAutonomico() {
               </button>
             </div>
             <PasswordStrength password={form.password} />
+          </div>
+
+          {/* Checkbox Notificar */}
+          <div className="pt-2 border-t border-white/5">
+             <label className="flex items-center gap-3 cursor-pointer group">
+                <input 
+                  type="checkbox" 
+                  checked={enviarEmail}
+                  onChange={(e) => setEnviarEmail(e.target.checked)}
+                  className="w-5 h-5 rounded-lg border-white/20 bg-white/5 text-emerald-500 focus:ring-emerald-500/20 transition-all cursor-pointer"
+                />
+                <span className="text-[11px] font-bold text-white/50 uppercase tracking-widest group-hover:text-emerald-400 transition-colors">Notificar credenciales por email (Outlook)</span>
+             </label>
           </div>
 
           {/* Mensaje de estado */}

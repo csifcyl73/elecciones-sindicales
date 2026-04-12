@@ -75,6 +75,15 @@ const menuItems = [
     href: '/admin/nacional/visualizar',
   },
   {
+    id: 'interventor-nacional',
+    label: 'Interventor Nacional (Soporte)',
+    description: 'Acceso de emergencia para carga de datos y suplencia de interventores',
+    icon: ShieldCheck,
+    color: 'from-blue-600 to-cyan-700',
+    shadow: 'shadow-blue-500/30',
+    href: '/admin/nacional/interventor-nacional',
+  },
+  {
     id: 'gestion-sindicatos',
     label: 'Gestión Sindicatos',
     description: 'Administrar el listado de organizaciones sindicales',

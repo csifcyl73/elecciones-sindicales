@@ -27,10 +27,13 @@ export async function GET(req: NextRequest, context: any) {
 
     if (unidadError) throw unidadError;
 
-    // Obtener mesas
+    // Obtener mesas con info de interventor
     const { data: mesas, error: mesasError } = await supabase
       .from('mesas_electorales')
-      .select('*')
+      .select(`
+        *,
+        interventor:usuarios(nombre_completo, email, telefono)
+      `)
       .eq('unidad_id', id);
       
     if (mesasError) throw mesasError;

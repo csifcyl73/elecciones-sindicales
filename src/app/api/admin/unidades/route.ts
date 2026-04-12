@@ -18,7 +18,11 @@ export async function GET() {
         ccaa(nombre),
         provincias(nombre),
         sectores(nombre),
-        tipos_organos(nombre)
+        tipos_organos(nombre),
+        mesas_electorales(
+          *,
+          usuarios(nombre_completo)
+        )
       `)
       .order('nombre', { ascending: true });
 

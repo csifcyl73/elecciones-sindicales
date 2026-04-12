@@ -93,16 +93,19 @@ export default function AltaInterventorPage() {
       if (!response.ok) throw new Error(data.error);
 
       if (formData.enviarEmail && formData.password) {
-        await fetch('/api/admin/enviar-credenciales', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-             email: formData.email,
-             nombre: formData.nombre,
-             password: formData.password,
-             pin: 'PENDIENTE'
-          }),
-        });
+        const subject = encodeURIComponent(`Tus credenciales de acceso - Elecciones Sindicales CSIF`);
+        const body = encodeURIComponent(
+          `Hola, ${formData.nombre.toUpperCase()}:\n\n` +
+          `Se han generado tus credenciales de acceso para el sistema de elecciones sindicales de CSIF.\n\n` +
+          `🌐 Acceso: https://elecciones-sindicales.vercel.app\n` +
+          `📧 Usuario: ${formData.email}\n` +
+          `🔑 Contraseña: ${formData.password}\n\n` +
+          `Por favor, accede al portal para validar tu cuenta e iniciar tu gestión.\n\n` +
+          `Atentamente,\n\n` +
+          `Departamento de Elecciones Sindicales\n` +
+          `CSIF`
+        );
+        window.location.href = `mailto:${formData.email}?subject=${subject}&body=${body}`;
       }
 
       setFormData({ nombre: '', email: '', password: '', telefono: '', enviarEmail: true });

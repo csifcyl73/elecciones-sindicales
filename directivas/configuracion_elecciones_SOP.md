@@ -15,7 +15,8 @@ Implementar un formulario robusto para que el administrador nacional configure n
   - Si "JUNTA DE PERSONAL": un campo numérico.
   - **Validación Estricta**: La suma/valor total DEBE SER IMPAR.
 - **Asignar Interventor**: Buscador desplegable de usuarios con rol `interventor`.
-- **Botón Grabar**: Guarda todas las elecciones de una y envía email de notificación al interventor.
+- **Botón Grabar**: Guarda todas las elecciones de una y activa el protocolo de notificación.
+- **Protocolo de Notificación**: Al guardar con éxito, se debe disparar un enlace `mailto:` que abra el cliente de correo predeterminado (Outlook) con los interventores en copia, asunto formal y cuerpo estandarizado.
 
 ## Flujo de Datos
 - **Lectura**: Obtención masiva de maestros por Supabase y el JSON de `municipios`.

@@ -11,7 +11,10 @@ import {
   Lock,
   BarChart,
   Target,
-  FileDown
+  FileDown,
+  Mail,
+  Phone,
+  Contact
 } from 'lucide-react';
 
 // ── Colores fijos por sindicato ──
@@ -476,6 +479,74 @@ export default function DetalleEleccionPage() {
                  <div className="flex items-center gap-3">
                     <span className="text-xl font-black text-white">{censoTotal}</span> <span className="text-white/30">|</span>
                     <span className="text-xl font-black text-rose-400 group flex items-center gap-1" title="Delegados a Elegir Globales"><Users className="w-4 h-4"/> {isDoble ? ((unidad.del_tecnicos || 0) + (unidad.del_especialistas || 0)) : (unidad.delegados_a_elegir || 0)}</span>
+                 </div>
+              </div>
+           </div>
+        </div>
+
+        {/* CARD INTERVENTOR(ES) ASIGNADO(S) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+           <div className="bg-[#111827]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl flex flex-col justify-center">
+              <div className="flex items-center gap-4 mb-6">
+                 <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
+                    <Contact className="w-6 h-6 text-emerald-400" />
+                 </div>
+                 <div>
+                   <h3 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] leading-none mb-1">Responsable Asignado</h3>
+                   <p className="text-xl font-black uppercase tracking-tight">Intervención de Unidad</p>
+                 </div>
+              </div>
+
+              {/* Extraer interventores únicos de las mesas */}
+              {(() => {
+                 const uniqueInterventors = Array.from(new Map(
+                   mesas
+                     .filter((m: any) => m.interventor)
+                     .map((m: any) => [m.interventor.email, m.interventor])
+                 ).values());
+
+                 if (uniqueInterventors.length === 0) {
+                   return <p className="text-white/20 font-black uppercase text-[10px] tracking-widest text-center py-4 italic">Sin interventor configurado</p>;
+                 }
+
+                 return (
+                   <div className="space-y-6">
+                     {uniqueInterventors.map((int: any, idx: number) => (
+                       <div key={idx} className="space-y-4">
+                          <p className="text-lg font-black text-white uppercase tracking-tight leading-none">{int.nombre_completo}</p>
+                          <div className="flex flex-wrap gap-x-6 gap-y-3">
+                             <div className="flex items-center gap-2 text-white/50 hover:text-white transition-colors">
+                                <Mail className="w-4 h-4 text-emerald-500/60" />
+                                <span className="text-xs font-medium">{int.email}</span>
+                             </div>
+                             {int.telefono && (
+                               <div className="flex items-center gap-2 text-white/50 hover:text-white transition-colors">
+                                  <Phone className="w-4 h-4 text-emerald-500/60" />
+                                  <span className="text-xs font-medium">{int.telefono}</span>
+                                </div>
+                             )}
+                          </div>
+                       </div>
+                     ))}
+                   </div>
+                 );
+              })()}
+           </div>
+
+           {/* Resumen Métrica Acceso Rápido (Lado derecho del interventor) */}
+           <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-3xl p-8 flex flex-col justify-center relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl group-hover:bg-emerald-500/10 transition-all" />
+              <div className="relative z-10 flex items-center justify-between">
+                 <div className="space-y-1">
+                    <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em]">Participación Actual</p>
+                    <p className="text-5xl font-black text-emerald-400">{censoTotal > 0 ? ((votosEmitidosTotales / censoTotal) * 100).toFixed(1) : 0}%</p>
+                 </div>
+                 <div className="text-right">
+                    <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-2">Estado de Actas</p>
+                    <div className="flex items-center gap-2 justify-end">
+                       <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                       <span className="font-black text-sm uppercase text-white">{mesas.length} / {mesas.length} Mesas</span>
+                    </div>
                  </div>
               </div>
            </div>
