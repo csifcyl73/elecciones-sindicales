@@ -8,6 +8,7 @@ export default function InterventorDashboard() {
   const router = useRouter();
   const supabase = createClient();
   const [userName, setUserName] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const [mesas, setMesas] = useState<any[]>([]);
   const [loadingMesas, setLoadingMesas] = useState(true);
