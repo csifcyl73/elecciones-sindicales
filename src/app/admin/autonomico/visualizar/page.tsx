@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { createClient } from '@supabase/supabase-js';
 import { 
   ArrowLeft, 
   Search, 
@@ -21,7 +22,12 @@ import {
   Clock
 } from 'lucide-react';
 
-export default function VisualizarEleccionesPage() {
+const supabase = createClient(
+  (process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'),
+  (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder')
+);
+
+export default function VisualizarEleccionesAutonomicoPage() {
   const [unidades, setUnidades] = useState<any[]>([]);
   const [procesos, setProcesos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +36,7 @@ export default function VisualizarEleccionesPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [unitToDelete, setUnitToDelete] = useState<any>(null);
   const [deleting, setDeleting] = useState(false);
+  const [comunidad, setComunidad] = useState<string>('');
   
   // Notificaciones RT logic
   const [notificaciones, setNotificaciones] = useState<any[]>([]);
@@ -38,8 +45,14 @@ export default function VisualizarEleccionesPage() {
   const [showNotifications, setShowNotifications] = useState(true);
 
   useEffect(() => {
-    loadData();
-    const interval = setInterval(loadNotifications, 10000); // Polling cada 10s
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const com = session?.user?.user_metadata?.comunidad || '';
+      setComunidad(com);
+      if (com) loadData(com);
+    };
+    init();
+    const interval = setInterval(loadNotifications, 10000);
     loadNotifications();
     return () => clearInterval(interval);
   }, []);
@@ -76,17 +89,14 @@ export default function VisualizarEleccionesPage() {
     }
   };
 
-  const loadData = async () => {
+  const loadData = async (com: string) => {
     setLoading(true);
     try {
-      // Usar las API routes del servidor (service role key, ignora RLS)
-      // igual que gestion-unidades y configurar-elecciones
       const [unidadesResp, procesosResp] = await Promise.all([
-        fetch('/api/admin/unidades').then(r => r.json()).catch(() => []),
+        fetch(`/api/admin/autonomico/unidades?comunidad=${encodeURIComponent(com)}`).then(r => r.json()).catch(() => []),
         fetch('/api/admin/procesos-electorales').then(r => r.json()).catch(() => [])
       ]);
 
-      // Filtrar solo unidades con estados relevantes para visualización
       const estadosRelevantes = ['activa', 'escrutinio', 'finalizada', 'congelada'];
       const unidadesFiltradas = Array.isArray(unidadesResp) 
         ? unidadesResp.filter((u: any) => estadosRelevantes.includes(u.estado))
@@ -117,7 +127,7 @@ export default function VisualizarEleccionesPage() {
   const renderUnidadCard = (u: any) => (
     <div key={u.id} className="relative group">
       <Link 
-        href={`/admin/nacional/visualizar/${u.id}`} 
+        href={`/admin/autonomico/visualizar/${u.id}`} 
         className="flex flex-col md:flex-row justify-between md:items-center bg-[#111827]/40 border border-white/5 hover:border-rose-500/30 rounded-[30px] p-5 md:p-6 transition-all hover:bg-[#111827]/80 hover:shadow-[0_10px_40px_rgba(225,29,72,0.1)] gap-4 md:gap-6"
       >
         <div className="flex-1 min-w-0">
@@ -193,7 +203,7 @@ export default function VisualizarEleccionesPage() {
         {/* Cabecera */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
           <div>
-            <Link href="/admin/nacional/dashboard" className="group flex items-center gap-2 text-white/30 hover:text-white transition-colors mb-6">
+            <Link href="/admin/autonomico/dashboard" className="group flex items-center gap-2 text-white/30 hover:text-white transition-colors mb-6">
               <div className="p-2 rounded-xl bg-white/5 border border-white/5 group-hover:border-white/20">
                 <ArrowLeft className="w-5 h-5" />
               </div>

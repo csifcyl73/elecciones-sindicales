@@ -12,19 +12,26 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = getAdminSupabase();
     
-    // Obtener las últimas 5 mesas enviadas
+    // Calculamos el umbral de 24 horas
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    // Obtener las últimas mesas enviadas en las últimas 24h
+    // Añadimos filtro de notificacion_borrada si existiera, o simplemente por tiempo
     const { data: mesas, error } = await supabase
       .from('mesas_electorales')
       .select(`
         id,
         nombre_identificador,
         fecha_envio,
+        notificacion_borrada,
         unidad:unidades_electorales(nombre),
         interventor:usuarios(nombre_completo)
       `)
       .not('fecha_envio', 'is', null)
+      .gt('fecha_envio', twentyFourHoursAgo)
+      .or('notificacion_borrada.is.null,notificacion_borrada.eq.false')
       .order('fecha_envio', { ascending: false })
-      .limit(5);
+      .limit(10);
 
     if (error) throw error;
 
@@ -33,3 +40,23 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { id } = await req.json();
+    const supabase = getAdminSupabase();
+    
+    // "Borramos" la notificación marcando un flag en la mesa
+    // Asumimos que hemos añadido la columna o usamos un sistema de meta de Supabase
+    const { error } = await supabase
+      .from('mesas_electorales')
+      .update({ notificacion_borrada: true })
+      .eq('id', id);
+
+    if (error) throw error;
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
