@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { LogOut, ClipboardList, Loader2, ArrowRight, Lock, Trash2 } from 'lucide-react';
+import { LogOut, ClipboardList, Loader2, ArrowRight, Lock, Trash2, MessageSquare } from 'lucide-react';
 
 export default function InterventorDashboard() {
   const router = useRouter();
@@ -97,6 +97,17 @@ export default function InterventorDashboard() {
         </div>
 
         <div className="flex items-center gap-2 md:gap-6 shrink-0">
+          <a
+            href="https://notebooklm.google.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 font-bold rounded-xl transition-colors shadow-sm text-sm md:text-base mr-2"
+            title="Asistente IA - Manual de Elecciones"
+          >
+            <MessageSquare className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
+            <span className="hidden xs:inline">Manual IA</span>
+          </a>
+          
           <div className="hidden sm:flex flex-col items-end">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Activo como</span>
             <span className="text-sm font-semibold text-gray-700">{userName}</span>

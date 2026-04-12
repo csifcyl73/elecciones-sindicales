@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { ArrowLeft, Loader2, Save, CheckCircle2, ShieldCheck, Mail, Users, Inbox, Building2, UploadCloud, MapPin, Lock } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, CheckCircle2, ShieldCheck, Mail, Users, Inbox, Building2, UploadCloud, MapPin, Lock, MessageSquare } from 'lucide-react';
 
 export default function FormularioEscrutinio() {
   const router = useRouter();
@@ -167,6 +167,19 @@ export default function FormularioEscrutinio() {
               </h1>
               <p className="text-xs text-gray-500 uppercase font-bold tracking-widest">{mesa.estado === 'enviada' ? 'MODIFICANDO ACTA EXISTENTE' : 'NUEVO REGISTRO'}</p>
             </div>
+        </div>
+        
+        <div className="shrink-0 ml-4">
+          <a
+            href="https://notebooklm.google.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 font-bold rounded-xl transition-colors shadow-sm text-sm"
+            title="Asistente IA - Manual de Elecciones"
+          >
+            <MessageSquare className="w-4 h-4 text-blue-500" />
+            <span className="hidden sm:inline">Manual / Ayuda IA</span>
+          </a>
         </div>
       </header>
 
