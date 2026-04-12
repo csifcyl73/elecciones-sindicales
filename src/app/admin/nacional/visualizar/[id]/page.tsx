@@ -96,6 +96,47 @@ const SemicircleChart = ({ data }: { data: { siglas: string; delegados: number; 
               to { transform: scale(1) translateY(0); opacity: 1; }
             }
             .animate-chart { animation: chartGrow 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+            /* MODO PDF BLANCO (IMPRESIÓN) - CORRECCIÓN LAB/OKLCH */
+            .pdf-mode-white {
+              background-color: #ffffff !important;
+              color: #000000 !important;
+            }
+            .pdf-mode-white * {
+              color: #111827 !important;
+              background-color: transparent !important;
+              border-color: #e2e8f0 !important;
+              background-image: none !important;
+              text-shadow: none !important;
+              filter: none !important;
+              backdrop-filter: none !important;
+              transition: none !important;
+              animation: none !important;
+              box-shadow: none !important;
+            }
+            .pdf-mode-white div[class*="bg-"], 
+            .pdf-mode-white .bg-white\\/5,
+            .pdf-mode-white .bg-\\[\\#111827\\]\\/60,
+            .pdf-mode-white table, 
+            .pdf-mode-white thead,
+            .pdf-mode-white tr {
+               background-color: #f8fafc !important;
+            }
+            .pdf-mode-white .text-rose-400 { color: #e11d48 !important; }
+            .pdf-mode-white .text-emerald-400 { color: #10b981 !important; }
+            .pdf-mode-white .text-amber-400 { color: #f59e0b !important; }
+            .pdf-mode-white .text-white\\/30, .pdf-mode-white .text-white\\/40, .pdf-mode-white .text-white\\/50, .pdf-mode-white .text-white\\/70 {
+               color: #94a3b8 !important;
+            }
+            .pdf-mode-white svg text { fill: #000000 !important; }
+            .pdf-mode-white [data-html2canvas-ignore="true"] { display: none !important; }
+            
+            /* Forzar el censo y resultados que usan colores específicos */
+            .pdf-mode-white .text-rose-400, .pdf-mode-white .text-red-500 { color: #b91c1c !important; }
+            .pdf-mode-white .text-emerald-400, .pdf-mode-white .text-green-500 { color: #15803d !important; }
+            .pdf-mode-white .text-amber-400 { color: #b45309 !important; }
+            .pdf-mode-white .text-white { color: #000000 !important; }
+            .pdf-mode-white h1, .pdf-mode-white h2, .pdf-mode-white h3 { color: #0f172a !important; }
           `}
         </style>
         {sectors.map((s) => (
@@ -168,8 +209,8 @@ export default function DetalleEleccionPage() {
   const [loading, setLoading] = useState(true);
   const [bloqueando, setBloqueando] = useState(false);
   const [datos, setDatos] = useState<any>(null);
-
   const [showModalBloqueo, setShowModalBloqueo] = useState(false);
+  const [generandoPDF, setGenerandoPDF] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -205,22 +246,301 @@ export default function DetalleEleccionPage() {
   };
 
   const handleDescargarPDF = async () => {
-    try {
-       const html2pdf = (await import('html2pdf.js')).default;
-       const element = document.getElementById('dashboard-pdf-content');
-       if (!element) throw new Error("Contenedor no encontrado");
+    if (generandoPDF) return;
+    setGenerandoPDF(true);
 
-       const opt = {
-         margin:       [10, 10, 10, 10] as [number, number, number, number],
-         filename:     `Informe_Electoral_${datos.unidad.nombre.replace(/ /g, '_')}.pdf`,
-         image:        { type: 'jpeg' as const, quality: 0.98 },
-         html2canvas:  { scale: 2, useCORS: true, letterRendering: true, backgroundColor: '#0a101f' },
-         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' as const }
+    try {
+       const { jsPDF } = await import('jspdf');
+
+       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+       const W = pdf.internal.pageSize.getWidth();
+       const H = pdf.internal.pageSize.getHeight();
+       const M = 15; // margen
+       let y = M;
+
+       // ── Helpers ──
+       const checkPage = (need: number) => {
+          if (y + need > H - M) { pdf.addPage(); y = M; }
        };
-       html2pdf().from(element).set(opt).save();
-    } catch (e) {
+
+       const drawLine = () => {
+          pdf.setDrawColor(200); pdf.setLineWidth(0.3);
+          pdf.line(M, y, W - M, y); y += 4;
+       };
+
+       const sectionTitle = (title: string) => {
+          checkPage(14);
+          pdf.setFillColor(16, 185, 129); // emerald-500
+          pdf.rect(M, y, 3, 8, 'F');
+          pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12); pdf.setTextColor(30, 41, 59);
+          pdf.text(title, M + 6, y + 6);
+          y += 14;
+       };
+
+       const labelValue = (label: string, value: string, xOffset = M) => {
+          pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); pdf.setTextColor(120);
+          pdf.text(label, xOffset, y);
+          y += 4;
+          pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10); pdf.setTextColor(30, 41, 59);
+          pdf.text(value, xOffset, y);
+          y += 7;
+       };
+
+       // ══════════════════════════════════════════════════════════════
+       // CABECERA
+       // ══════════════════════════════════════════════════════════════
+       pdf.setFillColor(15, 23, 42); // slate-900
+       pdf.rect(0, 0, W, 40, 'F');
+
+       pdf.setFont('helvetica', 'bold'); pdf.setFontSize(18); pdf.setTextColor(255);
+       pdf.text('INFORME ELECTORAL CSIF', M, 18);
+
+       pdf.setFontSize(9); pdf.setTextColor(180);
+       pdf.text(unidad.nombre.toUpperCase(), M, 27);
+
+       const estadoText = isBloqueada ? 'RESULTADOS BLOQUEADOS' : 'ESCRUTINIO ABIERTO';
+       pdf.setFontSize(8);
+       const estadoW = pdf.getTextWidth(estadoText) + 8;
+       if (isBloqueada) { pdf.setFillColor(59, 130, 246); } else { pdf.setFillColor(16, 185, 129); }
+       pdf.roundedRect(W - M - estadoW, 14, estadoW, 7, 2, 2, 'F');
+       pdf.setTextColor(255); pdf.setFontSize(7); pdf.setFont('helvetica', 'bold');
+       pdf.text(estadoText, W - M - estadoW + 4, 19);
+
+       // Fecha
+       pdf.setTextColor(120); pdf.setFontSize(7); pdf.setFont('helvetica', 'normal');
+       pdf.text(`Generado: ${new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, W - M - estadoW, 30);
+
+       y = 50;
+
+       // ══════════════════════════════════════════════════════════════
+       // DATOS DE LA UNIDAD
+       // ══════════════════════════════════════════════════════════════
+       sectionTitle('DATOS DE LA UNIDAD ELECTORAL');
+
+       const col1 = M; const col2 = M + 50; const col3 = M + 110;
+       const savedY = y;
+       labelValue('Proceso Electoral', unidad.proceso?.nombre || 'N/A', col1);
+       const y1 = y; y = savedY;
+       labelValue('Provincia', unidad.provincias?.nombre || 'N/A', col2);
+       const y2 = y; y = savedY;
+       labelValue('Sector', unidad.sectores?.nombre || 'N/A', col3);
+       y = Math.max(y1, y2, y);
+
+       const savedY2 = y;
+       labelValue('Censo Total', String(censoTotal), col1);
+       const y3 = y; y = savedY2;
+       const delTotal = isDoble ? ((unidad.del_tecnicos || 0) + (unidad.del_especialistas || 0)) : (unidad.delegados_a_elegir || 0);
+       labelValue('Delegados a Elegir', String(delTotal), col2);
+       const y4 = y; y = savedY2;
+       if (isDoble) {
+          labelValue('Modo Colegio', 'DOBLE COLEGIO', col3);
+       } else {
+          labelValue('Modo Colegio', 'ÚNICO', col3);
+       }
+       y = Math.max(y3, y4, y);
+
+       drawLine();
+
+       // ══════════════════════════════════════════════════════════════
+       // MÉTRICAS DE PARTICIPACIÓN
+       // ══════════════════════════════════════════════════════════════
+       sectionTitle('MÉTRICAS DE PARTICIPACIÓN');
+
+       const participacion = censoTotal > 0 ? ((votosEmitidosTotales / censoTotal) * 100).toFixed(2) : '0.00';
+
+       // Fila de métricas
+       const metricW = (W - 2 * M) / 4;
+       const metrics = [
+         { label: 'Participación', value: `${participacion}%` },
+         { label: 'Votos Blancos', value: String(votosBlancosTotales) },
+         { label: 'Votos Nulos', value: String(votosNulosTotales) },
+         { label: `Abstención (${abstencionPct}%)`, value: String(abstencionTotal) },
+       ];
+
+       checkPage(20);
+       metrics.forEach((m, i) => {
+          const mx = M + i * metricW;
+          pdf.setFillColor(248, 250, 252);
+          pdf.roundedRect(mx + 1, y, metricW - 2, 18, 2, 2, 'F');
+          pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7); pdf.setTextColor(120);
+          pdf.text(m.label, mx + 4, y + 6);
+          pdf.setFont('helvetica', 'bold'); pdf.setFontSize(14); pdf.setTextColor(30, 41, 59);
+          pdf.text(m.value, mx + 4, y + 15);
+       });
+       y += 25;
+
+       drawLine();
+
+       // ══════════════════════════════════════════════════════════════
+       // VOTOS POR CANDIDATURA
+       // ══════════════════════════════════════════════════════════════
+       sectionTitle('VOTOS POR CANDIDATURA');
+
+       const sindicatosArr = Object.entries(votosPorSindicatoGlobal)
+          .sort(([,a]: any, [,b]: any) => b.votos - a.votos);
+
+       // Cabecera de tabla
+       checkPage(10);
+       pdf.setFillColor(30, 41, 59);
+       pdf.rect(M, y, W - 2 * M, 8, 'F');
+       pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.setTextColor(255);
+       pdf.text('SINDICATO', M + 4, y + 5.5);
+       pdf.text('VOTOS', M + 70, y + 5.5);
+       pdf.text('% S/TOTAL', M + 100, y + 5.5);
+       pdf.text('UMBRAL 5%', M + 135, y + 5.5);
+       y += 8;
+
+       const umbral = votosCandidaturasTotales * 0.05;
+       sindicatosArr.forEach(([, data]: any, i: number) => {
+          checkPage(8);
+          if (i % 2 === 0) { pdf.setFillColor(248, 250, 252); pdf.rect(M, y, W - 2 * M, 7, 'F'); }
+          
+          const pct = votosCandidaturasTotales > 0 ? ((data.votos / votosCandidaturasTotales) * 100).toFixed(2) : '0.00';
+          const supera = data.votos >= umbral;
+
+          pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9);
+          pdf.setTextColor(data.siglas === 'CSIF' ? 16 : 30, data.siglas === 'CSIF' ? 185 : 41, data.siglas === 'CSIF' ? 129 : 59);
+          pdf.text(data.siglas, M + 4, y + 5);
+
+          pdf.setTextColor(60); pdf.setFont('helvetica', 'normal');
+          pdf.text(String(data.votos), M + 70, y + 5);
+          pdf.text(`${pct}%`, M + 100, y + 5);
+          
+          if (supera) {
+             pdf.setTextColor(16, 185, 129); pdf.text('SÍ', M + 140, y + 5);
+          } else {
+             pdf.setTextColor(220, 38, 38); pdf.text('NO', M + 140, y + 5);
+          }
+          y += 7;
+       });
+
+       // Total
+       checkPage(10);
+       pdf.setDrawColor(30, 41, 59); pdf.setLineWidth(0.5);
+       pdf.line(M, y, W - M, y); y += 2;
+       pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.setTextColor(30, 41, 59);
+       pdf.text('TOTAL VOTOS A CANDIDATURAS', M + 4, y + 5);
+       pdf.text(String(votosCandidaturasTotales), M + 70, y + 5);
+       y += 10;
+
+       drawLine();
+
+       // ══════════════════════════════════════════════════════════════
+       // REPARTO DE DELEGADOS
+       // ══════════════════════════════════════════════════════════════
+       sectionTitle('REPARTO DE DELEGADOS');
+
+       if (modoReparto !== 'oficial') {
+          checkPage(8);
+          pdf.setFont('helvetica', 'italic'); pdf.setFontSize(8);
+          pdf.setTextColor(180);
+          pdf.text(`Tipo de reparto: ${modoReparto === 'provisional' ? 'PROVISIONAL (ESCRUTINIO ABIERTO)' : 'DEFINITIVO'}`, M, y);
+          y += 8;
+       }
+
+       // Tabla delegados
+       checkPage(10);
+       pdf.setFillColor(16, 185, 129);
+       pdf.rect(M, y, W - 2 * M, 8, 'F');
+       pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.setTextColor(255);
+       pdf.text('SINDICATO', M + 4, y + 5.5);
+       pdf.text('DELEGADOS', M + 70, y + 5.5);
+       pdf.text('DIRECTOS', M + 105, y + 5.5);
+       pdf.text('POR RESTO', M + 135, y + 5.5);
+       y += 8;
+
+       delegadosARepartirGlobal.forEach((d: any, i: number) => {
+          checkPage(8);
+          if (i % 2 === 0) { pdf.setFillColor(240, 253, 244); pdf.rect(M, y, W - 2 * M, 7, 'F'); }
+
+          const siglas = d.sindicatos?.siglas || '?';
+          pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10);
+          pdf.setTextColor(siglas === 'CSIF' ? 16 : 30, siglas === 'CSIF' ? 185 : 41, siglas === 'CSIF' ? 129 : 59);
+          pdf.text(siglas, M + 4, y + 5);
+
+          pdf.setTextColor(30, 41, 59);
+          pdf.setFontSize(12);
+          pdf.text(String(d.delegados_totales), M + 75, y + 5);
+
+          pdf.setFontSize(9); pdf.setTextColor(100);
+          pdf.text(String(d.detalle_reparto?.directos ?? '-'), M + 110, y + 5);
+          pdf.text(String(d.detalle_reparto?.restos ?? '-'), M + 140, y + 5);
+          y += 7;
+       });
+
+       if (delegadosARepartirGlobal.length === 0) {
+          checkPage(10);
+          pdf.setFont('helvetica', 'italic'); pdf.setFontSize(9); pdf.setTextColor(150);
+          pdf.text('Sin datos de reparto disponibles.', M + 4, y + 5);
+          y += 10;
+       }
+
+       y += 5;
+       drawLine();
+
+       // ══════════════════════════════════════════════════════════════
+       // DESGLOSE POR MESAS
+       // ══════════════════════════════════════════════════════════════
+       sectionTitle('DESGLOSE POR MESAS ELECTORALES');
+
+       checkPage(10);
+       pdf.setFillColor(30, 41, 59);
+       pdf.rect(M, y, W - 2 * M, 8, 'F');
+       pdf.setFont('helvetica', 'bold'); pdf.setFontSize(7); pdf.setTextColor(255);
+       pdf.text('MESA ELECTORAL', M + 4, y + 5.5);
+       pdf.text('COLEGIO', M + 75, y + 5.5);
+       pdf.text('CENSO', M + 110, y + 5.5);
+       pdf.text('V. VÁLIDOS', M + 135, y + 5.5);
+       pdf.text('ESTADO', M + 160, y + 5.5);
+       y += 8;
+
+       mesas.forEach((m: any, i: number) => {
+          checkPage(8);
+          if (i % 2 === 0) { pdf.setFillColor(248, 250, 252); pdf.rect(M, y, W - 2 * M, 7, 'F'); }
+
+          const mVotosCand = votos.filter((v:any) => v.mesa_id === m.id).reduce((acc: number, v:any) => acc + (v.votos_obtenidos || 0), 0);
+          const mVotosValidos = mVotosCand + (m.votos_blancos || 0);
+          const cType = getColegio(m.id);
+          const cLabel = cType === 'tecnicos' ? 'Técnicos' : cType === 'especialistas' ? 'Especialist.' : 'Único';
+          const cleanName = m.nombre_identificador.replace(/\[TÉCNICOS\]\s*/i, '').replace(/\[ESPECIALISTAS\]\s*/i, '');
+          const enviado = m.fecha_envio ? 'Enviada' : 'Pendiente';
+
+          pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.setTextColor(30, 41, 59);
+          pdf.text(cleanName.substring(0, 35), M + 4, y + 5);
+
+          pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7); pdf.setTextColor(100);
+          pdf.text(cLabel, M + 75, y + 5);
+          pdf.text(String(m.censo_real || 0), M + 115, y + 5);
+
+          pdf.setFont('helvetica', 'bold'); pdf.setTextColor(16, 185, 129);
+          pdf.text(String(mVotosValidos), M + 140, y + 5);
+
+          pdf.setTextColor(m.fecha_envio ? 16 : 200, m.fecha_envio ? 185 : 100, m.fecha_envio ? 129 : 50);
+          pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7);
+          pdf.text(enviado, M + 160, y + 5);
+          y += 7;
+       });
+
+       // ══════════════════════════════════════════════════════════════
+       // PIE DE PÁGINA
+       // ══════════════════════════════════════════════════════════════
+       const totalPages = pdf.internal.pages.length - 1;
+       for (let p = 1; p <= totalPages; p++) {
+          pdf.setPage(p);
+          pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7); pdf.setTextColor(180);
+          pdf.text(`CSIF — Informe Electoral Confidencial`, M, H - 7);
+          pdf.text(`Página ${p} de ${totalPages}`, W - M - 25, H - 7);
+       }
+
+       // Guardar
+       const cleanName = datos.unidad.nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "_");
+       pdf.save(`Informe_CSIF_${cleanName}.pdf`);
+
+    } catch (e: any) {
        console.error("Error generando PDF:", e);
-       alert("Ocurrió un error intentando generar el PDF.");
+       alert("Error al generar el PDF: " + e.message);
+    } finally {
+       setGenerandoPDF(false);
     }
   };
 
@@ -442,8 +762,13 @@ export default function DetalleEleccionPage() {
             </div>
 
             <div data-html2canvas-ignore="true" className="flex flex-col sm:flex-row gap-4 items-end">
-                <button onClick={handleDescargarPDF} className="px-6 py-4 bg-white/5 hover:bg-white/10 border border-white/10 active:scale-95 transition-all rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-sm flex items-center gap-2 text-white">
-                   <FileDown className="w-5 h-5 text-emerald-400" /> Informe PDF
+                <button 
+                  onClick={handleDescargarPDF} 
+                  disabled={generandoPDF}
+                  className="px-6 py-4 bg-white/5 hover:bg-white/10 border border-white/10 active:scale-95 transition-all rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-sm flex items-center gap-2 text-white disabled:opacity-50"
+                >
+                   {generandoPDF ? <Loader2 className="w-5 h-5 animate-spin text-emerald-400" /> : <FileDown className="w-5 h-5 text-emerald-400" />}
+                   {generandoPDF ? 'Generando Informe...' : 'Informe PDF'}
                 </button>
 
                 {!isBloqueada && (
