@@ -39,6 +39,12 @@ export default function VisualizarEleccionesPage() {
 
   useEffect(() => {
     loadData();
+    
+    // Solicitar permisos para notificaciones del navegador
+    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+      Notification.requestPermission();
+    }
+
     const interval = setInterval(loadNotifications, 10000); // Polling cada 10s
     loadNotifications();
     return () => clearInterval(interval);
@@ -66,6 +72,13 @@ export default function VisualizarEleccionesPage() {
           if (lastNotifId && data[0].id !== lastNotifId) {
             setIsNewNotif(true);
             setTimeout(() => setIsNewNotif(false), 5000);
+
+            // Disparar notificación nativa del navegador
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('Nuevo Envío Detectado', {
+                body: `Se han recibido datos de ${data[0].nombre_identificador} (${data[0].unidad?.nombre || 'Unidad desconocida'})`,
+              });
+            }
           }
           setLastNotifId(data[0].id);
         }

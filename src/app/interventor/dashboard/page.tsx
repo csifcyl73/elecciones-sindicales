@@ -73,7 +73,7 @@ export default function InterventorDashboard() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push('/interventor');
+    router.replace('/');
   };
 
   // Ordenar: editables primero, bloqueadas al final

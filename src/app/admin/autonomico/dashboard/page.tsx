@@ -110,7 +110,7 @@ export default function AdminAutonomicoDashboard() {
   const handleLogout = async () => {
     setLoggingOut(true);
     await supabase.auth.signOut();
-    router.replace('/admin/autonomico');
+    router.replace('/');
   };
 
   if (checkingAuth) {

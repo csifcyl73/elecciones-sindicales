@@ -485,14 +485,10 @@ function ConfigurarEleccionesSPA() {
                       if (u) {
                         setFormData(f => ({
                           ...f, 
-                          unidad_id: u.id.toString(), 
-                          provincia_id: u.provincia_id?.toString() || f.provincia_id, 
-                          sector_id: u.sector_id?.toString() || f.sector_id, 
-                          tipo_organo_id: u.tipo_organo_id?.toString() || f.tipo_organo_id,
-                          ccaa_id: u.ccaa_id?.toString() || f.ccaa_id
+                          unidad_id: u.id.toString()
                         }));
                       }
-                    }} 
+                    }}  
                     placeholder="SELECCIONA UNIDAD ELECTORAL..." 
                  />
               </div>

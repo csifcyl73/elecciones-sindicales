@@ -116,7 +116,7 @@ export default function AdminNacionalDashboard() {
   const handleLogout = async () => {
     setLoggingOut(true);
     await supabase.auth.signOut();
-    router.replace('/admin/nacional');
+    router.replace('/');
   };
 
   if (checkingAuth) {
