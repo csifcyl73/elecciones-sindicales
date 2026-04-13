@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { ArrowLeft, Loader2, Save, CheckCircle2, ShieldCheck, Mail, Users, Inbox, Building2, UploadCloud, MapPin, Lock, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, CheckCircle2, ShieldCheck, Mail, Users, Inbox, Building2, MapPin, Lock, MessageSquare } from 'lucide-react';
 
 export default function FormularioEscrutinio() {
   const router = useRouter();
@@ -307,15 +307,6 @@ export default function FormularioEscrutinio() {
                      onChange={(e) => setObservaciones(e.target.value)}
                      className="w-full bg-gray-50 border-2 border-gray-200 p-4 rounded-xl focus:border-blue-500 outline-none transition-all resize-y text-gray-700 font-medium"
                  />
-            </div>
-            <div>
-                <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Acta Oficial Escaneada</h2>
-                <div className="border-2 border-dashed border-gray-300 bg-gray-50 rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-100 transition-colors">
-                    <UploadCloud className="w-10 h-10 text-gray-400 mb-2" />
-                    <p className="font-bold text-gray-600 mb-1">Haz clic o arrastra el documento del acta (PDF/JPG)</p>
-                    <p className="text-xs text-gray-400">Tamaño máximo: 5MB</p>
-                    <input type="file" className="hidden" />
-                </div>
             </div>
          </div>
 

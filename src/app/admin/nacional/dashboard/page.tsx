@@ -18,8 +18,44 @@ const supabase = createClient();
 
 const menuItems = [
   {
+    id: 'configurar-elecciones',
+    label: 'Alta nuevo proceso electoral',
+    description: 'Definir parámetros y configuración del proceso electoral',
+    icon: Settings2,
+    color: 'from-violet-500 to-purple-700',
+    shadow: 'shadow-violet-500/30',
+    href: '/admin/nacional/configurar-elecciones',
+  },
+  {
+    id: 'unidades',
+    label: 'Gestión de procesos electorales activos',
+    description: 'Administrar elecciones activas y en configuración',
+    icon: Database,
+    color: 'from-emerald-500 to-teal-600',
+    shadow: 'shadow-emerald-500/30',
+    href: '/admin/nacional/gestion-unidades',
+  },
+  {
+    id: 'visualizar-elecciones',
+    label: 'Visualizador de elecciones',
+    description: 'Consultar resultados y estado de las elecciones',
+    icon: Eye,
+    color: 'from-rose-500 to-pink-600',
+    shadow: 'shadow-rose-500/30',
+    href: '/admin/nacional/visualizar',
+  },
+  {
+    id: 'interventor-nacional',
+    label: 'Interventor nacional',
+    description: 'Acceso de emergencia para carga de datos y suplencia de interventores',
+    icon: ShieldCheck,
+    color: 'from-blue-600 to-cyan-700',
+    shadow: 'shadow-blue-500/30',
+    href: '/admin/nacional/interventor-nacional',
+  },
+  {
     id: 'alta-autonomico',
-    label: 'Gestionar administradores autonómicos',
+    label: 'Administradores autonómicos',
     description: 'Registrar y administrar administradores de comunidad autónoma',
     icon: UserPlus,
     color: 'from-emerald-500 to-teal-600',
@@ -28,7 +64,7 @@ const menuItems = [
   },
   {
     id: 'gestion-interventores',
-    label: 'Alta interventor',
+    label: 'Interventores',
     description: 'Dar de alta a un interventor de mesa electoral',
     icon: ShieldCheck,
     color: 'from-blue-500 to-indigo-600',
@@ -36,13 +72,13 @@ const menuItems = [
     href: '/admin/nacional/gestion-interventores',
   },
   {
-    id: 'configurar-elecciones',
-    label: 'Configurar elecciones',
-    description: 'Definir parámetros y configuración del proceso electoral',
+    id: 'gestion-sindicatos',
+    label: 'Sindicatos',
+    description: 'Administrar el listado de organizaciones sindicales',
     icon: Settings2,
-    color: 'from-violet-500 to-purple-700',
-    shadow: 'shadow-violet-500/30',
-    href: '/admin/nacional/configurar-elecciones',
+    color: 'from-orange-400 to-amber-600',
+    shadow: 'shadow-orange-500/30',
+    href: '/admin/nacional/gestion-sindicatos',
   },
   {
     id: 'ejecucion-informes',
@@ -52,42 +88,6 @@ const menuItems = [
     color: 'from-amber-500 to-orange-600',
     shadow: 'shadow-amber-500/30',
     href: '/admin/nacional/informes',
-  },
-  {
-    id: 'unidades',
-    label: 'Gestor de procesos electorales activos',
-    description: 'Administrar elecciones activas y en configuración',
-    icon: Database,
-    color: 'from-emerald-500 to-teal-600',
-    shadow: 'shadow-emerald-500/30',
-    href: '/admin/nacional/gestion-unidades',
-  },
-  {
-    id: 'visualizar-elecciones',
-    label: 'Visualizar elecciones',
-    description: 'Consultar resultados y estado de las elecciones',
-    icon: Eye,
-    color: 'from-rose-500 to-pink-600',
-    shadow: 'shadow-rose-500/30',
-    href: '/admin/nacional/visualizar',
-  },
-  {
-    id: 'interventor-nacional',
-    label: 'Interventor Nacional (Soporte)',
-    description: 'Acceso de emergencia para carga de datos y suplencia de interventores',
-    icon: ShieldCheck,
-    color: 'from-blue-600 to-cyan-700',
-    shadow: 'shadow-blue-500/30',
-    href: '/admin/nacional/interventor-nacional',
-  },
-  {
-    id: 'gestion-sindicatos',
-    label: 'Gestión Sindicatos',
-    description: 'Administrar el listado de organizaciones sindicales',
-    icon: Settings2,
-    color: 'from-orange-400 to-amber-600',
-    shadow: 'shadow-orange-500/30',
-    href: '/admin/nacional/gestion-sindicatos',
   },
 ];
 
@@ -181,8 +181,7 @@ export default function AdminNacionalDashboard() {
           <p className="mt-3 text-white/50 text-lg">Selecciona una opción para continuar.</p>
         </div>
 
-        {/* Grid de menú */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto md:mx-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto md:mx-0">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
