@@ -176,12 +176,8 @@ function ConfigurarEleccionesSPA() {
       ]);
 
       if (provRes.data) {
-        if (userCom) {
-          const filtradas = provRes.data.filter((p: any) => p.ccaa?.nombre?.toUpperCase() === userCom.toUpperCase());
-          setProvincias(filtradas);
-        } else {
-          setProvincias(provRes.data);
-        }
+        // En lugar de filtrar por 'comunidad', mostramos todas para evitar problemas de coincidencias en los nombres (tildes, mayúsculas, etc.)
+        setProvincias(provRes.data);
       }
       if (sectRes.data) setSectores(sectRes.data);
       if (organRes.data) setOrganos(organRes.data);
