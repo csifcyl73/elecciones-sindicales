@@ -21,16 +21,25 @@ const supabase = createClient();
 const menuItems = [
   {
     id: 'configurar-elecciones',
-    label: 'Configurar elecciones',
-    description: 'Definir parámetros del proceso electoral en tu comunidad',
+    label: 'Alta nuevo proceso electoral',
+    description: 'Definir parámetros y configuración del proceso electoral',
     icon: Settings2,
     color: 'from-violet-500 to-purple-700',
     shadow: 'shadow-violet-500/30',
     href: '/admin/autonomico/configurar-elecciones',
   },
   {
+    id: 'unidades',
+    label: 'Gestión de procesos electorales activos',
+    description: 'Administrar elecciones activas y en configuración',
+    icon: Database,
+    color: 'from-emerald-500 to-teal-600',
+    shadow: 'shadow-emerald-500/30',
+    href: '/admin/autonomico/gestion-unidades',
+  },
+  {
     id: 'visualizar-elecciones',
-    label: 'Visualizar elecciones',
+    label: 'Visualizador de elecciones',
     description: 'Consultar resultados y estado de las elecciones',
     icon: Eye,
     color: 'from-rose-500 to-pink-600',
@@ -38,40 +47,31 @@ const menuItems = [
     href: '/admin/autonomico/visualizar',
   },
   {
-    id: 'unidades',
-    label: 'Gestionar elecciones activas',
-    description: 'Editar elecciones configuradas en tu ámbito',
-    icon: Database,
-    color: 'from-emerald-500 to-teal-600',
-    shadow: 'shadow-emerald-500/30',
-    href: '/admin/autonomico/gestion-unidades',
-  },
-  {
-    id: 'gestion-sindicatos',
-    label: 'Gestionar sindicatos',
-    description: 'Dar de alta, editar o eliminar sindicatos',
-    icon: ListChecks,
-    color: 'from-cyan-500 to-blue-600',
-    shadow: 'shadow-cyan-500/30',
-    href: '/admin/autonomico/gestion-sindicatos',
+    id: 'interventor-autonomico',
+    label: 'Interventor autonómico',
+    description: 'Acceso de emergencia para carga de datos y suplencia de interventores',
+    icon: ShieldCheck,
+    color: 'from-blue-600 to-cyan-700',
+    shadow: 'shadow-blue-500/30',
+    href: '/admin/autonomico/interventor-autonomico',
   },
   {
     id: 'gestion-interventores',
-    label: 'Alta de interventor',
-    description: 'Dar de alta a interventores de mesa electoral',
+    label: 'Interventores',
+    description: 'Dar de alta a un interventor de mesa electoral',
     icon: ShieldCheck,
     color: 'from-blue-500 to-indigo-600',
     shadow: 'shadow-blue-500/30',
     href: '/admin/autonomico/gestion-interventores',
   },
   {
-    id: 'interventor-autonomico',
-    label: 'Interventor autonómico',
-    description: 'Acceder a formularios de tus procesos electorales',
-    icon: UserSearch,
-    color: 'from-amber-400 to-orange-600',
-    shadow: 'shadow-amber-500/30',
-    href: '/admin/autonomico/interventor-autonomico',
+    id: 'gestion-sindicatos',
+    label: 'Sindicatos',
+    description: 'Administrar el listado de organizaciones sindicales',
+    icon: Settings2,
+    color: 'from-orange-400 to-amber-600',
+    shadow: 'shadow-orange-500/30',
+    href: '/admin/autonomico/gestion-sindicatos',
   },
 ];
 
@@ -186,8 +186,8 @@ export default function AdminAutonomicoDashboard() {
           <p className="mt-4 text-white/50 text-lg">Selecciona una opción para continuar.</p>
         </div>
 
-        {/* Grid de menú — 2x2 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl">
+        {/* Grid de menú */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto md:mx-0">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
