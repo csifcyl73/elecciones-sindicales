@@ -22,53 +22,23 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Falta parámetro comunidad' }, { status: 400 });
     }
 
-    // Primero obtenemos el ID de la CCAA
-    const { data: ccaaData, error: ccaaError } = await supabase
-      .from('ccaa')
-      .select('id')
-      .ilike('nombre', comunidad)
-      .single();
+    const normalize = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
-    if (ccaaError || !ccaaData) {
-      // Si no se encuentra CCAA exacta, intentar con provincias
-      // Buscar provincias cuyo nombre de CCAA coincida
-      const { data: provData } = await supabase
-        .from('provincias')
-        .select('id, ccaa_id, ccaa(nombre)')
-        .ilike('ccaa.nombre', `%${comunidad}%`);
+    // Obtener todas las CCAA y buscar coincidencia ignorando tildes y mayúsculas
+    const { data: allCcaa, error: ccaaError } = await supabase.from('ccaa').select('id, nombre');
+    if (ccaaError) throw ccaaError;
 
-      if (!provData || provData.length === 0) {
-        return NextResponse.json([]);
-      }
+    const matchedCcaa = allCcaa?.find(c => normalize(c.nombre) === normalize(comunidad));
 
-      const provinciaIds = provData.map((p: any) => p.id);
-
-      const { data, error } = await supabase
-        .from('unidades_electorales')
-        .select(`
-          *,
-          ccaa(nombre),
-          provincias(nombre),
-          sectores(nombre),
-          tipos_organos(nombre),
-          proceso:procesos_electorales(nombre),
-          mesas_electorales(
-            *,
-            usuarios(nombre_completo)
-          )
-        `)
-        .in('provincia_id', provinciaIds)
-        .order('nombre', { ascending: true });
-
-      if (error) throw error;
-      return NextResponse.json(data || []);
+    if (!matchedCcaa) {
+      return NextResponse.json([]);
     }
 
     // Si encontramos la CCAA, buscar las provincias de esa CCAA
     const { data: provincias } = await supabase
       .from('provincias')
       .select('id')
-      .eq('ccaa_id', ccaaData.id);
+      .eq('ccaa_id', matchedCcaa.id);
 
     if (!provincias || provincias.length === 0) {
       return NextResponse.json([]);
