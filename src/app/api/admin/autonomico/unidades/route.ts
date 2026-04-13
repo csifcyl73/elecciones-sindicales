@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
           usuarios(nombre_completo)
         )
       `)
-      .in('provincia_id', provinciaIds)
+      .or(`ccaa_id.eq.${matchedCcaa.id},provincia_id.in.(${provinciaIds.join(',')})`)
       .order('nombre', { ascending: true });
 
     if (error) throw error;
