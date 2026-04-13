@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { requireAuth } from '@/lib/auth';
 
 // Crear el cliente de administración solo cuando se necesita
 const getSupabaseAdmin = () => {
@@ -16,6 +17,9 @@ const getSupabaseAdmin = () => {
 };
 
 export async function POST(req: NextRequest) {
+  const { error: authError } = await requireAuth(['super_nacional']);
+  if (authError) return authError;
+
   try {
     const { nombre, apellidos, comunidad, usuario, password } = await req.json();
 

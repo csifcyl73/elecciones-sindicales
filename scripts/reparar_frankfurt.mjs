@@ -4,9 +4,14 @@ dotenv.config({ path: '.env.local' });
 
 async function runFix() {
   const { Client } = pg;
-  // Probando con el usuario estándar 'postgres' sobre el Pooler IPv4
+  
+  if (!process.env.DATABASE_URL) {
+    console.error('❌ ERROR: Configura DATABASE_URL en .env.local');
+    process.exit(1);
+  }
+
   const client = new Client({
-    connectionString: "postgresql://postgres:y3JNG7Ci%23BQBjL*@aws-0-eu-central-1.pooler.supabase.com:6543/postgres",
+    connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
   });
 

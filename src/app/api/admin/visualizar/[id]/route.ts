@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +10,9 @@ const getAdminSupabase = () => createClient(
 );
 
 export async function GET(req: NextRequest, context: any) {
+  const { error: authErr } = await requireAuth(['super_nacional', 'super_autonomico']);
+  if (authErr) return authErr;
+
   try {
     const { id } = await context.params;
     const supabase = getAdminSupabase();
@@ -73,6 +77,9 @@ export async function GET(req: NextRequest, context: any) {
 }
 
 export async function POST(req: NextRequest, context: any) {
+  const { error: authErr } = await requireAuth(['super_nacional', 'super_autonomico']);
+  if (authErr) return authErr;
+
   try {
      const { id } = await context.params;
      const supabase = getAdminSupabase();

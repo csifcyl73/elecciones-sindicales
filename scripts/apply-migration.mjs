@@ -2,14 +2,19 @@ import pg from 'pg';
 import fs from 'fs';
 import path from 'path';
 
+import 'dotenv/config';
+
 const { Client } = pg;
 
-// En lugar de un string hardcodeado, usaremos la información del proyecto nuevo
-// Password: y3JNG7Ci#BQBjL* -> Codificado: y3JNG7Ci%23BQBjL%2A
-const DB_HOST = "aws-0-eu-west-1.pooler.supabase.com"; 
-const DB_USER = "postgres.hnzbqgytvwfsxgsyakyc";
-const DB_PASS = "y3JNG7Ci%23BQBjL%2A";
-const CONNECTION_STRING = `postgresql://${DB_USER}:${DB_PASS}@${DB_HOST}:6543/postgres`;
+// IMPORTANTE: Configurar DATABASE_URL en .env.local
+// Formato: postgresql://usuario:password@host:puerto/database
+const CONNECTION_STRING = process.env.DATABASE_URL;
+
+if (!CONNECTION_STRING) {
+  console.error('❌ ERROR: La variable de entorno DATABASE_URL no está configurada.');
+  console.error('   Configúrala en .env.local con el formato: postgresql://usuario:password@host:puerto/database');
+  process.exit(1);
+}
 
 async function applyMigration() {
   const client = new Client({
@@ -35,21 +40,7 @@ async function applyMigration() {
   } catch (err) {
     console.error('❌ Error during migration:', err);
     if (err.message.includes('getaddrinfo')) {
-      console.log('TIP: Host resolution failed. Attempting with direct IPv6 if available...');
-      // Trying with the IPv6 address from nslookup before
-      const ipv6String = "postgresql://postgres:y3JNG7Ci%23BQBjL%2A@[2a05:d014:1c06:5f46:341:ded5:db4f:8f8b]:5432/postgres";
-      const clientV6 = new Client({ 
-        connectionString: ipv6String,
-        ssl: { rejectUnauthorized: false }
-      });
-      try {
-        console.log('Attempting IPv6 connection...');
-        await clientV6.connect();
-        await clientV6.query(fs.readFileSync(path.resolve('supabase/migrations/20260330100000_schema_inicial.sql'), 'utf8'));
-        console.log('✅ Migration applied successfully via IPv6!');
-      } catch (err2) {
-        console.error('❌ IPv6 attempt also failed:', err2);
-      }
+      console.log('TIP: Verifica que DATABASE_URL apunta al host correcto.');
     }
   } finally {
     await client.end().catch(() => {});

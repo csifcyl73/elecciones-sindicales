@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { requireAuth } from '@/lib/auth';
 
 const getSupabaseAdmin = () => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -11,6 +12,9 @@ const getSupabaseAdmin = () => {
 };
 
 export async function GET() {
+  const { error: authError } = await requireAuth(['super_nacional', 'super_autonomico']);
+  if (authError) return authError;
+
   try {
     const supabaseAdmin = getSupabaseAdmin();
     // Listar solo interventores
@@ -25,6 +29,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const { error: authErr } = await requireAuth(['super_nacional', 'super_autonomico']);
+  if (authErr) return authErr;
+
   try {
     let { nombre, email, password, telefono, provincia_id } = await req.json();
 
@@ -68,6 +75,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const { error: authErr } = await requireAuth(['super_nacional', 'super_autonomico']);
+  if (authErr) return authErr;
+
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
@@ -86,6 +96,9 @@ export async function DELETE(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const { error: authErr } = await requireAuth(['super_nacional', 'super_autonomico']);
+  if (authErr) return authErr;
+
   try {
     let { id, nombre, email, password, telefono } = await req.json();
 

@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/client';
 import { 
   ArrowLeft, 
   Loader2, 
@@ -17,10 +17,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 
-const supabase = createClient(
-  (process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'),
-  (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder')
-);
+const supabase = createClient();
 
 export default function ProxyFormularioEscrutinio() {
   const router = useRouter();

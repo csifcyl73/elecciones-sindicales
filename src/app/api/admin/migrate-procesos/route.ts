@@ -1,7 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
+  const { error: authErr } = await requireAuth(['super_nacional']);
+  if (authErr) return authErr;
+
   const supabase = createClient(
     (process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'),
     (process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder')

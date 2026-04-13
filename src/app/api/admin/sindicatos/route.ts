@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { requireAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -15,6 +16,9 @@ const getSupabaseAdmin = () => {
 };
 
 export async function GET() {
+  const { error: authErr } = await requireAuth(['super_nacional', 'super_autonomico']);
+  if (authErr) return authErr;
+
   try {
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase.from('sindicatos').select('*').order('siglas');
@@ -26,6 +30,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const { error: authErr } = await requireAuth(['super_nacional', 'super_autonomico']);
+  if (authErr) return authErr;
+
   try {
     const body = await request.json();
     const { siglas, nombre_completo } = body;
@@ -79,6 +86,9 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const { error: authErr } = await requireAuth(['super_nacional', 'super_autonomico']);
+  if (authErr) return authErr;
+
   try {
     const body = await request.json();
     const { id, siglas, nombre_completo } = body;
@@ -103,6 +113,9 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const { error: authErr } = await requireAuth(['super_nacional', 'super_autonomico']);
+  if (authErr) return authErr;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

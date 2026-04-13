@@ -1,7 +1,12 @@
 import pg from 'pg';
+import 'dotenv/config';
 const { Client } = pg;
 
-const CONNECTION_STRING = `postgresql://postgres:y3JNG7Ci%23BQBjL%2A@[2a05:d014:1c06:5f46:341:ded5:db4f:8f8b]:5432/postgres`;
+const CONNECTION_STRING = process.env.DATABASE_URL;
+if (!CONNECTION_STRING) {
+  console.error('❌ ERROR: Configura DATABASE_URL en .env.local');
+  process.exit(1);
+}
 
 async function addMunicipio() {
   const client = new Client({

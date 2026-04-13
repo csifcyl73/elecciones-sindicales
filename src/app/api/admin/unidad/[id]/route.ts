@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +10,9 @@ const getAdmin = () => createClient(
 );
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { error: authErr } = await requireAuth(['super_nacional', 'super_autonomico']);
+  if (authErr) return authErr;
+
   try {
     const supabase = getAdmin();
     // Await params in Next.js 15+ as required for dynamic route segments

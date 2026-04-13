@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +11,9 @@ const getAdmin = () => createClient(
 
 // Devuelve las unidades electorales filtradas por comunidad autónoma
 export async function GET(req: NextRequest) {
+  const { error: authErr } = await requireAuth(['super_nacional', 'super_autonomico']);
+  if (authErr) return authErr;
+
   try {
     const supabase = getAdmin();
     const comunidad = req.nextUrl.searchParams.get('comunidad');

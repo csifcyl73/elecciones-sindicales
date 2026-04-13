@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { requireAuth } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
+  const { error: authErr } = await requireAuth(['super_nacional', 'super_autonomico']);
+  if (authErr) return authErr;
+
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
     const { email, nombre, password, pin } = await req.json();

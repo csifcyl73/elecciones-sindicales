@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { requireAuth } from '@/lib/auth';
 
 const getSupabaseAdmin = () => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -11,6 +12,9 @@ const getSupabaseAdmin = () => {
 };
 
 export async function GET() {
+  const { error: authError } = await requireAuth(['super_nacional']);
+  if (authError) return authError;
+
   try {
     const supabaseAdmin = getSupabaseAdmin();
     // Listar usuarios (por defecto trae máximo 1000)
@@ -27,6 +31,9 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
+  const { error: authError } = await requireAuth(['super_nacional']);
+  if (authError) return authError;
+
   try {
     const { id, nombre, apellidos, comunidad, email } = await req.json();
     if (!id) return NextResponse.json({ error: 'Falta ID de usuario' }, { status: 400 });
@@ -55,6 +62,9 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const { error: authError } = await requireAuth(['super_nacional']);
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');

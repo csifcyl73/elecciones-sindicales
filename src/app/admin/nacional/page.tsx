@@ -2,13 +2,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Mail, Inbox, FileText, Users, ArrowLeft, Loader2 } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
-const supabase = createClient(
-  (process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'),
-  (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder')
-);
+const supabase = createClient();
 
 export default function AdminNacionalLogin() {
   const router = useRouter();

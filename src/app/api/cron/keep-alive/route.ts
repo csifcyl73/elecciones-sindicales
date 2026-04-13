@@ -4,11 +4,11 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
-  // Opcional: Solo permitir peticiones de Vercel Cron
-  // const authHeader = req.headers.get('authorization');
-  // if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-  //   // return new Response('Unauthorized', { status: 401 });
-  // }
+  // Verificar que la petición viene de Vercel Cron
+  const authHeader = req.headers.get('authorization');
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return new Response('Unauthorized', { status: 401 });
+  }
 
   try {
     const supabase = createClient(

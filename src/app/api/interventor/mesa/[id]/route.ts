@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth';
 
 const getClient = () => createClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'),
@@ -7,6 +8,9 @@ const getClient = () => createClient(
 );
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { error: authErr } = await requireAuth(['interventor', 'super_nacional', 'super_autonomico']);
+  if (authErr) return authErr;
+
   try {
      const mesa_id = (await params).id;
      if (!mesa_id) return NextResponse.json({ error: 'ID faltante' }, { status: 400 });
@@ -39,6 +43,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { error: authErr } = await requireAuth(['interventor', 'super_nacional', 'super_autonomico']);
+  if (authErr) return authErr;
+
   try {
      const mesa_id = (await params).id;
      const body = await req.json();
