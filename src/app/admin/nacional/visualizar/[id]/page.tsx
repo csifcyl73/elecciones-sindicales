@@ -785,10 +785,14 @@ export default function DetalleEleccionPage() {
            {isDoble && <div className="absolute top-0 right-8 bg-amber-500/20 text-amber-500 font-black text-[10px] px-4 py-1 rounded-b-xl tracking-widest border border-amber-500/30 uppercase border-t-0">Modo Dos Colegios Habilitado</div>}
            <h2 className="text-2xl font-black uppercase tracking-tighter mb-6">{unidad.nombre}</h2>
            
-           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+           <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
               <div className="space-y-1">
                  <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">Proceso Electoral</p>
                  <p className="text-sm font-bold text-amber-400 uppercase">{unidad.proceso?.nombre || 'NO PROCEDE'}</p>
+              </div>
+              <div className="space-y-1">
+                 <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">Año</p>
+                 <p className="text-sm font-bold text-rose-400 uppercase">{unidad.anio || '-'}</p>
               </div>
               <div className="space-y-1">
                  <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">Provincia / Municipio</p>
