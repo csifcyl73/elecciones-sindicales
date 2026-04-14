@@ -128,7 +128,7 @@ export default function VisualizarEleccionesPage() {
   const optSectores   = [...new Set(unidades.map(u => u.sectores?.nombre).filter(Boolean))].sort();
   const optUnidades   = [...new Set(unidades.map(u => u.nombre).filter(Boolean))].sort();
   const optOrganos    = [...new Set(unidades.map(u => u.tipos_organos?.nombre).filter(Boolean))].sort();
-  const optAnyos      = [...new Set(unidades.map(u => String(u.anyo)).filter(v => v && v !== 'undefined'))].sort().reverse();
+  const optAnyos      = [...new Set(unidades.map(u => String(u.anio)).filter(v => v && v !== 'undefined' && v !== 'null'))].sort().reverse();
 
   const toggleFilter = (set: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
     set(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
@@ -149,7 +149,7 @@ export default function VisualizarEleccionesPage() {
     if (filterSectores.length > 0   && !filterSectores.includes(u.sectores?.nombre))    return false;
     if (filterUnidades.length > 0   && !filterUnidades.includes(u.nombre))              return false;
     if (filterOrganos.length > 0    && !filterOrganos.includes(u.tipos_organos?.nombre)) return false;
-    if (filterAnyos.length > 0      && !filterAnyos.includes(String(u.anyo)))           return false;
+    if (filterAnyos.length > 0      && !filterAnyos.includes(String(u.anio)))           return false;
     return true;
   });
 
@@ -188,7 +188,7 @@ export default function VisualizarEleccionesPage() {
           
             <div className="flex flex-wrap items-center gap-3 mt-4">
             <div className="flex items-center gap-1.5 text-white/40 text-[9px] font-bold uppercase tracking-widest">
-              <Calendar className="w-3 h-3 text-rose-400/50" /> {u.anyo || 'N/A'}
+              <Calendar className="w-3 h-3 text-rose-400/50" /> {u.anio || 'N/A'}
             </div>
             <div className="flex items-center gap-1.5 text-white/40 text-[9px] font-bold uppercase tracking-widest">
               <MapPin className="w-3 h-3 text-rose-400/50" /> {u.provincias?.nombre || 'General'}
