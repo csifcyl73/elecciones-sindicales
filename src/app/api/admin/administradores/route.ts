@@ -35,7 +35,7 @@ export async function PATCH(req: NextRequest) {
   if (authError) return authError;
 
   try {
-    const { id, nombre, apellidos, comunidad, email } = await req.json();
+    const { id, nombre, apellidos, comunidad, email, password } = await req.json();
     if (!id) return NextResponse.json({ error: 'Falta ID de usuario' }, { status: 400 });
 
     const supabaseAdmin = getSupabaseAdmin();
@@ -51,6 +51,9 @@ export async function PATCH(req: NextRequest) {
     };
 
     if (email) updateData.email = email;
+    if (password && password.trim() !== '') {
+      updateData.password = password;
+    }
 
     const { data, error } = await supabaseAdmin.auth.admin.updateUserById(id, updateData);
     if (error) throw error;

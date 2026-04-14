@@ -35,6 +35,7 @@ export default function GestionAdminsAutonomicosPage() {
   const [editApellidos, setEditApellidos] = useState('');
   const [editComunidad, setEditComunidad] = useState('');
   const [editEmail, setEditEmail] = useState('');
+  const [editPassword, setEditPassword] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -67,18 +68,27 @@ export default function GestionAdminsAutonomicosPage() {
     e.preventDefault();
     setSaving(true);
     try {
+      const payload: any = { 
+        id: selectedAdmin.id, 
+        nombre: editNombre.toUpperCase(), 
+        apellidos: editApellidos.toUpperCase(),
+        comunidad: editComunidad.toUpperCase(),
+        email: editEmail
+      };
+      
+      if (editPassword.trim() !== '') {
+        payload.password = editPassword;
+      }
+
       const response = await fetch('/api/admin/administradores', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          id: selectedAdmin.id, 
-          nombre: editNombre.toUpperCase(), 
-          apellidos: editApellidos.toUpperCase(),
-          comunidad: editComunidad.toUpperCase(),
-          email: editEmail
-        }),
+        body: JSON.stringify(payload),
       });
-      if (!response.ok) throw new Error('Error al actualizar');
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Error al actualizar');
+      }
       
       const updatedUser = await response.json();
       setAdmins(admins.map(a => a.id === updatedUser.id ? updatedUser : a));
@@ -273,6 +283,18 @@ export default function GestionAdminsAutonomicosPage() {
                   >
                     {COMUNIDADES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
+                </div>
+                <div className="space-y-1 md:col-span-2 bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl mt-2">
+                   <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest px-1">Resetear Contraseña (Opcional)</label>
+                   <p className="text-white/40 text-[10px] mb-2 px-1">Deja este campo vacío si no deseas modificar la contraseña actual.</p>
+                   <input
+                     type="text"
+                     placeholder="Nueva contraseña (mín. 8 caracteres)"
+                     className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3 focus:outline-none focus:border-blue-500 transition-all text-white font-bold placeholder:text-white/20"
+                     value={editPassword}
+                     onChange={(e) => setEditPassword(e.target.value)}
+                     minLength={8}
+                   />
                 </div>
                 
                 <button
