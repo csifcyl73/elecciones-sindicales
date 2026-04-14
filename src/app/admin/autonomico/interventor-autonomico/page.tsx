@@ -78,28 +78,28 @@ export default function InterventorAutonomicoDashboard() {
 
       <div className="relative z-10 max-w-7xl mx-auto">
         {/* Cabecera */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-start mb-12 gap-6">
           <div>
-            <Link href="/admin/autonomico/dashboard" className="group flex items-center gap-2 text-white/30 hover:text-white transition-colors mb-6">
-              <div className="p-2 rounded-xl bg-white/5 border border-white/5 group-hover:border-white/20">
-                <ArrowLeft className="w-5 h-5" />
-              </div>
-              <span className="font-black uppercase tracking-[0.2em] text-[10px]">Panel Autonómico</span>
-            </Link>
             <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">
               Intervención <br />
               <span className="text-black bg-emerald-400 px-4 py-2 inline-block -skew-x-6 mt-2">Autonómica</span>
             </h1>
           </div>
 
-          <div className="flex items-center gap-6">
-             <div className="text-right hidden sm:block">
-                <p className="text-[10px] font-black text-white/30 uppercase tracking-widest leading-none">Mesas Disponibles para Carga</p>
-                <p className="text-4xl font-black text-white leading-none mt-1">{mesas.length}</p>
-             </div>
-             <div className="p-4 bg-white/5 rounded-3xl border border-white/10 backdrop-blur-3xl shadow-[0_0_30px_rgba(16,185,129,0.1)]">
-                <ShieldCheck className="w-10 h-10 text-emerald-400" />
-             </div>
+          <div className="flex flex-col items-end gap-4">
+            <Link href="/admin/autonomico/dashboard" className="group flex items-center gap-2 text-white/30 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-xl border border-white/5">
+              <ArrowLeft className="w-4 h-4" />
+              <span className="font-black uppercase tracking-widest text-[10px]">Panel Autonómico</span>
+            </Link>
+            <div className="flex items-center gap-6">
+               <div className="text-right hidden sm:block">
+                  <p className="text-[10px] font-black text-white/30 uppercase tracking-widest leading-none">Mesas Disponibles para Carga</p>
+                  <p className="text-4xl font-black text-white leading-none mt-1">{mesas.length}</p>
+               </div>
+               <div className="p-4 bg-white/5 rounded-3xl border border-white/10 backdrop-blur-3xl shadow-[0_0_30px_rgba(16,185,129,0.1)]">
+                  <ShieldCheck className="w-10 h-10 text-emerald-400" />
+               </div>
+            </div>
           </div>
         </div>
 

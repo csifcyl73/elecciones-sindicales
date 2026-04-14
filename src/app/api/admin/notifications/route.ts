@@ -20,20 +20,18 @@ export async function GET(req: NextRequest) {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
     // Obtener las últimas mesas enviadas en las últimas 24h
-    // Añadimos filtro de notificacion_borrada si existiera, o simplemente por tiempo
+    // NOTA: Se ha desactivado el filtro de notificacion_borrada porque la columna no existe en DB.
     const { data: mesas, error } = await supabase
       .from('mesas_electorales')
       .select(`
         id,
         nombre_identificador,
         fecha_envio,
-        notificacion_borrada,
         unidad:unidades_electorales(nombre),
         interventor:usuarios(nombre_completo)
       `)
       .not('fecha_envio', 'is', null)
       .gt('fecha_envio', twentyFourHoursAgo)
-      .or('notificacion_borrada.is.null,notificacion_borrada.eq.false')
       .order('fecha_envio', { ascending: false })
       .limit(10);
 

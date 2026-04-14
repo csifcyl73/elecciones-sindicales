@@ -395,12 +395,8 @@ function ConfigurarEleccionesSPA() {
       </div>
 
       <div className="relative z-10 max-w-4xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8 animate-in fade-in slide-in-from-top-4 duration-700">
+        <div className="flex flex-col md:flex-row md:items-start justify-between mb-16 gap-8 animate-in fade-in slide-in-from-top-4 duration-700">
           <div>
-            <Link href="/admin/autonomico/dashboard" className="group flex items-center gap-2 text-white/30 hover:text-white transition-colors mb-4">
-              <ArrowLeft className="w-4 h-4 border border-white/10 p-2 rounded-xl bg-white/5" />
-              <span className="font-black uppercase tracking-[0.4em] text-[10px]">Punto de Retorno</span>
-            </Link>
             <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-white uppercase leading-none">
               CONFIGURAR <span className="text-emerald-500">ELECCIONES</span>
             </h1>

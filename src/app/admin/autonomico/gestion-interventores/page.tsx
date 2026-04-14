@@ -146,25 +146,25 @@ export default function AltaInterventorPage() {
       <div className="relative z-10 max-w-6xl mx-auto">
         
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-8">
+        <div className="flex flex-col md:flex-row md:items-start justify-between mb-12 gap-8">
           <div>
-            <Link href="/admin/autonomico/dashboard" className="group flex items-center gap-2 text-white/40 hover:text-white transition-colors mb-4">
-              <div className="p-2 rounded-lg bg-white/5 group-hover:bg-white/10">
-                <ArrowLeft className="w-5 h-5" />
-              </div>
-              <span className="font-semibold uppercase tracking-widest text-[11px]">DASHBOARD AUTONÓMICO</span>
-            </Link>
             <h1 className="text-4xl md:text-6xl font-black tracking-tight text-blue-400 uppercase leading-none">
-              GESTI&Oacute;N DE <br /> INTERVENTORES
+              GESTIÓN DE <br /> INTERVENTORES
             </h1>
           </div>
 
-          <button 
-            onClick={openNew}
-            className="flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white font-black py-5 px-10 rounded-[30px] shadow-[0_10px_40px_rgba(37,99,235,0.3)] transition-all hover:scale-105 active:scale-95 uppercase tracking-widest text-sm"
-          >
-            <UserPlus className="w-6 h-6" /> Dar de alta nuevo
-          </button>
+          <div className="flex flex-col items-end gap-4">
+            <Link href="/admin/autonomico/dashboard" className="group flex items-center gap-2 text-white/30 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-xl border border-white/5">
+              <ArrowLeft className="w-4 h-4" />
+              <span className="font-black uppercase tracking-widest text-[10px]">Panel Autonómico</span>
+            </Link>
+            <button 
+              onClick={openNew}
+              className="flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white font-black py-5 px-10 rounded-[30px] shadow-[0_10px_40px_rgba(37,99,235,0.3)] transition-all hover:scale-105 active:scale-95 uppercase tracking-widest text-sm"
+            >
+              <UserPlus className="w-6 h-6" /> Dar de alta nuevo
+            </button>
+          </div>
         </div>
 
         {/* Buscador y Stats */}

@@ -141,39 +141,37 @@ export default function GestionSindicatosPage() {
 
       <div className="relative z-10 max-w-5xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-12">
           <div className="flex flex-col gap-4">
-            <Link href="/admin/autonomico/dashboard" className="group flex items-center gap-2 text-white/40 hover:text-white transition-colors w-fit">
-              <div className="p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-all">
-                <ArrowLeft className="w-4 h-4" />
-              </div>
-              <span className="font-bold uppercase tracking-widest text-[10px]">Panel Autonómico</span>
-            </Link>
-            <div>
-              <h1 className="text-3xl font-black tracking-tight text-white uppercase flex items-center gap-3">
-                <Settings2 className="w-8 h-8 text-orange-400" /> GESTI&Oacute;N DE SINDICATOS
-              </h1>
-              <p className="text-white/40 text-xs mt-1 uppercase font-bold tracking-[3px]">ADMINISTRACI&Oacute;N GLOBAL DE ORGANIZACIONES</p>
-            </div>
+            <h1 className="text-3xl font-black tracking-tight text-white uppercase flex items-center gap-3">
+              <Settings2 className="w-8 h-8 text-orange-400" /> GESTI&Oacute;N DE SINDICATOS
+            </h1>
+            <p className="text-white/40 text-xs mt-1 uppercase font-bold tracking-[3px]">ADMINISTRACI&Oacute;N GLOBAL DE ORGANIZACIONES</p>
           </div>
           
-          <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
-            <div className="relative w-full md:w-96">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-              <input 
-                type="text" 
-                placeholder="BUSCAR SINDICATO..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:border-orange-500 transition-all text-white font-bold placeholder:text-white/20 uppercase"
-              />
+          <div className="flex flex-col items-end gap-4 w-full md:w-auto">
+            <Link href="/admin/autonomico/dashboard" className="group flex items-center gap-2 text-white/30 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-xl border border-white/5">
+              <ArrowLeft className="w-4 h-4" />
+              <span className="font-black uppercase tracking-widest text-[10px]">Panel Autonómico</span>
+            </Link>
+            <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+              <div className="relative w-full md:w-96">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                <input 
+                  type="text" 
+                  placeholder="BUSCAR SINDICATO..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:border-orange-500 transition-all text-white font-bold placeholder:text-white/20 uppercase"
+                />
+              </div>
+              <button 
+                onClick={() => setIsAddModalOpen(true)}
+                className="w-full sm:w-auto px-6 py-4 bg-orange-600 hover:bg-orange-500 text-white font-black rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 uppercase tracking-widest text-sm shrink-0"
+              >
+                <Plus className="w-5 h-5" /> Añadir Nuevo
+              </button>
             </div>
-            <button 
-              onClick={() => setIsAddModalOpen(true)}
-              className="w-full sm:w-auto px-6 py-4 bg-orange-600 hover:bg-orange-500 text-white font-black rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 uppercase tracking-widest text-sm shrink-0"
-            >
-              <Plus className="w-5 h-5" /> Añadir Nuevo
-            </button>
           </div>
         </div>
 

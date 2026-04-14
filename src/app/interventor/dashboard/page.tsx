@@ -164,6 +164,11 @@ export default function InterventorDashboard() {
                     </p>
 
                     <div className="flex flex-wrap items-center gap-2 pt-1">
+                      {m.unidades_electorales?.anio && (
+                        <span className="px-2 py-1 bg-amber-500/10 text-amber-500 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-amber-500/20">
+                          Año: {m.unidades_electorales.anio}
+                        </span>
+                      )}
                       {m.unidades_electorales?.provincias?.nombre && (
                         <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-[10px] font-bold uppercase tracking-widest">
                           Provincia: {m.unidades_electorales?.provincias?.nombre}

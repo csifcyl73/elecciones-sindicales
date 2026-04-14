@@ -246,19 +246,19 @@ export default function VisualizarEleccionesAutonomicoPage() {
 
       <div className="relative z-10 max-w-7xl mx-auto">
         {/* Cabecera */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-start mb-12 gap-6">
           <div>
-            <Link href="/admin/autonomico/dashboard" className="group flex items-center gap-2 text-white/30 hover:text-white transition-colors mb-6">
-              <div className="p-2 rounded-xl bg-white/5 border border-white/5 group-hover:border-white/20">
-                <ArrowLeft className="w-5 h-5" />
-              </div>
-              <span className="font-black uppercase tracking-[0.2em] text-[10px]">Panel Autonómico</span>
-            </Link>
             <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">
               Visualizar <br />
               <span className="text-black bg-rose-400 px-4 py-2 inline-block -skew-x-6 mt-2">Elecciones</span>
             </h1>
           </div>
+
+          <Link href="/admin/autonomico/dashboard" className="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl font-black uppercase text-[10px] tracking-[0.3em] text-white/40 hover:text-white hover:bg-white/10 transition-all flex items-center gap-3 active:scale-95 shadow-lg group">
+             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+             <span>Panel Autonómico</span>
+          </Link>
+        </div>
 
           <div className="flex items-center gap-6">
              <div className="text-right hidden sm:block">
@@ -279,8 +279,7 @@ export default function VisualizarEleccionesAutonomicoPage() {
                 <Database className="w-10 h-10 text-rose-400" />
              </div>
           </div>
-        </div>
-
+        
         {/* MÓDULO DE NOTIFICACIONES RT */}
         {showNotifications && (
           <div className={`mb-12 transition-all duration-700 ${isNewNotif ? 'scale-[1.02]' : 'scale-100'}`}>
@@ -528,7 +527,6 @@ export default function VisualizarEleccionesAutonomicoPage() {
             )}
           </div>
         )}
-      </div>
 
       {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
       {deleteModalOpen && unitToDelete && (
@@ -588,7 +586,8 @@ export default function VisualizarEleccionesAutonomicoPage() {
               </div>
            </div>
         </div>
-      )}
+       )}
+      </div>
     </div>
   );
 }

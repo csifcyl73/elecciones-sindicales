@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+const supabase = createClient();
 import { 
   ArrowLeft, 
   Loader2,
@@ -758,14 +760,16 @@ export default function DetalleEleccionAutonomicoPage() {
         {/* ENCABEZADO Y ACCIONES */}
         <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-6">
           <div className="space-y-4">
-             <Link href="/admin/autonomico/visualizar" data-html2canvas-ignore="true" className="inline-flex items-center gap-2 text-white/30 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">
-               <ArrowLeft className="w-4 h-4" /> Panel Autonómico
-             </Link>
-             <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter leading-none mt-4 text-white">
+             <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter leading-none text-white">
                 Dashboard <br /> <span className="text-rose-400">Electoral</span>
              </h1>
           </div>
 
+          <div className="flex flex-col items-end gap-4">
+            <Link href="/admin/autonomico/visualizar" data-html2canvas-ignore="true" className="inline-flex items-center gap-2 text-white/30 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-xl border border-white/5 text-[10px] font-black uppercase tracking-widest">
+              <ArrowLeft className="w-4 h-4" /> Panel Autonómico
+            </Link>
+          </div>
           <div className="flex flex-col sm:flex-row gap-4 items-end">
             <div className={`px-6 py-4 rounded-2xl border flex items-center gap-3 backdrop-blur-md ${isBloqueada ? 'bg-blue-500/10 border-blue-500/30' : 'bg-emerald-500/10 border-emerald-500/30'}`}>
                 {isBloqueada ? <Lock className="w-5 h-5 text-blue-400" /> : <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />}
@@ -1056,8 +1060,7 @@ export default function DetalleEleccionAutonomicoPage() {
 
         </div>
 
-      </div>
-
+      
       {/* MODAL BLOQUEAR ELECCION */}
       {showModalBloqueo && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl animate-in fade-in duration-300">
@@ -1089,6 +1092,7 @@ export default function DetalleEleccionAutonomicoPage() {
         </div>
       )}
 
+      </div>
     </div>
   );
 }
