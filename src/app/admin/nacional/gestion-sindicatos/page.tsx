@@ -10,8 +10,11 @@ import {
   Settings2,
   Database,
   Search,
-  Building2
+  Building2,
+  UploadCloud,
+  DownloadCloud
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 export default function GestionSindicatosPage() {
   const [sindicatos, setSindicatos] = useState<any[]>([]);
@@ -30,6 +33,10 @@ export default function GestionSindicatosPage() {
   const [newSiglas, setNewSiglas] = useState('');
   const [newNombre, setNewNombre] = useState('');
   const [adding, setAdding] = useState(false);
+
+  // Estados Importación
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadSindicatos();
@@ -108,6 +115,67 @@ export default function GestionSindicatosPage() {
     }
   };
 
+  const handleDownloadTemplate = () => {
+    const ws = XLSX.utils.json_to_sheet([{ 'Siglas': '', 'Nombre_completo': '' }]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sindicatos");
+    XLSX.writeFile(wb, "Plantilla_Sindicatos.xlsx");
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+      try {
+        const data = e.target?.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json<any>(worksheet);
+
+        const payload = json.map((row) => ({
+          siglas: (row['Siglas'] || row['SIGLAS'] || '').toString().trim().toUpperCase(),
+          nombre_completo: (row['Nombre_completo'] || row['NOMBRE_COMPLETO'] || row['Nombre completo'] || '').toString().trim().toUpperCase()
+        })).filter(s => s.siglas && s.nombre_completo);
+
+        if (payload.length === 0) {
+          alert('El archivo no contiene filas válidas (recuerda que Siglas y Nombre_completo son obligatorios o tal vez las columnas no se llaman así).');
+          return;
+        }
+
+        const res = await fetch('/api/admin/sindicatos/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await res.json();
+        
+        if (!res.ok) throw new Error(result.error || 'Error importando sindicatos');
+
+        alert(`Importación completada:\n- ${result.imported} Importados\n- ${result.duplicated} Omitidos (Duplicados)`);
+        loadSindicatos();
+        
+      } catch (err: any) {
+        alert('Hubo un error importando el archivo: ' + err.message);
+      } finally {
+        setImporting(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    };
+
+    reader.onerror = () => {
+      alert("Error leyendo el archivo");
+      setImporting(false);
+    };
+
+    reader.readAsBinaryString(file);
+  };
+
   const handleDelete = async (id: number) => {
     if (!confirm('¿Estás seguro de borrar este sindicato? Esto lo eliminará permanentemente de todos los listados.')) return;
     try {
@@ -168,6 +236,28 @@ export default function GestionSindicatosPage() {
                 className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:border-orange-500 transition-all text-white font-bold placeholder:text-white/20 uppercase"
               />
             </div>
+            <input 
+              type="file" 
+              accept=".xlsx,.xls" 
+              ref={fileInputRef} 
+              onChange={handleFileUpload} 
+              className="hidden" 
+            />
+            <button 
+              onClick={handleDownloadTemplate}
+              className="w-full sm:w-auto px-4 py-4 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-[10px] shrink-0 border border-white/10"
+              title="Descargar Plantilla Excel"
+            >
+              <DownloadCloud className="w-4 h-4" /> Plantilla
+            </button>
+            <button 
+              disabled={importing}
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full sm:w-auto px-4 py-4 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 font-bold rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-[10px] shrink-0 border border-blue-500/20 disabled:opacity-50"
+            >
+              {importing ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
+              {importing ? 'Importando...' : 'Importar'}
+            </button>
             <button 
               onClick={() => setIsAddModalOpen(true)}
               className="w-full sm:w-auto px-6 py-4 bg-orange-600 hover:bg-orange-500 text-white font-black rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 uppercase tracking-widest text-sm shrink-0"
