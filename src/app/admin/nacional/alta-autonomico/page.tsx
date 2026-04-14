@@ -129,7 +129,7 @@ export default function AltaAdministradorAutonomico() {
 
       if (res.ok) {
         setStatus({ type: 'success', msg: `✅ Administrador autonómico "${form.nombre} ${form.apellidos}" dado de alta correctamente.` });
-        
+
         if (enviarEmail) {
           const subject = encodeURIComponent(`Credenciales de Administrador Autonómico - CSIF`);
           const body = encodeURIComponent(
@@ -202,7 +202,7 @@ export default function AltaAdministradorAutonomico() {
             <UserPlus className="w-9 h-9 text-emerald-400" />
             Gestionar Administradores Autonómicos
           </h2>
-          <p className="mt-2 text-white/50 uppercase text-[10px] font-bold tracking-widest">REGISTRO DE NUEVOS RESPONSABLES DE COMUNIDAD AUT&Oacute;NOMA</p>
+          <p className="mt-2 text-white/50 uppercase text-[10px] font-bold tracking-widest">ALTA Y GESTI&Oacute;N DE NUEVOS RESPONSABLES DE COMUNIDAD AUT&Oacute;NOMA</p>
         </div>
 
         {/* Formulario */}
@@ -327,24 +327,23 @@ export default function AltaAdministradorAutonomico() {
 
           {/* Checkbox Notificar */}
           <div className="pt-2 border-t border-white/5">
-             <label className="flex items-center gap-3 cursor-pointer group">
-                <input 
-                  type="checkbox" 
-                  checked={enviarEmail}
-                  onChange={(e) => setEnviarEmail(e.target.checked)}
-                  className="w-5 h-5 rounded-lg border-white/20 bg-white/5 text-emerald-500 focus:ring-emerald-500/20 transition-all cursor-pointer"
-                />
-                <span className="text-[11px] font-bold text-white/50 uppercase tracking-widest group-hover:text-emerald-400 transition-colors">Notificar credenciales por email (Outlook)</span>
-             </label>
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={enviarEmail}
+                onChange={(e) => setEnviarEmail(e.target.checked)}
+                className="w-5 h-5 rounded-lg border-white/20 bg-white/5 text-emerald-500 focus:ring-emerald-500/20 transition-all cursor-pointer"
+              />
+              <span className="text-[11px] font-bold text-white/50 uppercase tracking-widest group-hover:text-emerald-400 transition-colors">Notificar credenciales por email (Outlook)</span>
+            </label>
           </div>
 
           {/* Mensaje de estado */}
           {status && (
-            <div className={`flex items-start gap-3 p-4 rounded-xl border text-sm font-medium ${
-              status.type === 'success'
+            <div className={`flex items-start gap-3 p-4 rounded-xl border text-sm font-medium ${status.type === 'success'
                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                 : 'bg-red-500/10 border-red-500/30 text-red-400'
-            }`}>
+              }`}>
               {status.type === 'success'
                 ? <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
                 : <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />

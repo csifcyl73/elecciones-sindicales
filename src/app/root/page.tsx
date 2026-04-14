@@ -37,7 +37,7 @@ export default function RootLogin() {
         className="absolute top-8 left-8 z-50 flex items-center gap-2 text-neutral-400 font-semibold hover:text-white transition-colors bg-neutral-900/80 p-3 rounded-xl shadow-sm backdrop-blur-sm"
       >
         <ArrowLeft className="w-5 h-5" />
-        Inicio
+        INICIO
       </Link>
 
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
