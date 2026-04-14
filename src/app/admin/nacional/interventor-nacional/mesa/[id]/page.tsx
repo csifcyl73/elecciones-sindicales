@@ -142,7 +142,7 @@ export default function ProxyFormularioEscrutinio() {
                 <div className="p-2 rounded-xl bg-white/5 border border-white/5 group-hover:border-white/20">
                   <ArrowLeft className="w-5 h-5" />
                 </div>
-                <span className="font-black uppercase tracking-[0.2em] text-[10px]">Portal Intervención Nacional</span>
+                <span className="font-black uppercase tracking-[0.2em] text-[10px]">Panel Nacional</span>
               </button>
               <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase leading-none">
                 Carga de Datos <br />

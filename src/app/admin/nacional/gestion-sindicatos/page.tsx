@@ -147,7 +147,7 @@ export default function GestionSindicatosPage() {
               <div className="p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-all">
                 <ArrowLeft className="w-4 h-4" />
               </div>
-              <span className="font-bold uppercase tracking-widest text-[10px]">VOLVER AL PANEL</span>
+              <span className="font-bold uppercase tracking-widest text-[10px]">Panel Nacional</span>
             </Link>
             <div>
               <h1 className="text-3xl font-black tracking-tight text-white uppercase flex items-center gap-3">

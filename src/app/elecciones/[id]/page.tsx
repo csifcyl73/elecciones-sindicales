@@ -174,7 +174,7 @@ export default function DetalleEleccionPublicaPage() {
 
   const loadData = async () => {
     try {
-      const resp = await fetch(`/api/admin/visualizar/${id}`);
+      const resp = await fetch(`/api/public/visualizar/${id}`);
       if (!resp.ok) throw new Error("Error cargando datos");
       setDatos(await resp.json());
     } catch (err) {

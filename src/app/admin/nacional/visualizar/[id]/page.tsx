@@ -743,7 +743,7 @@ export default function DetalleEleccionPage() {
         <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-6">
           <div className="space-y-4">
              <Link href="/admin/nacional/visualizar" data-html2canvas-ignore="true" className="inline-flex items-center gap-2 text-white/30 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">
-               <ArrowLeft className="w-4 h-4" /> Volver al listado
+               <ArrowLeft className="w-4 h-4" /> Panel Nacional
              </Link>
              <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter leading-none mt-4 text-white">
                 Dashboard <br /> <span className="text-rose-400">Electoral</span>

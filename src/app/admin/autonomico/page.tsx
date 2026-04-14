@@ -43,11 +43,11 @@ export default function AdminAutonomicoLogin() {
     <div className="flex min-h-screen bg-gray-50 flex-col items-center justify-center relative overflow-hidden">
       {/* Botón para volver al inicio */}
       <Link
-        href="/"
+        href="/admin/autonomico/dashboard"
         className="absolute top-8 left-8 z-50 flex items-center gap-2 text-[#008c45] font-semibold hover:text-[#004d26] transition-colors bg-white/80 p-3 rounded-full shadow-sm backdrop-blur-sm hover:scale-105"
       >
         <ArrowLeft className="w-5 h-5" />
-        Volver
+        Panel Autonómico
       </Link>
 
       {/* Marcas de agua de fondo */}

@@ -396,7 +396,7 @@ function ConfigurarEleccionesSPA() {
 
           <Link href="/admin/nacional/dashboard" className="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl font-black uppercase text-[10px] tracking-[0.3em] text-white/40 hover:text-white hover:bg-white/10 transition-all flex items-center gap-3 active:scale-95 shadow-lg group">
              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-             <span>Volver al Panel</span>
+             <span>Panel Nacional</span>
           </Link>
         </div>
 

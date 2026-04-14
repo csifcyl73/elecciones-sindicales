@@ -227,15 +227,11 @@ export default function DetalleEleccionAutonomicoPage() {
 
       // Validación de ámbito autonómico
       if (userComunidad && d.unidad) {
-        // Obtenemos la CCAA de la unidad a través de su provincia
-        const { data: provData } = await supabase
-          .from('provincias')
-          .select('ccaa(nombre)')
-          .eq('id', d.unidad.provincia_id)
-          .single();
+        let unidadComunidad = d.unidad.ccaa?.nombre || d.unidad.provincias?.ccaa?.nombre || '';
         
-        const unidadComunidad = (provData as any)?.ccaa?.nombre || '';
-        if (unidadComunidad.toUpperCase() !== userComunidad.toUpperCase()) {
+        const normalize = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        
+        if (unidadComunidad && normalize(unidadComunidad) !== normalize(userComunidad)) {
           router.push('/admin/autonomico/dashboard');
           return;
         }
@@ -763,7 +759,7 @@ export default function DetalleEleccionAutonomicoPage() {
         <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-6">
           <div className="space-y-4">
              <Link href="/admin/autonomico/visualizar" data-html2canvas-ignore="true" className="inline-flex items-center gap-2 text-white/30 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">
-               <ArrowLeft className="w-4 h-4" /> Volver al listado
+               <ArrowLeft className="w-4 h-4" /> Panel Autonómico
              </Link>
              <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter leading-none mt-4 text-white">
                 Dashboard <br /> <span className="text-rose-400">Electoral</span>

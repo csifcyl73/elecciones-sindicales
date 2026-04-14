@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,9 +9,6 @@ const getAdminSupabase = () => createClient(
 );
 
 export async function GET(req: NextRequest, context: any) {
-  const { error: authErr } = await requireAuth(['super_nacional', 'super_autonomico']);
-  if (authErr) return authErr;
-
   try {
     const { id } = await context.params;
     const supabase = getAdminSupabase();
@@ -32,13 +28,10 @@ export async function GET(req: NextRequest, context: any) {
 
     if (unidadError) throw unidadError;
 
-    // Obtener mesas con info de interventor
+    // Obtener mesas SIN info de interventores por privacidad
     const { data: mesas, error: mesasError } = await supabase
       .from('mesas_electorales')
-      .select(`
-        *,
-        interventor:usuarios(nombre_completo, email, telefono)
-      `)
+      .select('*')
       .eq('unidad_id', id);
       
     if (mesasError) throw mesasError;
@@ -74,25 +67,5 @@ export async function GET(req: NextRequest, context: any) {
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
-  }
-}
-
-export async function POST(req: NextRequest, context: any) {
-  const { error: authErr } = await requireAuth(['super_nacional', 'super_autonomico']);
-  if (authErr) return authErr;
-
-  try {
-     const { id } = await context.params;
-     const supabase = getAdminSupabase();
-     // Bloquear la elección
-     const { error } = await supabase
-        .from('unidades_electorales')
-        .update({ estado: 'congelada' })
-        .eq('id', id);
-
-     if (error) throw error;
-     return NextResponse.json({ success: true });
-  } catch (err: any) {
-     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

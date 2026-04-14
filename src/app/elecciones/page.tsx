@@ -30,8 +30,8 @@ export default function EleccionesPublicasPage() {
     setLoading(true);
     try {
       const [unidadesResp, procesosResp] = await Promise.all([
-        fetch('/api/admin/unidades').then(r => r.json()).catch(() => []),
-        fetch('/api/admin/procesos-electorales').then(r => r.json()).catch(() => [])
+        fetch('/api/public/unidades').then(r => r.json()).catch(() => []),
+        fetch('/api/public/procesos-electorales').then(r => r.json()).catch(() => [])
       ]);
 
       const estadosRelevantes = ['activa', 'escrutinio', 'finalizada', 'congelada'];

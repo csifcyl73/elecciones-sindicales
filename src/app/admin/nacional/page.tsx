@@ -49,6 +49,13 @@ export default function AdminNacionalLogin() {
         <Users className="absolute text-[#008c45] opacity-[0.03] w-72 h-72 top-20 right-1/4 animate-[spin_40s_linear_infinite_reverse]" />
       </div>
 
+      {/* Título Identificativo */}
+      <div className="text-center mb-6 relative z-10">
+        <h2 className="text-xl font-bold text-gray-800 uppercase tracking-widest bg-white/80 px-4 py-2 rounded-full shadow-sm backdrop-blur-sm border border-gray-100">
+          Administrador Nacional
+        </h2>
+      </div>
+
       {/* Contenedor central (Login) */}
       <div className="relative z-10 w-full max-w-md p-8 bg-white/60 backdrop-blur-lg rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 flex flex-col items-center">
 
