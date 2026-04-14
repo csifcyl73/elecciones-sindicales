@@ -18,7 +18,8 @@ import {
   AlertTriangle,
   X,
   Bell,
-  Clock
+  Clock,
+  Calendar
 } from 'lucide-react';
 
 export default function VisualizarEleccionesPage() {
@@ -153,7 +154,10 @@ export default function VisualizarEleccionesPage() {
           
           <h3 className="text-lg md:text-xl font-black uppercase tracking-tight truncate leading-tight">{u.nombre}</h3>
           
-          <div className="flex flex-wrap items-center gap-3 mt-4">
+            <div className="flex flex-wrap items-center gap-3 mt-4">
+            <div className="flex items-center gap-1.5 text-white/40 text-[9px] font-bold uppercase tracking-widest">
+              <Calendar className="w-3 h-3 text-rose-400/50" /> {u.anyo || 'N/A'}
+            </div>
             <div className="flex items-center gap-1.5 text-white/40 text-[9px] font-bold uppercase tracking-widest">
               <MapPin className="w-3 h-3 text-rose-400/50" /> {u.provincias?.nombre || 'General'}
             </div>
