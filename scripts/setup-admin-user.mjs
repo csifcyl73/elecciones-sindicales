@@ -1,5 +1,5 @@
-const SUPABASE_URL = 'https://wzorazeafxxaopkvieow.supabase.co';
-const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6b3JhemVhZnh4YW9wa3ZpZW93Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDU3ODQxOCwiZXhwIjoyMDkwMTU0NDE4fQ.TMNma9IbzLGGdiUfHruOy4EkMIlAgP-gALWq7K6CHSc';
+const SUPABASE_URL = 'https://hnzbqgytvwfsxgsyakyc.supabase.co';
+const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhuemJxZ3l0dndmc3hnc3lha3ljIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDk3Mzg1OCwiZXhwIjoyMDkwNTQ5ODU4fQ.ORFUNE1wc8agelnQmKN-mgiHHMuprb5k9udQZ-MJIWM';
 
 const EMAIL = 'admin@csif.es';
 const PASSWORD = 'Admin1234';
@@ -48,7 +48,7 @@ async function run() {
         email: EMAIL,
         password: PASSWORD,
         email_confirm: true,
-        user_metadata: { role: 'admin_nacional' },
+        user_metadata: { role: 'super_nacional' },
       }),
     });
     const createData = await createRes.json();

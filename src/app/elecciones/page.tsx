@@ -12,7 +12,10 @@ import {
   Building2,
   Layers,
   MapPin,
-  FolderOpen
+  FolderOpen,
+  SlidersHorizontal,
+  Calendar,
+  X
 } from 'lucide-react';
 
 export default function EleccionesPublicasPage() {
@@ -21,6 +24,14 @@ export default function EleccionesPublicasPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedProceso, setExpandedProceso] = useState<string | null>(null);
+
+  // Filtros multi-select
+  const [filterProvincias, setFilterProvincias] = useState<string[]>([]);
+  const [filterSectores, setFilterSectores] = useState<string[]>([]);
+  const [filterUnidades, setFilterUnidades] = useState<string[]>([]);
+  const [filterOrganos, setFilterOrganos] = useState<string[]>([]);
+  const [filterAnyos, setFilterAnyos] = useState<string[]>([]);
+  const [openPanel, setOpenPanel] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -48,10 +59,45 @@ export default function EleccionesPublicasPage() {
     }
   };
 
+  // Opciones únicas para cada filtro (derivadas de los datos cargados)
+  const optProvincias = [...new Set(unidades.map(u => u.provincias?.nombre).filter(Boolean))].sort();
+  const optSectores   = [...new Set(unidades.map(u => u.sectores?.nombre).filter(Boolean))].sort();
+  const optUnidades   = [...new Set(unidades.map(u => u.nombre).filter(Boolean))].sort();
+  const optOrganos    = [...new Set(unidades.map(u => u.tipos_organos?.nombre).filter(Boolean))].sort();
+  const optAnyos      = [...new Set(unidades.map(u => String(u.anio)).filter(v => v && v !== 'undefined' && v !== 'null'))].sort().reverse();
+
+  const toggleFilter = (set: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
+    set(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
+  };
+
+  const hasFilters = filterProvincias.length > 0 || filterSectores.length > 0 || filterUnidades.length > 0 || filterOrganos.length > 0 || filterAnyos.length > 0 || searchTerm !== '';
+
+  const clearAllFilters = () => {
+    setFilterProvincias([]);
+    setFilterSectores([]);
+    setFilterUnidades([]);
+    setFilterOrganos([]);
+    setFilterAnyos([]);
+    setSearchTerm('');
+  };
+
   const filtered = unidades.filter(u => {
-    const term = searchTerm.toUpperCase();
-    return u.nombre.toUpperCase().includes(term) || 
-           (u.provincias?.nombre || '').toUpperCase().includes(term);
+    // Filtro por término de búsqueda (nombre o provincia)
+    if (searchTerm) {
+      const term = searchTerm.toUpperCase();
+      const matchesSearch = u.nombre.toUpperCase().includes(term) || 
+                           (u.provincias?.nombre || '').toUpperCase().includes(term);
+      if (!matchesSearch) return false;
+    }
+
+    // Filtros multi-select
+    if (filterProvincias.length > 0 && !filterProvincias.includes(u.provincias?.nombre)) return false;
+    if (filterSectores.length > 0   && !filterSectores.includes(u.sectores?.nombre))    return false;
+    if (filterUnidades.length > 0   && !filterUnidades.includes(u.nombre))              return false;
+    if (filterOrganos.length > 0    && !filterOrganos.includes(u.tipos_organos?.nombre)) return false;
+    if (filterAnyos.length > 0      && !filterAnyos.includes(String(u.anio)))           return false;
+    
+    return true;
   });
 
   const unidadesPorProceso = (procesoId: string) => filtered.filter(u => u.proceso_electoral_id === procesoId);
@@ -87,6 +133,9 @@ export default function EleccionesPublicasPage() {
         <h3 className="text-lg md:text-xl font-black uppercase tracking-tight truncate leading-tight">{u.nombre}</h3>
         
         <div className="flex flex-wrap items-center gap-3 mt-4">
+          <div className="flex items-center gap-1.5 text-white/40 text-[9px] font-bold uppercase tracking-widest">
+             <Calendar className="w-3 h-3 text-emerald-400/50" /> {u.anio || 'N/A'}
+          </div>
           <div className="flex items-center gap-1.5 text-white/40 text-[9px] font-bold uppercase tracking-widest">
              <MapPin className="w-3 h-3 text-emerald-400/50" /> {u.provincias?.nombre || 'General'}
           </div>
@@ -146,17 +195,128 @@ export default function EleccionesPublicasPage() {
           </div>
         </div>
 
-        {/* Buscador */}
-        <div className="mb-10 relative group">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-white/20 group-focus-within:text-emerald-400 transition-colors" />
-          <input 
-            type="text" 
-            placeholder="Buscar por elección o provincia..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-[35px] pl-16 pr-8 py-5 md:py-6 focus:outline-none focus:border-emerald-500/50 transition-all font-bold placeholder:text-white/10 uppercase text-xs md:text-sm tracking-tight"
-          />
+        {/* Buscador y Filtros */}
+        <div className="mb-10 space-y-6">
+          <div className="relative group">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-white/20 group-focus-within:text-emerald-400 transition-colors" />
+            <input 
+              type="text" 
+              placeholder="Buscar por elección o provincia..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 rounded-[35px] pl-16 pr-8 py-5 md:py-6 focus:outline-none focus:border-emerald-500/50 transition-all font-bold placeholder:text-white/10 uppercase text-xs md:text-sm tracking-tight"
+            />
+          </div>
+
+          <div className="space-y-3">
+            {/* Barra superior con botón limpiar */}
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-white/40">
+                <SlidersHorizontal className="w-4 h-4" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Filtros Avanzados</span>
+                {(filterProvincias.length + filterSectores.length + filterUnidades.length + filterOrganos.length + filterAnyos.length) > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[9px] font-black border border-emerald-500/30">
+                    {filterProvincias.length + filterSectores.length + filterUnidades.length + filterOrganos.length + filterAnyos.length} activos
+                  </span>
+                )}
+              </div>
+              {hasFilters && (
+                <button
+                  onClick={clearAllFilters}
+                  className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-white/30 hover:text-emerald-400 transition-colors"
+                >
+                  <X className="w-3 h-3" /> Limpiar todo
+                </button>
+              )}
+            </div>
+
+            {/* Dropdowns de Filtros */}
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: 'provincia', label: 'Provincia', icon: <MapPin className="w-3 h-3" />, opts: optProvincias, selected: filterProvincias, setter: setFilterProvincias },
+                { key: 'sector',    label: 'Sector',    icon: <Building2 className="w-3 h-3" />, opts: optSectores,   selected: filterSectores,   setter: setFilterSectores },
+                { key: 'unidad',    label: 'Unidad Electoral', icon: <Database className="w-3 h-3" />, opts: optUnidades,   selected: filterUnidades,   setter: setFilterUnidades },
+                { key: 'organo',    label: 'Tipo de Órgano',   icon: <Layers className="w-3 h-3" />,   opts: optOrganos,    selected: filterOrganos,    setter: setFilterOrganos },
+                { key: 'anyo',      label: 'Año',       icon: <Calendar className="w-3 h-3" />, opts: optAnyos,      selected: filterAnyos,      setter: setFilterAnyos },
+              ].map(({ key, label, icon, opts, selected, setter }) => (
+                <div key={key} className="relative">
+                  <button
+                    onClick={() => setOpenPanel(openPanel === key ? null : key)}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-[10px] font-black uppercase tracking-widest transition-all ${
+                      selected.length > 0
+                        ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+                        : 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:border-white/20'
+                    }`}
+                  >
+                    {icon}
+                    {label}
+                    {selected.length > 0 && (
+                      <span className="bg-emerald-500/30 text-emerald-300 rounded-full w-4 h-4 flex items-center justify-center text-[8px]">
+                        {selected.length}
+                      </span>
+                    )}
+                    <ChevronDown className={`w-3 h-3 transition-transform ${openPanel === key ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {openPanel === key && opts.length > 0 && (
+                    <div className="absolute top-full mt-2 left-0 z-50 bg-[#111827] border border-white/10 rounded-2xl shadow-2xl min-w-[220px] max-h-64 overflow-y-auto">
+                      <div className="p-2 space-y-0.5">
+                        {opts.map((opt: string) => (
+                          <button
+                            key={opt}
+                            onClick={() => toggleFilter(setter, opt)}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all text-[11px] font-bold uppercase tracking-wide ${
+                              selected.includes(opt)
+                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/20'
+                                : 'text-white/50 hover:bg-white/5 hover:text-white'
+                            }`}
+                          >
+                            <span className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition-all ${
+                              selected.includes(opt) ? 'bg-emerald-500 border-emerald-500' : 'border-white/20'
+                            }`}>
+                              {selected.includes(opt) && <X className="w-2.5 h-2.5 text-white" />}
+                            </span>
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Tags activos */}
+            {(filterProvincias.length + filterSectores.length + filterUnidades.length + filterOrganos.length + filterAnyos.length) > 0 && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {[...filterProvincias.map(v => ({ v, label: 'Provincia', setter: setFilterProvincias })),
+                  ...filterSectores.map(v => ({ v, label: 'Sector', setter: setFilterSectores })),
+                  ...filterUnidades.map(v => ({ v, label: 'Unidad', setter: setFilterUnidades })),
+                  ...filterOrganos.map(v => ({ v, label: 'Órgano', setter: setFilterOrganos })),
+                  ...filterAnyos.map(v => ({ v, label: 'Año', setter: setFilterAnyos })),
+                ].map(({ v, label, setter }) => (
+                  <span
+                    key={`${label}-${v}`}
+                    className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[9px] font-black uppercase tracking-widest"
+                  >
+                    <span className="text-emerald-500/50">{label}:</span> {v}
+                    <button
+                      onClick={() => toggleFilter(setter, v)}
+                      className="w-4 h-4 rounded-full bg-emerald-500/20 hover:bg-emerald-500/40 flex items-center justify-center transition-all"
+                    >
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Cerrar paneles al hacer click fuera */}
+        {openPanel && (
+          <div className="fixed inset-0 z-40" onClick={() => setOpenPanel(null)} />
+        )}
 
         {/* Listado Agrupado */}
         {loading ? (

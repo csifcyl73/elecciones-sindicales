@@ -17,6 +17,10 @@ Configurar, depurar y asegurar el correcto funcionamiento del visualizador de pr
    - *El Problema:* El archivo `src/app/admin/autonomico/visualizar/page.tsx` fallaba al compilar debido a múltiples cierres `</div>` accidentales (líneas 282 y 531) que terminaban el root element antes de tiempo. Esto causaba que el compilador encontrara bloques JSX sueltos fuera del retorno principal.
    - *La Solución:* Mantener una vigilancia estricta sobre la jerarquía de divs. Todo el contenido dinámico, filtros y modales deben estar contenidos dentro del wrapper de margen (`max-w-7xl`) y del root div. Se ha corregido eliminando cierres redundantes y verificando el balance de etiquetas al final del archivo.
 
+4. **Discrepancia de Roles en Scripts de Prueba:**
+   - *El Problema:* Los scripts `create-test-autonomico.mjs` y `setup-admin-user.mjs` usaban roles como `admin_autonomico` o `admin_nacional`. El Middleware y las APIs exigen estrictamente `super_autonomico` y `super_nacional`. Esto causaba redirecciones al login o errores 403.
+   - *La Solución:* **Usar siempre el prefijo `super_` para roles administrativos.** Se han actualizado los scripts para reflejar esta jerarquía. No usar el prefijo `admin_` en `user_metadata.role`.
+
 ## Casos Borde:
 - **Protección de Identidades:** Los endpoints públicos como `/api/public/visualizar/[id]` JAMÁS deben cargar o exponer la información de Interventores (`usuarios(nombre_completo...`) asociados a las mesas.
 - Si un Autonómico interactúa con sus paneles, la comprobación comunitaria (`unidadComunidad !== userComunidad`) ahora se realiza analizando la proyección de DB directa y evita problemas al intentar obtener provincias nacionales.

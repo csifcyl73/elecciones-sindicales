@@ -20,8 +20,10 @@ import {
   Bell,
   Clock,
   Calendar,
-  SlidersHorizontal
+  SlidersHorizontal,
+  FileSpreadsheet
 } from 'lucide-react';
+import ModalImportarHistorico from '@/components/ModalImportarHistorico';
 
 export default function VisualizarEleccionesPage() {
   const [unidades, setUnidades] = useState<any[]>([]);
@@ -31,6 +33,7 @@ export default function VisualizarEleccionesPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [unitToDelete, setUnitToDelete] = useState<any>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   // Filtros multi-select
   const [filterProvincias, setFilterProvincias] = useState<string[]>([]);
@@ -254,11 +257,20 @@ export default function VisualizarEleccionesPage() {
             </h1>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
              <div className="text-right hidden sm:block">
                 <p className="text-[10px] font-black text-white/30 uppercase tracking-widest leading-none">Activas / Escrutadas</p>
                 <p className="text-4xl font-black text-white leading-none mt-1">{unidades.length}</p>
              </div>
+             {/* Botón Importar Histórico */}
+             <button
+               onClick={() => setShowImportModal(true)}
+               className="flex items-center gap-2 px-5 py-4 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 text-amber-400 font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all active:scale-95 shadow-lg backdrop-blur-md"
+               title="Importar datos históricos desde Excel"
+             >
+               <FileSpreadsheet className="w-5 h-5" />
+               <span className="hidden md:inline">Importar Histórico</span>
+             </button>
              {!showNotifications && (
                <button 
                  onClick={() => setShowNotifications(true)}
@@ -587,6 +599,15 @@ export default function VisualizarEleccionesPage() {
               </div>
            </div>
         </div>
+      )}
+
+      {/* MODAL IMPORTAR HISTÓRICO */}
+      {showImportModal && (
+        <ModalImportarHistorico
+          perfil="nacional"
+          onClose={() => setShowImportModal(false)}
+          onSuccess={() => { loadData(); }}
+        />
       )}
     </div>
   );

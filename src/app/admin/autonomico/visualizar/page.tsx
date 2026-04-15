@@ -21,8 +21,10 @@ import {
   Bell,
   Clock,
   Calendar,
-  SlidersHorizontal
+  SlidersHorizontal,
+  FileSpreadsheet
 } from 'lucide-react';
+import ModalImportarHistorico from '@/components/ModalImportarHistorico';
 
 const supabase = createClient();
 
@@ -35,6 +37,7 @@ export default function VisualizarEleccionesAutonomicoPage() {
   const [unitToDelete, setUnitToDelete] = useState<any>(null);
   const [deleting, setDeleting] = useState(false);
   const [comunidad, setComunidad] = useState<string>('');
+  const [showImportModal, setShowImportModal] = useState(false);
 
   // Filtros multi-select
   const [filterProvincias, setFilterProvincias] = useState<string[]>([]);
@@ -260,25 +263,30 @@ export default function VisualizarEleccionesAutonomicoPage() {
           </Link>
         </div>
 
-          <div className="flex items-center gap-6">
-             <div className="text-right hidden sm:block">
-                <p className="text-[10px] font-black text-white/30 uppercase tracking-widest leading-none">Activas / Escrutadas</p>
-                <p className="text-4xl font-black text-white leading-none mt-1">{unidades.length}</p>
-             </div>
-             {!showNotifications && (
-               <button 
-                 onClick={() => setShowNotifications(true)}
-                 className="p-4 bg-white/5 hover:bg-emerald-500/20 border border-white/10 rounded-3xl backdrop-blur-3xl shadow-lg transition-all active:scale-95 group relative"
-                 title="Restaurar Notificaciones"
-               >
-                  <Bell className={`w-6 h-6 ${isNewNotif ? 'text-emerald-400 animate-bounce' : 'text-white/30 group-hover:text-white'}`} />
-                  {isNewNotif && <div className="absolute top-3 right-3 w-2 h-2 bg-emerald-500 rounded-full animate-ping" />}
-               </button>
-             )}
-             <div className="p-4 bg-white/5 rounded-3xl border border-white/10 backdrop-blur-3xl shadow-[0_0_30px_rgba(225,29,72,0.1)]">
-                <Database className="w-10 h-10 text-rose-400" />
-             </div>
+        {/* Controles superiores derecha */}
+        <div className="flex items-center gap-4 mb-6">
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="flex items-center gap-2 px-5 py-4 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 text-amber-400 font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all active:scale-95 shadow-lg backdrop-blur-md"
+            title="Importar datos históricos desde Excel"
+          >
+            <FileSpreadsheet className="w-5 h-5" />
+            <span className="hidden md:inline">Importar Histórico</span>
+          </button>
+          {!showNotifications && (
+            <button
+              onClick={() => setShowNotifications(true)}
+              className="p-4 bg-white/5 hover:bg-emerald-500/20 border border-white/10 rounded-3xl backdrop-blur-3xl shadow-lg transition-all active:scale-95 group relative"
+              title="Restaurar Notificaciones"
+            >
+              <Bell className={`w-6 h-6 ${isNewNotif ? 'text-emerald-400 animate-bounce' : 'text-white/30 group-hover:text-white'}`} />
+              {isNewNotif && <div className="absolute top-3 right-3 w-2 h-2 bg-emerald-500 rounded-full animate-ping" />}
+            </button>
+          )}
+          <div className="p-4 bg-white/5 rounded-3xl border border-white/10 backdrop-blur-3xl shadow-[0_0_30px_rgba(225,29,72,0.1)]">
+            <Database className="w-10 h-10 text-rose-400" />
           </div>
+        </div>
         
         {/* MÓDULO DE NOTIFICACIONES RT */}
         {showNotifications && (
@@ -587,7 +595,17 @@ export default function VisualizarEleccionesAutonomicoPage() {
            </div>
         </div>
        )}
-      </div>
+
+      </div>{/* fin max-w-7xl */}
+
+      {/* MODAL IMPORTAR HISTÓRICO */}
+      {showImportModal && (
+        <ModalImportarHistorico
+          perfil="autonomico"
+          onClose={() => setShowImportModal(false)}
+          onSuccess={() => { if (comunidad) loadData(comunidad); }}
+        />
+      )}
     </div>
   );
 }
