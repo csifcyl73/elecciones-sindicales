@@ -20,10 +20,13 @@ Implementar un sistema de vinculación entre sindicatos que permita agrupar resu
     - Modal **Añadir** y modal **Editar** incluyen toggle `¿Es Federación?` y selector de federación vinculada.
     - Botón **"+ Nueva"** junto al selector abre un mini-formulario inline (Siglas + Nombre) que crea la federación al vuelo, la añade al estado local y la selecciona automáticamente. Contexto `'edit'` o `'add'` controla a qué modal se asigna.
     - Tooltip informativo en ambos modales.
-    - Modales con `overflow-y-auto` para permitir scroll cuando el formulario inline crece.
-3. **[PENDIENTE] Ajuste de Filtros**:
+    - Modales con `overflow-y-auto` en el overlay + `my-auto` en el contenedor (NO `overflow-hidden`) para permitir scroll cuando el formulario inline crece.
+3. **[COMPLETADO] Modificación de Interfaz (Autonómico)** — `src/app/admin/autonomico/gestion-sindicatos/page.tsx`:
+    - **Paridad total** con el módulo nacional: mismos estados, misma lógica de federaciones inline, misma visualización en tabla (etiqueta FEDERACIÓN y nombre de la federación vinculada).
+    - Misma corrección de overflow: `overflow-y-auto` en overlay + sin `overflow-hidden` en el card del modal.
+4. **[PENDIENTE] Ajuste de Filtros**:
     - Revisar el módulo de `configurar-elecciones` para filtrar y excluir registros donde `es_federacion = true`.
-4. **[COMPLETADO] Visualización de Estructura**: El listado muestra la federación asociada y la etiqueta [FEDERACIÓN / CONFEDERACIÓN] en verde.
+5. **[COMPLETADO] Visualización de Estructura**: El listado muestra la federación asociada y la etiqueta [FEDERACIÓN / CONFEDERACIÓN] en verde (ambos módulos, nacional y autonómico).
 
 ## Patrón UI: Alta Rápida de Federación (Inline)
 - Estado compartido: `showNewFedForm: 'edit' | 'add' | null`, `newFedSiglas`, `newFedNombre`, `savingNewFed`.
@@ -35,9 +38,12 @@ Implementar un sistema de vinculación entre sindicatos que permita agrupar resu
 - **Consistencia**: Si un sindicato pasa a ser federación, se debe validar si ya tiene votos en procesos anteriores y cómo afecta eso al histórico.
 - **Borrado**: Considerar el impacto de borrar una federación en los sindicatos que dependen de ella.
 - **Columnas BD**: Si la migración no se ha ejecutado, el API fallará silenciosamente. Ejecutar `python scripts/add_federation_fields.py` si las columnas no existen.
+- **Overflow del modal**: El div contenedor del modal NUNCA debe tener `overflow-hidden`. El overlay debe tener `overflow-y-auto` y el card del modal NO debe tener overflow. Esto evita que el formulario inline de alta rápida quede recortado fuera del borde del modal.
 
 ## Resultados Esperados
 - Columnas `es_federacion` y `federacion_id` en tabla `sindicatos`. ✓
-- Modal Añadir y Editar con selector de federación y botón inline. ✓
-- Alta rápida de federación sin salir del formulario de sindicato. ✓
-- Tooltip informativo implementado. ✓
+- Modal Añadir y Editar (Nacional) con selector de federación y botón inline. ✓
+- Modal Añadir y Editar (Autonómico) con selector de federación y botón inline. ✓
+- Alta rápida de federación sin salir del formulario de sindicato (ambos perfiles). ✓
+- Tooltip informativo implementado (ambos perfiles). ✓
+- Desplegable de federación sin recorte en ninguno de los dos modales. ✓

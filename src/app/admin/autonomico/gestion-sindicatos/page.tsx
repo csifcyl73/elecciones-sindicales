@@ -10,7 +10,8 @@ import {
   Settings2,
   Database,
   Search,
-  Building2
+  Building2,
+  Info
 } from 'lucide-react';
 
 export default function GestionSindicatosPage() {
@@ -23,13 +24,23 @@ export default function GestionSindicatosPage() {
   const [selectedSindicato, setSelectedSindicato] = useState<any>(null);
   const [editSiglas, setEditSiglas] = useState('');
   const [editNombre, setEditNombre] = useState('');
+  const [editEsFederacion, setEditEsFederacion] = useState(false);
+  const [editFederacionId, setEditFederacionId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Estados Modal Añadir
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newSiglas, setNewSiglas] = useState('');
   const [newNombre, setNewNombre] = useState('');
+  const [newEsFederacion, setNewEsFederacion] = useState(false);
+  const [newFederacionId, setNewFederacionId] = useState<number | null>(null);
   const [adding, setAdding] = useState(false);
+
+  // Estado inline "Nueva Federación" (compartido por ambos modales)
+  const [showNewFedForm, setShowNewFedForm] = useState<'edit' | 'add' | null>(null);
+  const [newFedSiglas, setNewFedSiglas] = useState('');
+  const [newFedNombre, setNewFedNombre] = useState('');
+  const [savingNewFed, setSavingNewFed] = useState(false);
 
   useEffect(() => {
     loadSindicatos();
@@ -52,6 +63,11 @@ export default function GestionSindicatosPage() {
     setSelectedSindicato(s);
     setEditSiglas(s.siglas);
     setEditNombre(s.nombre_completo);
+    setEditEsFederacion(s.es_federacion || false);
+    setEditFederacionId(s.federacion_id || null);
+    setShowNewFedForm(null);
+    setNewFedSiglas('');
+    setNewFedNombre('');
     setIsEditModalOpen(true);
   };
 
@@ -66,7 +82,9 @@ export default function GestionSindicatosPage() {
         body: JSON.stringify({ 
           id: selectedSindicato.id, 
           siglas: editSiglas.toUpperCase(), 
-          nombre_completo: editNombre.toUpperCase() 
+          nombre_completo: editNombre.toUpperCase(),
+          es_federacion: editEsFederacion,
+          federacion_id: editFederacionId
         }),
       });
       if (!response.ok) throw new Error('Error al actualizar');
@@ -91,7 +109,9 @@ export default function GestionSindicatosPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           siglas: newSiglas.toUpperCase(), 
-          nombre_completo: newNombre.toUpperCase() 
+          nombre_completo: newNombre.toUpperCase(),
+          es_federacion: newEsFederacion,
+          federacion_id: newFederacionId
         }),
       });
       if (!response.ok) throw new Error('Error al añadir');
@@ -101,10 +121,45 @@ export default function GestionSindicatosPage() {
       setIsAddModalOpen(false);
       setNewSiglas('');
       setNewNombre('');
+      setNewFederacionId(null);
+      setNewEsFederacion(false);
     } catch (err: any) {
       alert(err.message);
     } finally {
       setAdding(false);
+    }
+  };
+
+  // Crear federación al vuelo y asignarla al modal activo
+  const handleCreateFederacionInline = async (context: 'edit' | 'add') => {
+    if (!newFedSiglas.trim() || !newFedNombre.trim()) return;
+    setSavingNewFed(true);
+    try {
+      const response = await fetch('/api/admin/sindicatos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          siglas: newFedSiglas.toUpperCase(),
+          nombre_completo: newFedNombre.toUpperCase(),
+          es_federacion: true,
+          federacion_id: null
+        }),
+      });
+      if (!response.ok) throw new Error('Error al crear federación');
+      const created = await response.json();
+      // Añadir a la lista local
+      setSindicatos(prev => [...prev, created]);
+      // Asignar al modal activo
+      if (context === 'edit') setEditFederacionId(created.id);
+      else setNewFederacionId(created.id);
+      // Limpiar form inline
+      setNewFedSiglas('');
+      setNewFedNombre('');
+      setShowNewFedForm(null);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setSavingNewFed(false);
     }
   };
 
@@ -119,9 +174,12 @@ export default function GestionSindicatosPage() {
     }
   };
 
-  const filtered = sindicatos.filter(s => 
-    s.siglas.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    s.nombre_completo.toLowerCase().includes(searchTerm.toLowerCase())
+  // Federaciones disponibles para vincular (excluye el sindicato que se está editando)
+  const federaciones = sindicatos.filter(s => s.es_federacion && (!selectedSindicato || s.id !== selectedSindicato.id));
+
+  const filtered = (sindicatos || []).filter(s =>
+    (s.siglas?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (s.nombre_completo?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -134,6 +192,30 @@ export default function GestionSindicatosPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0f1c] text-white p-6 md:p-12 relative overflow-hidden">
+      {/* Tooltip simple custom */}
+      <style jsx global>{`
+        .tooltip-container { position: relative; display: inline-block; }
+        .tooltip-text {
+          visibility: hidden;
+          width: 250px;
+          background-color: #1f2937;
+          color: #fff;
+          text-align: center;
+          border-radius: 8px;
+          padding: 8px;
+          position: absolute;
+          z-index: 200;
+          bottom: 125%;
+          left: 50%;
+          margin-left: -125px;
+          opacity: 0;
+          transition: opacity 0.3s;
+          font-size: 10px;
+          border: 1px solid rgba(255,255,255,0.1);
+          pointer-events: none;
+        }
+        .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; }
+      `}</style>
       <div className="absolute inset-0 pointer-events-none z-0">
         <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-orange-900/10 blur-[120px]" />
         <div className="absolute top-1/2 right-0 w-[400px] h-[400px] rounded-full bg-amber-900/10 blur-[120px]" />
@@ -166,7 +248,7 @@ export default function GestionSindicatosPage() {
                 />
               </div>
               <button 
-                onClick={() => setIsAddModalOpen(true)}
+                onClick={() => { setNewSiglas(''); setNewNombre(''); setNewEsFederacion(false); setNewFederacionId(null); setShowNewFedForm(null); setIsAddModalOpen(true); }}
                 className="w-full sm:w-auto px-6 py-4 bg-orange-600 hover:bg-orange-500 text-white font-black rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 uppercase tracking-widest text-sm shrink-0"
               >
                 <Plus className="w-5 h-5" /> Añadir Nuevo
@@ -182,7 +264,7 @@ export default function GestionSindicatosPage() {
               <thead>
                 <tr className="border-b border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-widest text-white/40">
                   <th className="px-8 py-6">SIGLAS</th>
-                  <th className="px-8 py-6">NOMBRE COMPLETO</th>
+                  <th className="px-8 py-6">NOMBRE COMPLETO / FEDERACIÓN</th>
                   <th className="px-8 py-6 text-right">ACCIONES</th>
                 </tr>
               </thead>
@@ -198,8 +280,22 @@ export default function GestionSindicatosPage() {
                         {s.siglas.toUpperCase()}
                       </span>
                     </td>
-                    <td className="px-8 py-6 font-bold text-white/80 group-hover:text-white transition-colors uppercase text-sm">
-                      {s.nombre_completo.toUpperCase()}
+                    <td className="px-8 py-6">
+                      <div className="flex flex-col gap-1">
+                        <div className="font-bold text-white/80 group-hover:text-white transition-colors uppercase text-sm">
+                          {s.nombre_completo.toUpperCase()}
+                        </div>
+                        {s.federacion_id && (
+                          <div className="text-[10px] text-white/30 font-bold flex items-center gap-1 uppercase">
+                            <Building2 className="w-3 h-3" /> FEDERACIÓN: {sindicatos.find(f => f.id === s.federacion_id)?.siglas || 'N/A'}
+                          </div>
+                        )}
+                        {s.es_federacion && (
+                          <div className="text-[10px] text-emerald-400/50 font-black uppercase tracking-tighter">
+                            [ FEDERACIÓN / CONFEDERACIÓN ]
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-8 py-6 text-right">
                       <button 
@@ -229,10 +325,10 @@ export default function GestionSindicatosPage() {
         </footer>
       </div>
 
-      {/* MODAL EDICIÓN */}
+      {/* ── MODAL EDICIÓN ── */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-[#111827] border border-white/10 w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+          <div className="bg-[#111827] border border-white/10 w-full max-w-lg rounded-[32px] shadow-2xl animate-in zoom-in-95 duration-200 my-auto">
             <div className="p-8 space-y-6">
               <div className="flex justify-between items-center border-b border-white/5 pb-6">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2 uppercase tracking-tight">
@@ -243,6 +339,7 @@ export default function GestionSindicatosPage() {
               
               <form onSubmit={handleSaveEdit} className="space-y-6">
                 <div className="space-y-4">
+                  {/* Siglas */}
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-1">Siglas del sindicato</label>
                     <input
@@ -253,6 +350,8 @@ export default function GestionSindicatosPage() {
                       required
                     />
                   </div>
+
+                  {/* Nombre completo */}
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-1">Nombre completo del sindicato</label>
                     <textarea
@@ -263,6 +362,97 @@ export default function GestionSindicatosPage() {
                       required
                     />
                   </div>
+
+                  {/* Toggle ¿Es Federación? */}
+                  <div className="space-y-2">
+                    <div
+                      className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10 hover:border-white/20 transition-all cursor-pointer"
+                      onClick={() => setEditEsFederacion(!editEsFederacion)}
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-white uppercase tracking-tight">¿Es una Federación / Asociación?</span>
+                        <span className="text-[9px] text-white/40 uppercase font-black tracking-widest leading-none mt-1">Marca esta opción si es una entidad paraguas</span>
+                      </div>
+                      <div className={`w-10 h-6 rounded-full transition-all flex items-center px-1 ${editEsFederacion ? 'bg-orange-500' : 'bg-white/10'}`}>
+                        <div className={`w-4 h-4 bg-white rounded-full shadow-md transition-transform ${editEsFederacion ? 'translate-x-4' : 'translate-x-0'}`} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Selector Federación vinculada (solo si no es federación) */}
+                  {!editEsFederacion && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 px-1">
+                        <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Federación / Asociación Vinculada</label>
+                        <div className="tooltip-container">
+                          <Info className="w-3 h-3 text-white/20 hover:text-white transition-colors" />
+                          <span className="tooltip-text">Asociar el sindicato a una federación, confederación, intersindical o asociación de sindicatos</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 items-stretch w-full">
+                        <select
+                          className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-orange-500 transition-all text-white font-bold uppercase appearance-none"
+                          value={editFederacionId || ''}
+                          onChange={(e) => setEditFederacionId(e.target.value ? parseInt(e.target.value) : null)}
+                        >
+                          <option value="" className="bg-[#111827]">INDIVIDUAL (SIN FEDERACIÓN)</option>
+                          {federaciones.map(f => (
+                            <option key={f.id} value={f.id} className="bg-[#111827]">{f.siglas} - {f.nombre_completo}</option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          title="Dar de alta una nueva federación"
+                          onClick={() => setShowNewFedForm(showNewFedForm === 'edit' ? null : 'edit')}
+                          className={`px-4 py-3 rounded-2xl border font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-1 shrink-0 ${
+                            showNewFedForm === 'edit'
+                              ? 'bg-orange-500/20 border-orange-500/40 text-orange-400'
+                              : 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:border-white/30'
+                          }`}
+                        >
+                          <Plus className="w-3 h-3" /> Nueva
+                        </button>
+                      </div>
+                      {showNewFedForm === 'edit' && (
+                        <div className="mt-2 p-4 bg-orange-500/5 border border-orange-500/20 rounded-2xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                          <p className="text-[9px] font-black text-orange-400/70 uppercase tracking-widest">✦ Alta rápida de nueva federación</p>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="SIGLAS"
+                              value={newFedSiglas}
+                              onChange={e => setNewFedSiglas(e.target.value)}
+                              className="w-24 bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-orange-500 text-white font-bold uppercase text-xs"
+                            />
+                            <input
+                              type="text"
+                              placeholder="NOMBRE COMPLETO"
+                              value={newFedNombre}
+                              onChange={e => setNewFedNombre(e.target.value)}
+                              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-orange-500 text-white font-bold uppercase text-xs"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleCreateFederacionInline('edit')}
+                              disabled={savingNewFed || !newFedSiglas.trim() || !newFedNombre.trim()}
+                              className="flex-1 py-2 bg-orange-600 hover:bg-orange-500 text-white font-black rounded-xl text-[10px] uppercase tracking-widest transition-all disabled:opacity-40 flex items-center justify-center gap-1"
+                            >
+                              {savingNewFed ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} Crear y Vincular
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setShowNewFedForm(null); setNewFedSiglas(''); setNewFedNombre(''); }}
+                              className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white/40 font-black rounded-xl text-[10px] uppercase tracking-widest transition-all"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 <button
@@ -277,10 +467,11 @@ export default function GestionSindicatosPage() {
           </div>
         </div>
       )}
-      {/* MODAL AÑADIR */}
+
+      {/* ── MODAL AÑADIR ── */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-[#111827] border border-white/10 w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+          <div className="bg-[#111827] border border-white/10 w-full max-w-lg rounded-[32px] shadow-2xl animate-in zoom-in-95 duration-200 my-auto">
             <div className="p-8 space-y-6">
               <div className="flex justify-between items-center border-b border-white/5 pb-6">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2 uppercase tracking-tight">
@@ -291,6 +482,7 @@ export default function GestionSindicatosPage() {
               
               <form onSubmit={handleAddNew} className="space-y-6">
                 <div className="space-y-4">
+                  {/* Siglas */}
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-1">Siglas del nuevo sindicato</label>
                     <input
@@ -301,16 +493,109 @@ export default function GestionSindicatosPage() {
                       required
                     />
                   </div>
+
+                  {/* Nombre completo */}
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-1">Nombre completo</label>
-                    <textarea
-                      rows={3}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500 transition-all text-white font-bold uppercase resize-none"
+                    <input
+                      type="text"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500 transition-all text-white font-bold uppercase"
                       value={newNombre}
                       onChange={(e) => setNewNombre(e.target.value)}
                       required
                     />
                   </div>
+
+                  {/* Toggle ¿Es Federación? */}
+                  <div className="space-y-2">
+                    <div
+                      className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10 hover:border-white/20 transition-all cursor-pointer"
+                      onClick={() => setNewEsFederacion(!newEsFederacion)}
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-white uppercase tracking-tight">¿Es una Federación / Asociación?</span>
+                        <span className="text-[9px] text-white/40 uppercase font-black tracking-widest leading-none mt-1">Marca esta opción si es una entidad paraguas</span>
+                      </div>
+                      <div className={`w-10 h-6 rounded-full transition-all flex items-center px-1 ${newEsFederacion ? 'bg-emerald-500' : 'bg-white/10'}`}>
+                        <div className={`w-4 h-4 bg-white rounded-full shadow-md transition-transform ${newEsFederacion ? 'translate-x-4' : 'translate-x-0'}`} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Selector Federación vinculada (solo si no es federación) */}
+                  {!newEsFederacion && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 px-1 text-white/40">
+                        <label className="text-[10px] font-bold uppercase tracking-widest">Federación / Asociación Vinculada</label>
+                        <div className="tooltip-container">
+                          <Info className="w-3 h-3 text-white/20 hover:text-white transition-colors" />
+                          <span className="tooltip-text">Asociar el sindicato a una federación, confederación, intersindical o asociación de sindicatos</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 items-stretch w-full">
+                        <select
+                          className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500 transition-all text-white font-bold uppercase appearance-none"
+                          value={newFederacionId || ''}
+                          onChange={(e) => setNewFederacionId(e.target.value ? parseInt(e.target.value) : null)}
+                        >
+                          <option value="" className="bg-[#111827]">INDIVIDUAL (SIN FEDERACIÓN)</option>
+                          {federaciones.map(f => (
+                            <option key={f.id} value={f.id} className="bg-[#111827]">{f.siglas} - {f.nombre_completo}</option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          title="Dar de alta una nueva federación"
+                          onClick={() => setShowNewFedForm(showNewFedForm === 'add' ? null : 'add')}
+                          className={`px-4 py-3 rounded-2xl border font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-1 shrink-0 ${
+                            showNewFedForm === 'add'
+                              ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
+                              : 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:border-white/30'
+                          }`}
+                        >
+                          <Plus className="w-3 h-3" /> Nueva
+                        </button>
+                      </div>
+                      {showNewFedForm === 'add' && (
+                        <div className="mt-2 p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                          <p className="text-[9px] font-black text-emerald-400/70 uppercase tracking-widest">✦ Alta rápida de nueva federación</p>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="SIGLAS"
+                              value={newFedSiglas}
+                              onChange={e => setNewFedSiglas(e.target.value)}
+                              className="w-24 bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500 text-white font-bold uppercase text-xs"
+                            />
+                            <input
+                              type="text"
+                              placeholder="NOMBRE COMPLETO"
+                              value={newFedNombre}
+                              onChange={e => setNewFedNombre(e.target.value)}
+                              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500 text-white font-bold uppercase text-xs"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleCreateFederacionInline('add')}
+                              disabled={savingNewFed || !newFedSiglas.trim() || !newFedNombre.trim()}
+                              className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-[10px] uppercase tracking-widest transition-all disabled:opacity-40 flex items-center justify-center gap-1"
+                            >
+                              {savingNewFed ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} Crear y Vincular
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setShowNewFedForm(null); setNewFedSiglas(''); setNewFedNombre(''); }}
+                              className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white/40 font-black rounded-xl text-[10px] uppercase tracking-widest transition-all"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 <button

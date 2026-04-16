@@ -458,9 +458,9 @@ export default function GestionSindicatosPage() {
                           <span className="tooltip-text">Asociar el sindicato a una federación, confederación, intersindical o asociación de sindicatos</span>
                         </div>
                       </div>
-                      <div className="flex gap-2 items-stretch">
+                      <div className="flex gap-2 items-stretch w-full">
                         <select
-                          className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-orange-500 transition-all text-white font-bold uppercase appearance-none"
+                          className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-orange-500 transition-all text-white font-bold uppercase appearance-none"
                           value={editFederacionId || ''}
                           onChange={(e) => setEditFederacionId(e.target.value ? parseInt(e.target.value) : null)}
                         >
@@ -587,9 +587,9 @@ export default function GestionSindicatosPage() {
                             <span className="tooltip-text">Asociar el sindicato a una federación, confederación, intersindical o asociación de sindicatos</span>
                          </div>
                       </div>
-                      <div className="flex gap-2 items-stretch">
+                      <div className="flex gap-2 items-stretch w-full">
                         <select
-                          className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500 transition-all text-white font-bold uppercase appearance-none"
+                          className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500 transition-all text-white font-bold uppercase appearance-none"
                           value={newFederacionId || ''}
                           onChange={(e) => setNewFederacionId(e.target.value ? parseInt(e.target.value) : null)}
                         >
