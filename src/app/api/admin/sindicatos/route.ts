@@ -35,7 +35,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { siglas, nombre_completo } = body;
+    const { siglas, nombre_completo, es_federacion, federacion_id } = body;
 
     if (!siglas || !nombre_completo) {
       return NextResponse.json({ error: 'Siglas y nombre son obligatorios' }, { status: 400 });
@@ -73,6 +73,8 @@ export async function POST(request: Request) {
         id: nextId,
         siglas: siglas.toUpperCase(),
         nombre_completo: nombre_completo.toUpperCase(),
+        es_federacion: es_federacion || false,
+        federacion_id: federacion_id || null,
         orden_prioridad: 50 // Prioridad estándar para nuevos
       }])
       .select()
@@ -91,7 +93,7 @@ export async function PATCH(request: Request) {
 
   try {
     const body = await request.json();
-    const { id, siglas, nombre_completo } = body;
+    const { id, siglas, nombre_completo, es_federacion, federacion_id } = body;
     if (!id) return NextResponse.json({ error: 'Falta ID' }, { status: 400 });
 
     const supabase = getSupabaseAdmin();
@@ -99,7 +101,9 @@ export async function PATCH(request: Request) {
       .from('sindicatos')
       .update({
         siglas: siglas?.toUpperCase(),
-        nombre_completo: nombre_completo?.toUpperCase()
+        nombre_completo: nombre_completo?.toUpperCase(),
+        es_federacion,
+        federacion_id
       })
       .eq('id', id)
       .select()
