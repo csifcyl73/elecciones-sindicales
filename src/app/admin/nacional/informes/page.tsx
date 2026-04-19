@@ -546,6 +546,10 @@ export default function InformesPage() {
   })();
 
   const totalDelegados   = datos.reduce((s, u) => s + u.totalDelegadosObtenidos, 0);
+  const totalCSIF = datos.reduce((acc, u) => {
+    const csif = u.sindicatos.find(s => s.siglas.toUpperCase() === 'CSIF');
+    return acc + (csif?.delegados || 0);
+  }, 0);
   const sindicatosTop6   = todosSindicatos.slice(0, 6);
 
   // Comparativa (eje X = sindicato, una barra por unidad)
@@ -847,7 +851,7 @@ export default function InformesPage() {
               {/* KPI Cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                  { label: 'Delegados Obtenidos', value: totalDelegados.toLocaleString('es-ES'), color: 'text-amber-400', border: 'border-amber-500/20 bg-amber-500/[0.04]' },
+                  { label: 'CSIF (Delegados Obt.)', value: totalCSIF.toLocaleString('es-ES'), color: 'text-amber-400', border: 'border-amber-500/20 bg-amber-500/[0.04]' },
                   { label: 'Elecciones en Sesión', value: datos.length, color: 'text-indigo-400', border: 'border-indigo-500/20 bg-indigo-500/[0.04]' },
                   { label: 'Total a Elegir', value: datos.reduce((s, u) => s + u.delegadosAElegir, 0).toLocaleString('es-ES'), color: 'text-emerald-400', border: 'border-emerald-500/20 bg-emerald-500/[0.04]' },
                   { label: 'Sindicatos Distintos', value: todosSindicatos.length, color: 'text-pink-400', border: 'border-pink-500/20 bg-pink-500/[0.04]' },
