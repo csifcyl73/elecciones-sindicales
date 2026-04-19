@@ -391,7 +391,7 @@ export default function InformesPage() {
         pdf.setFont('helvetica', 'bold'); pdf.setFontSize(6.5); pdf.setTextColor(255);
         pdf.text('SINDICATO', M + 2, y + 4.8);
         datos.forEach((u, i) => {
-          const lbl = `${u.nombre.slice(0, 18)} (${u.anio})`;
+          const lbl = `${u.provincia || 'S/P'} (${u.anio})`;
           pdf.text(lbl, M + colSind + i * colElec + 2, y + 4.8);
         });
         pdf.text('TOTAL', M + colSind + datos.length * colElec + 2, y + 4.8);
@@ -533,7 +533,7 @@ export default function InformesPage() {
   // Evolución (eje X = elección ordenada por año)
   const datosOrdenados = [...datos].sort((a, b) => (a.anio || 0) - (b.anio || 0));
   const dataEvolucion = datosOrdenados.map(u => {
-    const entry: Record<string, any> = { label: `${u.nombre.slice(0, 20)} (${u.anio})` };
+    const entry: Record<string, any> = { label: `${u.provincia || 'S/P'} (${u.anio})` };
     sindicatosTop6.forEach(s => {
       const found = u.sindicatos.find(x => x.siglas === s.siglas);
       entry[s.siglas] = found?.delegados || 0;
@@ -558,7 +558,7 @@ export default function InformesPage() {
   }));
 
   // ── Label helpers ─────────────────────────────────────────────────────────
-  const labelUnidad = (i: number) => datos[i] ? `${datos[i].nombre.slice(0, 25)} (${datos[i].anio})` : `u${i}`;
+  const labelUnidad = (i: number) => datos[i] ? `${datos[i].provincia || 'S/P'} (${datos[i].anio})` : `u${i}`;
 
   // ── Estado badge ──────────────────────────────────────────────────────────
   const estadoBadge = (estado?: string) => {
@@ -882,7 +882,7 @@ export default function InformesPage() {
                 <ChartCard title="Delegados por Sindicato — Comparativa entre Elecciones">
                   {dataComparativa.length === 0 ? <EmptyChart msg="Sin resultados consolidados en las elecciones seleccionadas" /> : (
                     <ResponsiveContainer width="100%" height={360}>
-                      <BarChart data={dataComparativa} margin={{ top: 10, right: 20, left: -10, bottom: 70 }}>
+                      <BarChart data={dataComparativa} margin={{ top: 10, right: 20, left: -10, bottom: 85 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" />
                         <XAxis dataKey="sindicato" tick={{ fill: '#ffffff40', fontSize: 10, fontWeight: 700 }} angle={-40} textAnchor="end" interval={0} height={80} />
                         <YAxis tick={{ fill: '#ffffff40', fontSize: 10 }} />
