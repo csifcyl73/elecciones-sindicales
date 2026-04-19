@@ -99,3 +99,25 @@ export async function DELETE(request: NextRequest) {
          return NextResponse.json({ error: err.message }, { status: 500 });
     }
 }
+
+export async function PATCH(request: NextRequest) {
+    const perm = await checkAdmin(request);
+    if (perm.error) return NextResponse.json({ error: perm.error }, { status: 401 });
+
+    try {
+        const body = await request.json();
+        const { id, password } = body;
+        
+        if (!id || !password) throw new Error('ID y nueva contraseña son requeridos');
+        
+        const { data, error } = await supabaseAdmin.auth.admin.updateUserById(id, {
+            password: password
+        });
+        
+        if (error) throw error;
+        
+        return NextResponse.json({ success: true, user: data.user });
+    } catch(err: any) {
+        return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+}

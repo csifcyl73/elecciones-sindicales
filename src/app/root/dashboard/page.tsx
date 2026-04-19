@@ -80,6 +80,27 @@ export default function RootDashboard() {
       }
   };
 
+  const handleResetPassword = async (id: string, currentEmail: string) => {
+      const newPass = prompt(`Introduce la nueva contraseña para ${currentEmail}\n(Mínimo 6 caracteres):`);
+      if (!newPass) return;
+      if (newPass.length < 6) {
+          alert('Error: La contraseña debe tener al menos 6 caracteres.');
+          return;
+      }
+      try {
+          const res = await fetch('/api/root/nacionales', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id, password: newPass })
+          });
+          const result = await res.json();
+          if (!res.ok) throw new Error(result.error);
+          setMsg('Contraseña actualizada correctamente para ' + currentEmail);
+      } catch(err: any) {
+          setMsg(`Error al actualizar contraseña: ${err.message}`);
+      }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.replace('/');
@@ -151,9 +172,14 @@ export default function RootDashboard() {
                                      <h3 className="font-bold text-white">{u.user_metadata?.name || 'Administrador Nacional'}</h3>
                                      <p className="text-sm text-neutral-500">{u.email}</p>
                                  </div>
-                                 <button onClick={() => handleDelete(u.id, u.email)} className="mt-3 sm:mt-0 px-4 py-2 bg-red-950/30 hover:bg-red-900/50 text-red-400 rounded-lg flex items-center gap-2 text-xs font-bold uppercase transition-colors">
-                                     <Trash2 className="w-4 h-4" /> Revocar
-                                 </button>
+                                 <div className="flex gap-2 mt-3 sm:mt-0">
+                                     <button onClick={() => handleResetPassword(u.id, u.email)} className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg flex items-center gap-2 text-xs font-bold uppercase transition-colors">
+                                         <KeyRound className="w-4 h-4" /> Reset Pass
+                                     </button>
+                                     <button onClick={() => handleDelete(u.id, u.email)} className="px-4 py-2 bg-red-950/30 hover:bg-red-900/50 text-red-400 rounded-lg flex items-center gap-2 text-xs font-bold uppercase transition-colors">
+                                         <Trash2 className="w-4 h-4" /> Revocar
+                                     </button>
+                                 </div>
                              </div>
                          ))}
                          {nacionales.length === 0 && <p className="text-neutral-500 italic text-center py-10">No hay administradores nacionales registrados.</p>}

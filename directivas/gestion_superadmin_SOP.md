@@ -15,11 +15,12 @@ Implementar un perfil de máxima jerarquía ("Root" o "Propietario") en el Siste
    - **Dashboard**: Panel extremadamente simple que solo lista los "Administradores Nacionales" actuales.
    - **Formulario de Alta**: Captura Email, Nombre Completo, DNI y Contraseña para el nuevo administrador.
    - **Botón de Revocación**: Permite eliminar o deshabilitar un administrador nacional existente.
+   - **Botón de Reseteo de Contraseña**: Permite a Root cambiar o asignar una nueva contraseña a un administrador nacional existente (usando supabaseAdmin.auth.admin.updateUserById).
 
 3. **Backend API Bypassing (Supabase Admin)**
-   - **Ruta**: `/api/root/gestion-nacionales`.
-   - Utilizar la `supabase_service_role_key` para interactuar con la consola de Auth de Supabase y esquivar restricciones estándar. Garantizando que la clave maestra nunca se filtre al frontend.
-   - El endpoint debe validar robustamente la sesión JWT de la persona que hace la petición (debe ser `super_admin_sistema`).
+   - **Ruta**: `/api/root/gestion-nacionales` o `/api/root/nacionales`.
+   - Utilizar la `supabase_service_role_key` para interactuar con la consola de Auth de Supabase (crear, listar, eliminar y actualizar mediante updateUserById para el reset de password) y esquivar restricciones estándar. Garantizando que la clave maestra nunca se filtre al frontend.
+   - El endpoint debe validar robustamente la sesión JWT de la persona que hace la petición (debe ser `super_admin_sistema` u homologable).
 
 ## Pasos Requeridos para Construcción
 1. **Definir el Perfil Superior**: Crear un nuevo script de migración SQL o una capa lógica para admitir el rol.
