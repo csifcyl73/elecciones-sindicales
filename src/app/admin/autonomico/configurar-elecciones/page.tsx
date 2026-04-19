@@ -19,8 +19,8 @@ import {
   FolderOpen,
   Plus,
   Calendar
+} from 'lucide-react';
 import { SearchableCombobox } from '@/components/ui/searchable-combobox';
-
 
 
 function ConfigurarEleccionesSPA() {
