@@ -576,8 +576,8 @@ export default function InformesPage() {
           </Link>
           <div>
             <p className="text-[8px] font-black uppercase tracking-[0.3em] text-amber-400/60">Módulo de Análisis</p>
-            <h1 className="text-base font-black uppercase tracking-tight leading-none">
-              Mission Control <span className="text-amber-400">·</span> <span className="text-white/40 font-bold text-sm">Informes</span>
+            <h1 className="text-base font-black uppercase tracking-widest leading-none">
+              MÓDULO DE ANÁLISIS <span className="text-amber-400">·</span> INFORMES
             </h1>
           </div>
         </div>
