@@ -441,15 +441,23 @@ export default function InformesPage() {
         const captureChart = async (id: string): Promise<string | null> => {
           const el = document.getElementById(id);
           if (!el) return null;
+          const originalClass = el.className;
+          // Movemos el gráfico temporalmente a la pantalla (detrás del contenido) para evitar el culling del navegador
+          el.className = 'absolute top-0 left-0 w-[900px] z-[0] pointer-events-none';
           try {
+            await new Promise(r => setTimeout(r, 100)); // tiempo para ResizeObserver de Recharts
             const canvas = await html2canvas(el as HTMLElement, {
               backgroundColor: '#0a101f',
               scale: 1.5,
               logging: false,
               useCORS: true,
             });
+            el.className = originalClass;
             return canvas.toDataURL('image/png');
-          } catch { return null; }
+          } catch { 
+            el.className = originalClass;
+            return null; 
+          }
         };
 
         const [imgComp, imgEvol, imgSect, imgRepr] = await Promise.all([
@@ -889,7 +897,7 @@ export default function InformesPage() {
                         <Tooltip content={<CustomTooltip />} />
                         <Legend wrapperStyle={{ fontSize: 10, paddingTop: 12 }} />
                         {datos.map((_, i) => (
-                          <Bar key={i} dataKey={`u${i}`} name={labelUnidad(i)} fill={SESSION_COLORS[i]} radius={[4, 4, 0, 0]} maxBarSize={40} />
+                          <Bar isAnimationActive={false} key={i} dataKey={`u${i}`} name={labelUnidad(i)} fill={SESSION_COLORS[i]} radius={[4, 4, 0, 0]} maxBarSize={40} />
                         ))}
                       </BarChart>
                     </ResponsiveContainer>
@@ -970,7 +978,7 @@ export default function InformesPage() {
                         <Tooltip content={<CustomTooltip />} />
                         <Legend wrapperStyle={{ fontSize: 10 }} />
                         {sindicatosTop6.map((s, i) => (
-                          <Line key={s.siglas} type="monotone" dataKey={s.siglas} stroke={SESSION_COLORS[i]} strokeWidth={2.5} dot={{ fill: SESSION_COLORS[i], r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                          <Line isAnimationActive={false} key={s.siglas} type="monotone" dataKey={s.siglas} stroke={SESSION_COLORS[i]} strokeWidth={2.5} dot={{ fill: SESSION_COLORS[i], r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} />
                         ))}
                       </LineChart>
                     </ResponsiveContainer>
@@ -989,7 +997,7 @@ export default function InformesPage() {
                         <Tooltip content={<CustomTooltip />} />
                         <Legend wrapperStyle={{ fontSize: 10 }} />
                         {datos.map((_, i) => (
-                          <Bar key={i} dataKey={`u${i}`} name={labelUnidad(i)} fill={SESSION_COLORS[i]} radius={[0, 4, 4, 0]} />
+                          <Bar isAnimationActive={false} key={i} dataKey={`u${i}`} name={labelUnidad(i)} fill={SESSION_COLORS[i]} radius={[0, 4, 4, 0]} />
                         ))}
                       </BarChart>
                     </ResponsiveContainer>
