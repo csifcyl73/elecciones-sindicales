@@ -24,6 +24,7 @@ import {
   Save,
   Plus
 } from 'lucide-react';
+import { SearchableCombobox } from '@/components/ui/searchable-combobox';
 
 export default function GestionUnidadesPage() {
   const [unidades, setUnidades] = useState<any[]>([]);
@@ -485,11 +486,17 @@ export default function GestionUnidadesPage() {
              <div className="space-y-5 relative z-10">
                 <div className="space-y-2">
                    <label className="text-[9px] font-black text-white/40 uppercase tracking-widest px-4">Asociar a Proceso Electoral</label>
-                   <select value={editUnidadProcesoId} onChange={(e) => setEditUnidadProcesoId(e.target.value)} className="w-full bg-black/40 border-2 border-white/10 rounded-3xl px-8 py-5 text-white font-black uppercase text-sm focus:outline-none focus:border-emerald-500 transition-all appearance-none">
-                      <option value="">Sin proceso asociado</option>
-                      <option value="NO_PROCEDE">NO PROCEDE</option>
-                      {procesos.map(p => <option key={p.id} value={p.id}>{p.nombre.toUpperCase()}{p.periodo ? ` · ${p.periodo}` : ''}</option>)}
-                   </select>
+                   <SearchableCombobox
+                      options={[
+                        { id: '', nombre: 'Sin proceso asociado' },
+                        { id: 'NO_PROCEDE', nombre: 'NO PROCEDE' },
+                        ...procesos.map(p => ({ id: p.id, nombre: `${p.nombre.toUpperCase()}${p.periodo ? ` · ${p.periodo}` : ''}` }))
+                      ]}
+                      value={editUnidadProcesoId}
+                      onChange={(val) => setEditUnidadProcesoId(val)}
+                      placeholder="SELECCIONA PROCESO ELECTORAL..."
+                      className="w-full"
+                   />
                 </div>
                 <div className="space-y-2">
                    <label className="text-[9px] font-black text-white/40 uppercase tracking-widest px-4">Año</label>

@@ -5,6 +5,7 @@ import {
   ArrowLeft, UserPlus, RefreshCw, Eye, EyeOff,
   CheckCircle2, AlertCircle, Loader2, Copy, Check,
 } from 'lucide-react';
+import { SearchableCombobox } from '@/components/ui/searchable-combobox';
 
 const COMUNIDADES = [
   'ANDALUCÍA',
@@ -238,22 +239,13 @@ export default function AltaAdministradorAutonomico() {
           <div className="space-y-2">
             <label className="text-sm font-semibold text-white/70 uppercase tracking-wider">Comunidad Autónoma</label>
             <div className="relative">
-              <select
+              <SearchableCombobox
+                options={COMUNIDADES.map(c => ({ id: c, nombre: c }))}
                 value={form.comunidad}
-                onChange={e => setForm(f => ({ ...f, comunidad: e.target.value }))}
-                required
-                className="w-full px-4 py-3 bg-[#0f1628] border border-white/15 rounded-xl text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none cursor-pointer font-medium"
-              >
-                <option value="" disabled>-- Selecciona una comunidad --</option>
-                {COMUNIDADES.map(c => (
-                  <option key={c} value={c} className="bg-[#0f1628] text-white">{c}</option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center">
-                <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
+                onChange={val => setForm(f => ({ ...f, comunidad: val }))}
+                placeholder="-- SELECCIONA UNA COMUNIDAD --"
+                className="w-full"
+              />
             </div>
           </div>
 

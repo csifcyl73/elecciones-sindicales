@@ -175,10 +175,10 @@ export default function InformesPage() {
 
   // ── Opciones de filtro (derivadas de la lista) ───────────────────────────
   const optAnios    = [...new Set(todasUnidades.map(u => String(u.anio)).filter(v => v && v !== 'undefined' && v !== 'null'))].sort().reverse();
-  const optProvs    = [...new Set(todasUnidades.map(u => u.provincias?.nombre).filter(Boolean) as string[])].sort();
-  const optSects    = [...new Set(todasUnidades.map(u => u.sectores?.nombre).filter(Boolean) as string[])].sort();
-  const optOrganos  = [...new Set(todasUnidades.map(u => u.tipos_organos?.nombre).filter(Boolean) as string[])].sort();
-  const optUnidades = [...new Set(todasUnidades.map(u => u.nombre).filter(Boolean))].sort();
+  const optProvs    = [...new Set(todasUnidades.map(u => u.provincias?.nombre).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  const optSects    = [...new Set(todasUnidades.map(u => u.sectores?.nombre).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  const optOrganos  = [...new Set(todasUnidades.map(u => u.tipos_organos?.nombre).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  const optUnidades = [...new Set(todasUnidades.map(u => u.nombre).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
 
   const toggleFilter = (set: React.Dispatch<React.SetStateAction<string[]>>, val: string) =>
     set(prev => prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]);

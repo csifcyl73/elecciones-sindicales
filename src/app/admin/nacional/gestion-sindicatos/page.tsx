@@ -16,6 +16,7 @@ import {
   Info
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { SearchableCombobox } from '@/components/ui/searchable-combobox';
 
 export default function GestionSindicatosPage() {
   const [sindicatos, setSindicatos] = useState<any[]>([]);
@@ -459,16 +460,16 @@ export default function GestionSindicatosPage() {
                         </div>
                       </div>
                       <div className="flex gap-2 items-stretch w-full">
-                        <select
-                          className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-orange-500 transition-all text-white font-bold uppercase appearance-none"
-                          value={editFederacionId || ''}
-                          onChange={(e) => setEditFederacionId(e.target.value ? parseInt(e.target.value) : null)}
-                        >
-                          <option value="" className="bg-[#111827]">INDIVIDUAL (SIN FEDERACIÓN)</option>
-                          {federaciones.map(f => (
-                            <option key={f.id} value={f.id} className="bg-[#111827]">{f.siglas} - {f.nombre_completo}</option>
-                          ))}
-                        </select>
+                        <SearchableCombobox
+                          options={[
+                            { id: '', nombre: 'INDIVIDUAL (SIN FEDERACIÓN)' },
+                            ...federaciones.map(f => ({ id: f.id, nombre: `${f.siglas} - ${f.nombre_completo}` }))
+                          ]}
+                          value={editFederacionId?.toString() || ''}
+                          onChange={(val) => setEditFederacionId(val ? parseInt(val) : null)}
+                          placeholder="SELECCIONA FEDERACIÓN..."
+                          className="flex-1 min-w-0"
+                        />
                         <button
                           type="button"
                           title="Dar de alta una nueva federación"
@@ -588,16 +589,16 @@ export default function GestionSindicatosPage() {
                          </div>
                       </div>
                       <div className="flex gap-2 items-stretch w-full">
-                        <select
-                          className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500 transition-all text-white font-bold uppercase appearance-none"
-                          value={newFederacionId || ''}
-                          onChange={(e) => setNewFederacionId(e.target.value ? parseInt(e.target.value) : null)}
-                        >
-                          <option value="" className="bg-[#111827]">INDIVIDUAL (SIN FEDERACIÓN)</option>
-                          {federaciones.map(f => (
-                            <option key={f.id} value={f.id} className="bg-[#111827]">{f.siglas} - {f.nombre_completo}</option>
-                          ))}
-                        </select>
+                        <SearchableCombobox
+                          options={[
+                            { id: '', nombre: 'INDIVIDUAL (SIN FEDERACIÓN)' },
+                            ...federaciones.map(f => ({ id: f.id, nombre: `${f.siglas} - ${f.nombre_completo}` }))
+                          ]}
+                          value={newFederacionId?.toString() || ''}
+                          onChange={(val) => setNewFederacionId(val ? parseInt(val) : null)}
+                          placeholder="SELECCIONA FEDERACIÓN..."
+                          className="flex-1 min-w-0"
+                        />
                         <button
                           type="button"
                           title="Dar de alta una nueva federación"

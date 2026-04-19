@@ -133,10 +133,10 @@ export default function VisualizarEleccionesAutonomicoPage() {
   };
 
   // Opciones únicas para cada filtro (derivadas de los datos cargados)
-  const optProvincias = [...new Set(unidades.map(u => u.provincias?.nombre).filter(Boolean))].sort();
-  const optSectores   = [...new Set(unidades.map(u => u.sectores?.nombre).filter(Boolean))].sort();
-  const optUnidades   = [...new Set(unidades.map(u => u.nombre).filter(Boolean))].sort();
-  const optOrganos    = [...new Set(unidades.map(u => u.tipos_organos?.nombre).filter(Boolean))].sort();
+  const optProvincias = [...new Set(unidades.map(u => u.provincias?.nombre).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  const optSectores   = [...new Set(unidades.map(u => u.sectores?.nombre).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  const optUnidades   = [...new Set(unidades.map(u => u.nombre).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  const optOrganos    = [...new Set(unidades.map(u => u.tipos_organos?.nombre).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
   const optAnyos      = [...new Set(unidades.map(u => String(u.anio)).filter(v => v && v !== 'undefined' && v !== 'null'))].sort().reverse();
 
   const toggleFilter = (set: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {

@@ -14,6 +14,7 @@ import {
   MapPin,
   CheckCircle2
 } from 'lucide-react';
+import { SearchableCombobox } from '@/components/ui/searchable-combobox';
 
 const COMUNIDADES = [
   'ANDALUCÍA', 'ARAGÓN', 'ASTURIAS (PRINCIPADO DE)', 'BALEARES (ISLAS)', 'CANARIAS',
@@ -275,14 +276,13 @@ export default function GestionAdminsAutonomicosPage() {
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-1">Comunidad Autónoma</label>
-                  <select
-                    className="w-full bg-[#1e293b] border border-white/10 rounded-xl px-5 py-3 focus:outline-none focus:border-blue-500 transition-all text-white font-bold appearance-none cursor-pointer"
+                  <SearchableCombobox
+                    options={COMUNIDADES.map(c => ({ id: c, nombre: c }))}
                     value={editComunidad}
-                    onChange={(e) => setEditComunidad(e.target.value)}
-                    required
-                  >
-                    {COMUNIDADES.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                    onChange={val => setEditComunidad(val)}
+                    placeholder="-- SELECCIONA UNA COMUNIDAD --"
+                    className="w-full"
+                  />
                 </div>
                 <div className="space-y-1 md:col-span-2 bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl mt-2">
                    <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest px-1">Resetear Contraseña (Opcional)</label>
