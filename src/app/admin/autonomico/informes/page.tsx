@@ -11,6 +11,7 @@ import {
   CheckSquare, Square, SlidersHorizontal, Building2, MapPin,
   Calendar, Zap, ChevronDown, Database, Landmark,
 } from 'lucide-react';
+import html2canvas from 'html2canvas';
 
 // ── Paleta de colores de sesión ────────────────────────────────────────────
 const SESSION_COLORS = [
@@ -437,15 +438,16 @@ export default function InformesPage() {
 
       // ── PÁGINAS DE GRÁFICOS ──────────────────────────────────────────────
       try {
-        const html2canvas = (await import('html2canvas')).default;
         const captureChart = async (id: string): Promise<string | null> => {
           const el = document.getElementById(id);
           if (!el) return null;
           const originalClass = el.className;
-          // Movemos el gráfico temporalmente a la pantalla (detrás del contenido) para evitar el culling del navegador
-          el.className = 'absolute top-0 left-0 w-[900px] z-[0] pointer-events-none';
+          
+          // Removemos clases "fixed" o "hidden", y fijamos ancho exacto forzado para la captura
+          el.className = 'absolute top-0 left-0 w-[900px] h-[450px] z-[-99] bg-[#0a101f]';
+          
           try {
-            await new Promise(r => setTimeout(r, 100)); // tiempo para ResizeObserver de Recharts
+            await new Promise(r => setTimeout(r, 150)); // Render cycle
             const canvas = await html2canvas(el as HTMLElement, {
               backgroundColor: '#0a101f',
               scale: 1.5,
@@ -453,8 +455,11 @@ export default function InformesPage() {
               useCORS: true,
             });
             el.className = originalClass;
-            return canvas.toDataURL('image/png');
-          } catch { 
+            const dataUrl = canvas.toDataURL('image/png');
+            if (dataUrl === 'data:,') throw new Error('DataURL vacio');
+            return dataUrl;
+          } catch (e) { 
+            console.error('Error render chart', id, e);
             el.className = originalClass;
             return null; 
           }
