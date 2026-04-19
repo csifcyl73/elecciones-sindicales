@@ -47,6 +47,15 @@ const menuItems = [
     href: '/admin/autonomico/visualizar',
   },
   {
+    id: 'informes',
+    label: 'Módulo de Análisis · Informes',
+    description: 'Generar informes avanzados, gráficas comparativas y PDF',
+    icon: BarChart3,
+    color: 'from-amber-500 to-yellow-600',
+    shadow: 'shadow-amber-500/30',
+    href: '/admin/autonomico/informes',
+  },
+  {
     id: 'interventor-autonomico',
     label: 'Interventor autonómico',
     description: 'Acceso de emergencia para carga de datos y suplencia de interventores',

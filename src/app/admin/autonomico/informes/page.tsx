@@ -156,7 +156,12 @@ export default function InformesPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch('/api/admin/unidades');
+        const { createClient } = await import('@/lib/supabase/client');
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        const userComunidad = session?.user?.user_metadata?.comunidad || '';
+
+        const res = await fetch(`/api/admin/autonomico/unidades?comunidad=${encodeURIComponent(userComunidad)}`);
         const data = await res.json();
         if (Array.isArray(data)) {
           // Mismos estados que el visualizador
@@ -571,7 +576,7 @@ export default function InformesPage() {
       {/* HEADER */}
       <header className="flex items-center justify-between px-5 py-3 border-b border-white/5 bg-[#0a101f]/90 backdrop-blur-md sticky top-0 z-50 shrink-0">
         <div className="flex items-center gap-3">
-          <Link href="/admin/nacional/dashboard" className="group p-2 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 text-white/30 hover:text-white transition-colors">
+          <Link href="/admin/autonomico/dashboard" className="group p-2 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 text-white/30 hover:text-white transition-colors">
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
