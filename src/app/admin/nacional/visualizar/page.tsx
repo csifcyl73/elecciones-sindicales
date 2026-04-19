@@ -394,7 +394,7 @@ export default function VisualizarEleccionesPage() {
             ].map(({ key, label, icon, opts, selected, setter }) => (
               <div key={key} className="relative">
                 <button
-                  onClick={() => setOpenPanel(openPanel === key ? null : key)}
+                  onClick={() => { setOpenPanel(openPanel === key ? null : key); setSearchQuery(''); }}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-[10px] font-black uppercase tracking-widest transition-all ${
                     selected.length > 0
                       ? 'bg-rose-500/15 border-rose-500/40 text-rose-300'
@@ -412,9 +412,22 @@ export default function VisualizarEleccionesPage() {
                 </button>
 
                 {openPanel === key && opts.length > 0 && (
-                  <div className="absolute top-full mt-2 left-0 z-50 bg-[#111827] border border-white/10 rounded-2xl shadow-2xl min-w-[220px] max-h-64 overflow-y-auto">
-                    <div className="p-2 space-y-0.5">
-                      {opts.map((opt: string) => (
+                  <div className="absolute top-full mt-2 left-0 z-50 bg-[#111827] border border-white/10 rounded-2xl shadow-2xl min-w-[220px] max-h-64 flex flex-col overflow-hidden">
+                    <div className="p-2 border-b border-white/10">
+                      <div className="relative">
+                        <Search className="w-3 h-3 absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+                        <input
+                          type="text"
+                          autoFocus
+                          placeholder="BUSCAR..."
+                          className="w-full bg-black/40 border border-white/10 rounded-xl pl-8 pr-3 py-2 text-[10px] font-bold uppercase text-white focus:outline-none focus:border-rose-400/50"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="p-2 space-y-0.5 overflow-y-auto hidden-scrollbar flex-1">
+                      {opts.filter((opt: string) => opt.toLowerCase().includes(searchQuery.toLowerCase())).map((opt: string) => (
                         <button
                           key={opt}
                           onClick={() => toggleFilter(setter, opt)}
@@ -432,6 +445,11 @@ export default function VisualizarEleccionesPage() {
                           {opt}
                         </button>
                       ))}
+                      {opts.filter((opt: string) => opt.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                        <div className="px-3 py-4 text-center text-white/30 text-[9px] uppercase font-black uppercase">
+                           Sin resultados
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

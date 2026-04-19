@@ -83,6 +83,8 @@ function FilterDropdown({
   accentColor?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  
   const accent = accentColor === 'amber'
     ? { pill: 'bg-amber-500/15 border-amber-500/40 text-amber-300', item: 'bg-amber-500/20 text-amber-300 border-amber-500/20', check: 'bg-amber-500 border-amber-500', count: 'bg-amber-500/30 text-amber-300' }
     : { pill: 'bg-white/10 border-white/20 text-white', item: 'bg-white/10 text-white border-white/20', check: 'bg-white border-white', count: 'bg-white/20 text-white' };
@@ -90,7 +92,7 @@ function FilterDropdown({
   return (
     <div className="relative">
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={() => { setOpen(o => !o); setSearchQuery(''); }}
         className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
           selected.length > 0 ? accent.pill : 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:border-white/20'
         }`}
@@ -108,9 +110,22 @@ function FilterDropdown({
       {open && options.length > 0 && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute top-full mt-1 left-0 z-50 bg-[#0d1526] border border-white/10 rounded-2xl shadow-2xl min-w-[200px] max-h-56 overflow-y-auto">
-            <div className="p-1.5 space-y-0.5">
-              {options.map(opt => (
+          <div className="absolute top-full mt-1 left-0 z-50 bg-[#0d1526] border border-white/10 rounded-2xl shadow-2xl min-w-[200px] flex flex-col overflow-hidden max-h-64">
+            <div className="p-1 border-b border-white/10">
+              <div className="relative">
+                <Search className="w-3 h-3 absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="BUSCAR..."
+                  className="w-full bg-black/40 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-[10px] font-bold uppercase text-white focus:outline-none focus:border-amber-400/50"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="p-1.5 space-y-0.5 overflow-y-auto hidden-scrollbar flex-1">
+              {options.filter(opt => opt.toLowerCase().includes(searchQuery.toLowerCase())).map(opt => (
                 <button
                   key={opt}
                   onClick={() => { onToggle(opt); }}
@@ -126,6 +141,11 @@ function FilterDropdown({
                   <span className="truncate">{opt}</span>
                 </button>
               ))}
+              {options.filter(opt => opt.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                 <div className="px-3 py-4 text-center text-white/30 text-[9px] uppercase font-black">
+                   Sin resultados
+                 </div>
+              )}
             </div>
           </div>
         </>
