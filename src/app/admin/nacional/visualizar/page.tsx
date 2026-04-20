@@ -34,6 +34,10 @@ export default function VisualizarEleccionesPage() {
   const [unitToDelete, setUnitToDelete] = useState<any>(null);
   const [deleting, setDeleting] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   // Filtros multi-select
   const [filterProvincias, setFilterProvincias] = useState<string[]>([]);
@@ -164,6 +168,48 @@ export default function VisualizarEleccionesPage() {
     return !procesos.some(p => p.id === u.proceso_electoral_id);
   });
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = (ids: string[]) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      const allSelected = ids.every(id => next.has(id));
+      if (allSelected) { ids.forEach(id => next.delete(id)); }
+      else { ids.forEach(id => next.add(id)); }
+      return next;
+    });
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+    setSelectionMode(false);
+  };
+
+  const handleBulkDelete = async () => {
+    setBulkDeleting(true);
+    const ids = [...selectedIds];
+    let deletedCount = 0;
+    for (const id of ids) {
+      try {
+        const res = await fetch(`/api/admin/unidades/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          deletedCount++;
+          setUnidades(prev => prev.filter(u => u.id !== id));
+          setSelectedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
+        }
+      } catch (_) {}
+    }
+    setBulkDeleting(false);
+    setBulkDeleteModalOpen(false);
+    if (deletedCount === ids.length) clearSelection();
+  };
+
   const renderUnidadCard = (u: any) => (
     <div key={u.id} className="relative group">
       <Link 
@@ -271,6 +317,22 @@ export default function VisualizarEleccionesPage() {
              >
                <FileSpreadsheet className="w-5 h-5" />
                <span className="hidden md:inline">Importar Histórico</span>
+             </button>
+             {/* Botón Selección Múltiple */}
+             <button
+               onClick={() => {
+                 if (selectionMode) { clearSelection(); }
+                 else { setSelectionMode(true); setExpandedProceso(null); }
+               }}
+               className={`flex items-center gap-2 px-5 py-4 border font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all active:scale-95 shadow-lg backdrop-blur-md ${
+                 selectionMode
+                   ? 'bg-rose-500/20 border-rose-500/40 text-rose-300 hover:bg-rose-500/30'
+                   : 'bg-white/5 hover:bg-white/10 border-white/10 text-white/50 hover:text-white'
+               }`}
+               title={selectionMode ? 'Cancelar selección' : 'Selección múltiple'}
+             >
+               <CheckCircle2 className="w-5 h-5" />
+               <span className="hidden md:inline">{selectionMode ? 'Cancelar' : 'Seleccionar'}</span>
              </button>
              {!showNotifications && (
                <button 
@@ -510,33 +572,15 @@ export default function VisualizarEleccionesPage() {
             {procesos.map(proc => {
               const unidadesDeEsteProceso = unidadesPorProceso(proc.id);
               if (unidadesDeEsteProceso.length === 0) return null;
-              const isExpanded = expandedProceso === proc.id;
+              const isExpanded = expandedProceso === proc.id || selectionMode;
+              const groupIds = unidadesDeEsteProceso.map((u: any) => u.id);
 
               return (
                 <div key={proc.id} className="bg-[#111827]/40 border border-white/5 rounded-[40px] overflow-hidden backdrop-blur-xl">
-                  <div 
-                    className="flex items-center justify-between p-6 md:p-8 cursor-pointer group hover:bg-white/5 transition-colors"
-                    onClick={() => setExpandedProceso(isExpanded ? null : proc.id)}
-                  >
-                    <div className="flex items-center gap-4 flex-1 min-w-0">
-                      <div className="p-3 bg-rose-500/10 rounded-2xl border border-rose-500/20 shrink-0">
-                        <CalendarRange className="w-6 h-6 text-rose-400" />
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="text-lg md:text-xl font-black tracking-tight uppercase truncate">{proc.nombre}</h3>
-                        <p className="text-[9px] font-black text-rose-400/60 uppercase tracking-widest mt-1">
-                          {unidadesDeEsteProceso.length} Eleccion{unidadesDeEsteProceso.length !== 1 ? 'es' : ''} en este proceso
-                        </p>
-                      </div>
-                    </div>
-                    <div className={`p-2 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
-                      <ChevronDown className="w-5 h-5 text-white/20" />
-                    </div>
-                  </div>
-
+                  {renderGroupHeader(proc, groupIds)}
                   {isExpanded && (
                     <div className="px-6 md:px-8 pb-8 space-y-4 border-t border-white/5 pt-6">
-                      {unidadesDeEsteProceso.map(u => renderUnidadCard(u))}
+                      {unidadesDeEsteProceso.map((u: any) => renderUnidadCard(u))}
                     </div>
                   )}
                 </div>
@@ -547,20 +591,94 @@ export default function VisualizarEleccionesPage() {
             {unidadesSinProceso.length > 0 && (
               <div className="space-y-4">
                 <div className="px-6 flex items-center gap-3">
-                   <div className="h-[1px] flex-1 bg-white/5" />
-                   <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">Otras Elecciones</span>
-                   <div className="h-[1px] flex-1 bg-white/5" />
+                  {selectionMode && (
+                    <button
+                      onClick={() => selectAll(unidadesSinProceso.map((u: any) => u.id))}
+                      className={`w-7 h-7 rounded-xl border-2 flex items-center justify-center transition-all shrink-0 ${
+                        unidadesSinProceso.every((u: any) => selectedIds.has(u.id))
+                          ? 'bg-rose-500 border-rose-500'
+                          : 'bg-[#0a101f] border-white/20 hover:border-rose-400'
+                      }`}
+                    >
+                      {unidadesSinProceso.every((u: any) => selectedIds.has(u.id)) && <CheckCircle2 className="w-4 h-4 text-white" />}
+                    </button>
+                  )}
+                  <div className="h-[1px] flex-1 bg-white/5" />
+                  <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">Otras Elecciones</span>
+                  <div className="h-[1px] flex-1 bg-white/5" />
                 </div>
                 <div className="space-y-4">
-                  {unidadesSinProceso.map(u => renderUnidadCard(u))}
+                  {unidadesSinProceso.map((u: any) => renderUnidadCard(u))}
                 </div>
               </div>
             )}
           </div>
         )}
       </div>
+      {/* BARRA FLOTANTE DE SELECCIÓN MÚLTIPLE */}
+      {selectionMode && selectedIds.size > 0 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 duration-300">
+          <div className="flex items-center gap-4 bg-[#111827] border border-rose-500/30 shadow-[0_20px_60px_rgba(225,29,72,0.3)] rounded-full px-6 py-4 backdrop-blur-xl">
+            <div className="flex items-center gap-2">
+              <span className="w-7 h-7 bg-rose-500 rounded-full flex items-center justify-center text-white font-black text-sm">{selectedIds.size}</span>
+              <span className="text-white/70 font-black text-[11px] uppercase tracking-widest">{selectedIds.size === 1 ? 'seleccionada' : 'seleccionadas'}</span>
+            </div>
+            <div className="w-px h-6 bg-white/10" />
+            <button
+              onClick={() => setBulkDeleteModalOpen(true)}
+              className="flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-black uppercase tracking-widest text-[10px] rounded-full transition-all active:scale-95 shadow-lg"
+            >
+              <Trash2 className="w-4 h-4" /> Eliminar {selectedIds.size > 1 ? `las ${selectedIds.size}` : 'la'}
+            </button>
+            <button
+              onClick={clearSelection}
+              className="p-2 rounded-full hover:bg-white/10 text-white/30 hover:text-white transition-all"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
-      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
+      {/* MODAL CONFIRMACIÓN ELIMINACIÓN MASIVA */}
+      {bulkDeleteModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="bg-[#111827] border border-white/10 w-full max-w-lg rounded-[50px] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.7)] relative">
+            <div className="absolute top-0 left-0 w-full h-1 bg-rose-500" />
+            <div className="p-12 text-center space-y-8">
+              <div className="w-24 h-24 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto border border-rose-500/20">
+                <AlertTriangle className="w-12 h-12 text-rose-500" />
+              </div>
+              <div className="space-y-4">
+                <h2 className="text-3xl font-black text-white uppercase tracking-tighter">¿Eliminar {selectedIds.size} Elecciones?</h2>
+                <p className="text-white/40 text-sm font-medium leading-relaxed">
+                  Esta acción eliminará de forma permanente <span className="text-white font-black">{selectedIds.size} unidades electorales</span> y todos sus datos asociados.
+                </p>
+                <div className="bg-rose-500/5 border border-rose-500/10 p-5 rounded-2xl text-[10px] font-black text-rose-400 uppercase tracking-widest">
+                  ⚠️ Se borrarán mesas, interventores, votos y resultados de forma irreversible.
+                </div>
+              </div>
+              <div className="flex flex-col gap-4">
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={bulkDeleting}
+                  className="w-full py-6 bg-rose-600 hover:bg-rose-500 text-white font-black rounded-2xl uppercase tracking-[0.2em] text-sm transition-all shadow-xl active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
+                >
+                  {bulkDeleting ? <><Loader2 className="w-6 h-6 animate-spin" /> Eliminando...</> : `ELIMINAR ${selectedIds.size} ELECCIONES`}
+                </button>
+                <button
+                  onClick={() => setBulkDeleteModalOpen(false)}
+                  className="w-full py-5 text-white/30 hover:text-white font-black uppercase tracking-[0.2em] text-[10px] transition-all"
+                >
+                  CANCELAR Y VOLVER
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN INDIVIDUAL */}
       {deleteModalOpen && unitToDelete && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
            <div className="bg-[#111827] border border-white/10 w-full max-w-lg rounded-[50px] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.7)] relative">
