@@ -149,28 +149,29 @@ export async function POST(request: Request) {
         }
 
         // ── 5. Upsert Unidad Electoral ──
-        // Clave de unicidad: nombre + provincia_id.
-        // Una misma unidad puede existir en varias provincias (son órganos distintos).
-        // Dentro de la misma provincia, el mismo nombre = misma unidad (aunque sea en años distintos).
+        // Clave de unicidad: nombre + provincia_id + anio.
+        // - Mismo órgano + misma provincia + mismo año = misma elección (idempotencia en reimportación).
+        // - Mismo órgano + misma provincia + AÑO DISTINTO = elección diferente (se crea un registro nuevo).
+        // - Mismo órgano + PROVINCIA DISTINTA = órgano diferente (se crea un registro nuevo).
         const { data: existingUnit } = await supabase
           .from('unidades_electorales')
           .select('id')
           .eq('nombre', rawUnidad.toUpperCase())
           .eq('provincia_id', provinciaId)
+          .eq('anio', rawAnio)
           .maybeSingle();
 
         let unidadId: string;
 
         if (existingUnit) {
-          // Ya existe en esa provincia: reutilizar el ID sin sobreescribir sus metadatos base.
+          // Ya existe esta combinación exacta: actualizar datos (idempotente).
           unidadId = existingUnit.id;
-          // Solo actualizamos el año si el Excel trae uno más reciente
           await supabase.from('unidades_electorales')
-            .update({ anio: rawAnio, delegados_a_elegir: rawDelTotal })
+            .update({ delegados_a_elegir: rawDelTotal, sector_id: sector!.id, tipo_organo_id: organo!.id })
             .eq('id', unidadId);
           actualizadas++;
         } else {
-          // Nueva combinación nombre+provincia: crear la unidad.
+          // Nueva elección (nueva combinación nombre+provincia+año): crear registro.
           const { data: newUnit, error: unitErr } = await supabase
             .from('unidades_electorales')
             .insert({
@@ -190,6 +191,7 @@ export async function POST(request: Request) {
           unidadId = newUnit.id;
           importadas++;
         }
+
 
 
         // ── 6. Upsert Mesa Histórica (para el censo) ──

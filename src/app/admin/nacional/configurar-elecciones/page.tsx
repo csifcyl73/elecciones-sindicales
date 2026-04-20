@@ -128,16 +128,17 @@ function ConfigurarEleccionesSPA() {
       if (sectRes.data) setSectores(sectRes.data);
       if (organRes.data) setOrganos(organRes.data);
       if (unityRes) {
-        // Añadir campo 'nombre' con provincia para el selector, para distinguir
-        // unidades con el mismo nombre pero en distintas provincias
-        const unidadesConLabel = unityRes.map((u: any) => ({
-          ...u,
-          nombre: u.provincias?.nombre
-            ? `${u.nombre} (${u.provincias.nombre})`
-            : u.nombre
-        }));
+        // Mostrar "NOMBRE (Provincia, Año)" para distinguir unidades de la misma sede pero distintos años
+        const unidadesConLabel = unityRes.map((u: any) => {
+          const parts = [u.provincias?.nombre, u.anio ? String(u.anio) : null].filter(Boolean).join(', ');
+          return {
+            ...u,
+            nombre: parts ? `${u.nombre} (${parts})` : u.nombre
+          };
+        });
         setUnidadesExistentes(unidadesConLabel);
       }
+
 
       if (muniRes && muniRes.length) {
           setMunicipios([
