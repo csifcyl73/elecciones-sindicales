@@ -128,15 +128,29 @@ function ConfigurarEleccionesSPA() {
       if (sectRes.data) setSectores(sectRes.data);
       if (organRes.data) setOrganos(organRes.data);
       if (unityRes) {
-        // Mostrar "NOMBRE (Provincia, Año)" para distinguir unidades de la misma sede pero distintos años
-        const unidadesConLabel = unityRes.map((u: any) => {
-          const parts = [u.provincias?.nombre, u.anio ? String(u.anio) : null].filter(Boolean).join(', ');
-          return {
-            ...u,
-            nombre: parts ? `${u.nombre} (${parts})` : u.nombre
-          };
-        });
-        setUnidadesExistentes(unidadesConLabel);
+        // El selector muestra "NOMBRE (Provincia)" sin año.
+        // La misma sede puede tener elecciones en 2019, 2023, 2026...
+        // El año lo determina el campo 'Año' del formulario, no la selección aquí.
+        // Deduplicamos por nombre+provincia_id: si hay varias instancias del mismo
+        // órgano+provincia, conservamos la más reciente para pre-rellenar los metadatos.
+        const seenKey = new Set<string>();
+        const unidadesDedup: any[] = [];
+        // Ordenar por anio desc para que el record más reciente sea el primero de cada grupo
+        const sorted = [...unityRes].sort((a: any, b: any) => (b.anio || 0) - (a.anio || 0));
+        for (const u of sorted) {
+          const key = `${(u.nombre || '').toUpperCase()}__${u.provincia_id}`;
+          if (!seenKey.has(key)) {
+            seenKey.add(key);
+            unidadesDedup.push({
+              ...u,
+              // Label limpio sin año
+              nombre: u.provincias?.nombre
+                ? `${u.nombre} (${u.provincias.nombre})`
+                : u.nombre
+            });
+          }
+        }
+        setUnidadesExistentes(unidadesDedup);
       }
 
 
