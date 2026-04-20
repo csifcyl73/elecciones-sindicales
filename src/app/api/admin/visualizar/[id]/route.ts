@@ -59,10 +59,19 @@ export async function GET(req: NextRequest, context: any) {
     }
 
     // Resultados consolidados (Reparto Ley D'Hondt) guardados
-    const { data: consolidados, error: consolidadosError } = await supabase
+    const { data: consolidadosRaw, error: consolidadosError } = await supabase
       .from('resultados_consolidados')
       .select('*, sindicatos(siglas)')
       .eq('unidad_id', id);
+
+    // Normalizar: añadir el campo detalle_reparto que espera el frontend para el tooltip
+    const consolidados = (consolidadosRaw || []).map((c: any) => ({
+      ...c,
+      detalle_reparto: {
+        directos: c.delegados_directos ?? 0,
+        restos: c.delegados_por_restos ?? 0,
+      }
+    }));
 
     if (consolidadosError) throw consolidadosError;
 
