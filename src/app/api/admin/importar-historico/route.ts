@@ -149,22 +149,28 @@ export async function POST(request: Request) {
         }
 
         // ── 5. Upsert Unidad Electoral ──
-        // Clave de unicidad: SOLO el nombre (igual que los sindicatos por siglas).
-        // Una unidad es una sede/entidad permanente, no se duplica por año o proceso.
+        // Clave de unicidad: nombre + provincia_id.
+        // Una misma unidad puede existir en varias provincias (son órganos distintos).
+        // Dentro de la misma provincia, el mismo nombre = misma unidad (aunque sea en años distintos).
         const { data: existingUnit } = await supabase
           .from('unidades_electorales')
           .select('id')
           .eq('nombre', rawUnidad.toUpperCase())
+          .eq('provincia_id', provinciaId)
           .maybeSingle();
 
         let unidadId: string;
 
         if (existingUnit) {
-          // Ya existe: NO sobreescribir sus metadatos, solo reutilizar el ID.
+          // Ya existe en esa provincia: reutilizar el ID sin sobreescribir sus metadatos base.
           unidadId = existingUnit.id;
+          // Solo actualizamos el año si el Excel trae uno más reciente
+          await supabase.from('unidades_electorales')
+            .update({ anio: rawAnio, delegados_a_elegir: rawDelTotal })
+            .eq('id', unidadId);
           actualizadas++;
         } else {
-          // Nueva unidad: crear con datos base del Excel.
+          // Nueva combinación nombre+provincia: crear la unidad.
           const { data: newUnit, error: unitErr } = await supabase
             .from('unidades_electorales')
             .insert({
@@ -184,6 +190,7 @@ export async function POST(request: Request) {
           unidadId = newUnit.id;
           importadas++;
         }
+
 
         // ── 6. Upsert Mesa Histórica (para el censo) ──
         const { data: existingMesa } = await supabase

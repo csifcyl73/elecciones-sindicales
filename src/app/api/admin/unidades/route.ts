@@ -71,17 +71,6 @@ export async function POST(req: NextRequest) {
 
     const nombreUpper = nombre.toUpperCase();
 
-    // Prevenir duplicados comprobando si ya existe por nombre
-    const { data: existente } = await supabase
-      .from('unidades_electorales')
-      .select('*')
-      .eq('nombre', nombreUpper)
-      .maybeSingle();
-
-    if (existente) {
-      return NextResponse.json(existente);
-    }
-
     const { data, error } = await supabase
       .from('unidades_electorales')
       .insert({ nombre: nombreUpper })
