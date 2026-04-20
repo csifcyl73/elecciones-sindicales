@@ -69,9 +69,22 @@ export async function POST(req: NextRequest) {
 
     if (!nombre) return NextResponse.json({ error: 'Falta nombre' }, { status: 400 });
 
+    const nombreUpper = nombre.toUpperCase();
+
+    // Prevenir duplicados comprobando si ya existe por nombre
+    const { data: existente } = await supabase
+      .from('unidades_electorales')
+      .select('*')
+      .eq('nombre', nombreUpper)
+      .maybeSingle();
+
+    if (existente) {
+      return NextResponse.json(existente);
+    }
+
     const { data, error } = await supabase
       .from('unidades_electorales')
-      .insert({ nombre: nombre.toUpperCase() })
+      .insert({ nombre: nombreUpper })
       .select()
       .single();
 

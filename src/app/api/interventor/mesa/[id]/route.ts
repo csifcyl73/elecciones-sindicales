@@ -85,15 +85,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
      // Y además disparamos el flag de 'escrutinio' sobre la propia unidad para levantarla automáticamente en los paneles interactivos
      await supabaseAdmin.from('unidades_electorales').update({ estado: 'escrutinio' }).eq('id', currentMesa.unidad_id);
 
-     // Guardar votos
+     // Guardar votos (eliminando antes para asegurar que no queden fantasmas)
+     await supabaseAdmin.from('votos_candidaturas').delete().eq('mesa_id', mesa_id);
+     
      if (body.votos_candidaturas && body.votos_candidaturas.length > 0) {
-         const { error: voErr } = await supabaseAdmin.from('votos_candidaturas').upsert(
+         const { error: voErr } = await supabaseAdmin.from('votos_candidaturas').insert(
             body.votos_candidaturas.map((v: any) => ({
                mesa_id: mesa_id,
                sindicato_id: parseInt(v.sindicato_id),
                votos_obtenidos: parseInt(v.votos_obtenidos) || 0
-            })),
-            { onConflict: 'mesa_id,sindicato_id' }
+            }))
          );
          if (voErr) throw voErr;
      }
