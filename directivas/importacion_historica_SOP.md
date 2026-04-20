@@ -52,7 +52,9 @@ Retornar JSON con: `{ importadas, actualizadas, errores: [{fila, motivo}] }`
 - **LÃ­mite de Filas:** MÃ¡ximo 500 filas por archivo. Si el Excel supera ese lÃ­mite, cortar y notificar.
 - **Estado de Unidad:** Las unidades creadas por importaciÃ³n histÃ³rica siempre tienen `estado = 'congelada'`. Esto asegura que aparezcan en el visualizador con la etiqueta "Resultados Oficiales".
 
-- **Unicidad de Entidad Corporativa**: Previamente la validación comprobaba el año para ver si existía la unidad electoral. Esto causaba multiplicidad de unidades con el mismo nombre si se cargaban Exceles de años históricos. Para mantener la normalización (la unidad es una sede física o jurídica inmutable que alberga distintas elecciones en distintos momentos cronológicos), se evalúa la idempotencia exclusivamente por 
-ombre + provincia_id, NO por año. De esta forma la sede de la elección prevalece única en BD y sólo los procesos y actas se suceden.
-
-- **Unicidad de Entidad por Nombre (Igual que Sindicatos)**: Una unidad electoral es una sede/entidad permanente única en todo el sistema, identificada únicamente por su NOMBRE (sin tener en cuenta provincia o año). Si se importa el mismo Excel en años distintos, el sistema reutiliza la unidad existente por nombre, NO crea una nueva por cada proceso. Este comportamiento es análogo al de los sindicatos, que también existen una sola vez aunque aparezcan en múltiples procesos electorales.
+- **REGLA DEFINITIVA DE UNICIDAD DE UNIDAD ELECTORAL**: La clave de unicidad es `nombre + provincia_id + anio`.
+  - Mismo nombre + misma provincia + **mismo año** → misma elección (reimportación idempotente, actualiza datos).
+  - Mismo nombre + misma provincia + **año distinto** → elección diferente, se crea un nuevo registro (ej: "UNI PTGAS León 2019" ≠ "UNI PTGAS León 2023").
+  - Mismo nombre + **provincia distinta** → órgano diferente, se crea un nuevo registro (ej: "JUNTA AGE León" ≠ "JUNTA AGE Madrid").
+  - **Nunca** usar únicamente el nombre como clave: los órganos como "JUNTA DE PERSONAL AGE" existen en todas las provincias y son entidades distintas.
+  - En el selector del configurador de elecciones, el label muestra `NOMBRE (Provincia, Año)` para que el usuario pueda distinguir las instancias.
