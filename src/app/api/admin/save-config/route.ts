@@ -33,43 +33,50 @@ export async function POST(req: NextRequest) {
      const anioUnidadBase = unidadBase?.anio || null;
 
      // ── Resolución de unidad_id efectivo ──
-     // Si el año del formulario coincide con el de la unidad seleccionada (o la unidad no tiene año),
-     // actualizamos esa misma unidad.
-     // Si el año es DIFERENTE, buscamos si ya existe una unidad con ese nombre+provincia+año;
+     // Si el año del formulario o la provincia seleccionada son distintos a la unidad base,
+     // significa que esta es una unidad "plantilla" que estamos usando para otra provincia/año.
      //   - Si existe: usamos esa como target.
-     //   - Si no existe: creamos una nueva (la sede vuelve a tener elecciones ese año).
+     //   - Si no existe: creamos una nueva.
      let efectivoUnidadId = unidad_id;
 
-     if (anioFormulario && anioUnidadBase && anioFormulario !== anioUnidadBase && unidadBase) {
-       const nombreBase = unidadBase.nombre;
-       const provId = provincia_id ? parseInt(provincia_id) : unidadBase.provincia_id;
+     if (unidadBase) {
+       const provIdFormulario = provincia_id ? parseInt(provincia_id) : null;
+       const provUnidadBase = unidadBase.provincia_id || null;
 
-       const { data: existente } = await supabaseAdmin
-         .from('unidades_electorales')
-         .select('id')
-         .eq('nombre', nombreBase)
-         .eq('provincia_id', provId)
-         .eq('anio', anioFormulario)
-         .maybeSingle();
+       const anioMismatch = anioFormulario !== anioUnidadBase;
+       const provMismatch = provIdFormulario !== null && provUnidadBase !== null && provIdFormulario !== provUnidadBase;
 
-       if (existente) {
-         efectivoUnidadId = existente.id;
-       } else {
-         // Crear nueva instancia para ese año
-         const { data: nueva, error: errNueva } = await supabaseAdmin
+       if (anioMismatch || provMismatch) {
+         const nombreBase = unidadBase.nombre;
+         const targetProvId = provIdFormulario || provUnidadBase;
+
+         const { data: existente } = await supabaseAdmin
            .from('unidades_electorales')
-           .insert({
-             nombre: nombreBase,
-             provincia_id: provId,
-             ccaa_id: finalCcaaId ? parseInt(finalCcaaId) : (unidadBase.ccaa_id || null),
-             anio: anioFormulario,
-             estado: 'activa',
-             modo_colegio: 'unico',
-           })
            .select('id')
-           .single();
-         if (errNueva) throw errNueva;
-         efectivoUnidadId = nueva.id;
+           .eq('nombre', nombreBase)
+           .eq('provincia_id', targetProvId)
+           .eq('anio', anioFormulario)
+           .maybeSingle();
+
+         if (existente) {
+           efectivoUnidadId = existente.id;
+         } else {
+           // Crear nueva instancia para esa provincia y/o año
+           const { data: nueva, error: errNueva } = await supabaseAdmin
+             .from('unidades_electorales')
+             .insert({
+               nombre: nombreBase,
+               provincia_id: targetProvId,
+               ccaa_id: finalCcaaId ? parseInt(finalCcaaId) : (unidadBase.ccaa_id || null),
+               anio: anioFormulario,
+               estado: 'activa',
+               modo_colegio: 'unico',
+             })
+             .select('id')
+             .single();
+           if (errNueva) throw errNueva;
+           efectivoUnidadId = nueva.id;
+         }
        }
      }
 

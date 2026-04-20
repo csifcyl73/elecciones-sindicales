@@ -138,15 +138,14 @@ function ConfigurarEleccionesSPA() {
         // Ordenar por anio desc para que el record más reciente sea el primero de cada grupo
         const sorted = [...unityRes].sort((a: any, b: any) => (b.anio || 0) - (a.anio || 0));
         for (const u of sorted) {
-          const key = `${(u.nombre || '').toUpperCase()}__${u.provincia_id}`;
+          // El usuario quiere ver un solo "COMITÉ DE EMPRESA DE AEAT" a nivel conceptual.
+          const key = (u.nombre || '').toUpperCase();
           if (!seenKey.has(key)) {
             seenKey.add(key);
             unidadesDedup.push({
               ...u,
-              // Label limpio sin año
-              nombre: u.provincias?.nombre
-                ? `${u.nombre} (${u.provincias.nombre})`
-                : u.nombre
+              // Label limpio sin provincia
+              nombre: u.nombre
             });
           }
         }
