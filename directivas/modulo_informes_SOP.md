@@ -69,6 +69,7 @@ Implementar en `/admin/nacional/informes` un visualizador analítico avanzado de
 3. **Evolución Temporal** — LineChart de delegados totales por sindicato a lo largo del tiempo (orden cronológico)
 4. **Por Sector** — BarChart apilado agrupando delegados por sector
 5. **Índice de Representatividad** — Tabla ranking con badge de umbral (>15% verde, >10% amarillo, <10% rojo)
+6. **Por Sindicato (Ficha Sindicato)** — Vista interactiva con selector para aislar un sindicato en concreto y visualizar la distribución exacta de sus delegados extraídos agrupados por Sector, por Provincia y desglosado por Unidad Electoral.
 
 ## Lógica de Colores de Sesión
 - Cada proceso seleccionado recibe un color secuencial de la paleta (9 colores):

@@ -21,6 +21,10 @@ Configurar, depurar y asegurar el correcto funcionamiento del visualizador de pr
    - *El Problema:* Los scripts `create-test-autonomico.mjs` y `setup-admin-user.mjs` usaban roles como `admin_autonomico` o `admin_nacional`. El Middleware y las APIs exigen estrictamente `super_autonomico` y `super_nacional`. Esto causaba redirecciones al login o errores 403.
    - *La Solución:* **Usar siempre el prefijo `super_` para roles administrativos.** Se han actualizado los scripts para reflejar esta jerarquía. No usar el prefijo `admin_` en `user_metadata.role`.
 
+5. **Crash frontend "This page couldn’t load" por datos nativos en Filtros:**
+   - *El Problema:* Tras aplicar una carga masiva histórica, el proyecto desplegado crasheaba al intentar interactuar con la búsqueda o filtrado, mostrando el Error Boundary de Next.js. El problema era que algunos registros (`nombre`, `provincias.nombre`, `anio`) podían llegar desde Supabase parseados como enteros (números) en lugar de strings, debido al tipo de datos de origen en la hoja de subida (ej. años, o códigos postales importados como unidad). Las acciones de React `.toUpperCase()`, `.toLowerCase()` o `.localeCompare()` intentaban ejecutarse contra un *Integer* asumiendo string por `as string[]`, bloqueando el render.
+   - *La Solución:* Todos los datos extraídos de las tablas que vayan a someterse a comparaciones léxicas locales (`filter`, `sort`) DEBEN estar estrictamente envueltos en coerción de tipo de JS antes de la evaluación. Ejemplo: `String(u.nombre || '').toUpperCase()`.
+
 ## Casos Borde:
 - **Protección de Identidades:** Los endpoints públicos como `/api/public/visualizar/[id]` JAMÁS deben cargar o exponer la información de Interventores (`usuarios(nombre_completo...`) asociados a las mesas.
 - Si un Autonómico interactúa con sus paneles, la comprobación comunitaria (`unidadComunidad !== userComunidad`) ahora se realiza analizando la proyección de DB directa y evita problemas al intentar obtener provincias nacionales.

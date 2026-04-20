@@ -51,6 +51,7 @@ const VISTAS = [
   { key: 'evolucion',   label: 'Evolución', icon: TrendingUp },
   { key: 'sector',      label: 'Por Sector', icon: Layers },
   { key: 'representatividad', label: 'Represent.', icon: Award },
+  { key: 'fichaSindicato', label: 'Por Sindicato', icon: Building2 },
 ] as const;
 type VistaKey = typeof VISTAS[number]['key'];
 
@@ -164,6 +165,7 @@ export default function InformesPage() {
   const [vista, setVista] = useState<VistaKey>('comparativa');
   const [exportando, setExportando] = useState(false);
   const [exportandoPDF, setExportandoPDF] = useState(false);
+  const [sindicatoSeleccionado, setSindicatoSeleccionado] = useState<string>('');
 
   // ── Filtros panel izquierdo ──────────────────────────────────────────────
   const [search, setSearch]               = useState('');
@@ -195,10 +197,10 @@ export default function InformesPage() {
 
   // ── Opciones de filtro (derivadas de la lista) ───────────────────────────
   const optAnios    = [...new Set(todasUnidades.map(u => String(u.anio)).filter(v => v && v !== 'undefined' && v !== 'null'))].sort().reverse();
-  const optProvs    = [...new Set(todasUnidades.map(u => u.provincias?.nombre).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
-  const optSects    = [...new Set(todasUnidades.map(u => u.sectores?.nombre).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
-  const optOrganos  = [...new Set(todasUnidades.map(u => u.tipos_organos?.nombre).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
-  const optUnidades = [...new Set(todasUnidades.map(u => u.nombre).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  const optProvs    = [...new Set(todasUnidades.map(u => String(u.provincias?.nombre || '')).filter(v => v !== ''))].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  const optSects    = [...new Set(todasUnidades.map(u => String(u.sectores?.nombre || '')).filter(v => v !== ''))].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  const optOrganos  = [...new Set(todasUnidades.map(u => String(u.tipos_organos?.nombre || '')).filter(v => v !== ''))].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  const optUnidades = [...new Set(todasUnidades.map(u => String(u.nombre || '')).filter(v => v !== ''))].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
 
   const toggleFilter = (set: React.Dispatch<React.SetStateAction<string[]>>, val: string) =>
     set(prev => prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]);
@@ -210,8 +212,8 @@ export default function InformesPage() {
   const unidadesFiltradas = todasUnidades.filter(u => {
     if (search) {
       const term = search.toUpperCase();
-      const matchN = u.nombre.toUpperCase().includes(term);
-      const matchP = (u.provincias?.nombre || '').toUpperCase().includes(term);
+      const matchN = String(u.nombre || '').toUpperCase().includes(term);
+      const matchP = String(u.provincias?.nombre || '').toUpperCase().includes(term);
       if (!matchN && !matchP) return false;
     }
     if (filterAnios.length > 0 && !filterAnios.includes(String(u.anio))) return false;
@@ -1074,6 +1076,108 @@ export default function InformesPage() {
                   )}
                 </ChartCard>
               </div>
+
+              {vista === 'fichaSindicato' && (
+                <div id="pdf-chart-ficha-sindicato">
+                  <ChartCard title="Ficha de Sindicato — Explotación de Datos">
+                    {todosSindicatos.length === 0 ? <EmptyChart msg="Sin resultados consolidados" /> : (
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3">
+                          <label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Sindicato a analizar:</label>
+                          <select 
+                            value={sindicatoSeleccionado} 
+                            onChange={e => setSindicatoSeleccionado(e.target.value)}
+                            className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-amber-500/50 text-white"
+                          >
+                            <option value="" className="text-black">-- Selecciona un Sindicato --</option>
+                            {todosSindicatos.map(s => (
+                              <option key={s.siglas} value={s.siglas} className="text-black">{s.siglas} ({s.total} delegados)</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {sindicatoSeleccionado && (() => {
+                          const delegadosPorProv: Record<string, number> = {};
+                          const delegadosPorSector: Record<string, number> = {};
+                          const delegadosPorUnidad: { nombre: string, anio: number, count: number, sector: string, prov: string }[] = [];
+
+                          datos.forEach(u => {
+                              const match = u.sindicatos.find(s => s.siglas === sindicatoSeleccionado);
+                              const val = match?.delegados || 0;
+                              if (val > 0) {
+                                const prov = u.provincia || 'Sin Provincia';
+                                const sect = u.sector || 'Sin Sector';
+                                delegadosPorProv[prov] = (delegadosPorProv[prov] || 0) + val;
+                                delegadosPorSector[sect] = (delegadosPorSector[sect] || 0) + val;
+                                delegadosPorUnidad.push({ nombre: u.nombre, anio: u.anio, count: val, sector: sect, prov: prov });
+                              }
+                          });
+
+                          const dataProv = Object.entries(delegadosPorProv).map(([name, count]) => ({ name, count })).sort((a,b) => b.count - a.count);
+                          const dataSect = Object.entries(delegadosPorSector).map(([name, count]) => ({ name, count })).sort((a,b) => b.count - a.count);
+                          delegadosPorUnidad.sort((a,b) => b.count - a.count);
+
+                          return (
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div className="bg-[#050c18] border border-white/5 p-5 rounded-2xl">
+                                    <h3 className="text-[10px] font-black uppercase text-white/30 tracking-widest mb-4 flex items-center gap-2">
+                                      <Building2 className="w-3.5 h-3.5" /> Por Sector
+                                    </h3>
+                                    <div className="space-y-3">
+                                      {dataSect.map(d => (
+                                          <div key={d.name} className="flex items-center justify-between border-b border-white/5 pb-2">
+                                            <span className="text-xs font-bold text-white/80">{d.name}</span>
+                                            <span className="text-amber-400 font-black text-xs bg-amber-400/10 px-2 py-1 rounded-lg">{d.count} del.</span>
+                                          </div>
+                                      ))}
+                                      {dataSect.length === 0 && <span className="text-xs text-white/20">Sin datos sectoriales</span>}
+                                    </div>
+                                </div>
+
+                                <div className="bg-[#050c18] border border-white/5 p-5 rounded-2xl">
+                                    <h3 className="text-[10px] font-black uppercase text-white/30 tracking-widest mb-4 flex items-center gap-2">
+                                      <MapPin className="w-3.5 h-3.5" /> Por Provincia
+                                    </h3>
+                                    <div className="space-y-3">
+                                      {dataProv.map(d => (
+                                          <div key={d.name} className="flex items-center justify-between border-b border-white/5 pb-2">
+                                            <span className="text-xs font-bold text-white/80">{d.name}</span>
+                                            <span className="text-emerald-400 font-black text-xs bg-emerald-400/10 px-2 py-1 rounded-lg">{d.count} del.</span>
+                                          </div>
+                                      ))}
+                                      {dataProv.length === 0 && <span className="text-xs text-white/20">Sin datos provinciales</span>}
+                                    </div>
+                                </div>
+
+                                <div className="bg-[#050c18] border border-white/5 p-5 rounded-2xl lg:col-span-2">
+                                    <h3 className="text-[10px] font-black uppercase text-white/30 tracking-widest mb-4 flex items-center gap-2">
+                                      <Landmark className="w-3.5 h-3.5" /> Por Unidad Electoral
+                                    </h3>
+                                    <div className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+                                      {delegadosPorUnidad.map((d, idx) => (
+                                          <div key={idx} className="flex items-center justify-between border-b border-white/5 pb-2 hover:bg-white/[0.02] p-2 rounded-lg transition-colors">
+                                            <div>
+                                                <div className="text-xs font-bold text-white/90">{d.nombre}</div>
+                                                <div className="flex gap-2 mt-1">
+                                                  <span className="text-[9px] font-black uppercase tracking-widest text-white/30">{d.prov}</span>
+                                                  <span className="text-[9px] font-black uppercase tracking-widest text-white/20">•</span>
+                                                  <span className="text-[9px] font-black uppercase tracking-widest text-white/30">{d.sector} ({d.anio})</span>
+                                                </div>
+                                            </div>
+                                            <span className="text-indigo-400 font-black text-sm bg-indigo-400/10 px-3 py-1.5 rounded-xl">{d.count} del.</span>
+                                          </div>
+                                      ))}
+                                      {delegadosPorUnidad.length === 0 && <span className="text-xs text-white/20">Sin datos en unidades</span>}
+                                    </div>
+                                </div>
+                              </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </ChartCard>
+                </div>
+              )}
 
             </div>
           )}
