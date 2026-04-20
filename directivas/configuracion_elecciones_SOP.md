@@ -29,3 +29,11 @@ Implementar un formulario robusto para que el administrador nacional configure n
 ## Seguridad
 - Validar sesiÃ³n activa de Administrador Nacional.
 - SanitizaciÃ³n de entradas para la creaciÃ³n de nuevas unidades electorales.
+
+## Errores y Casos Borde:
+1. **Duplicación de Unidades Electorales**: 
+   - *Problema*: Al crear una unidad electoral desde el frontend, múltiples clics o peticiones asíncronas desincronizadas podían crear dos entidades con el mismo nombre y diferente UUID.
+   - *Solución*: En el endpoint POST /api/admin/unidades, se debe realizar un maybeSingle() de búsqueda con 	oUpperCase() antes del insert(). Si existe, devolver la existente en lugar de duplicarla.
+2. **Registro de Sindicatos No Deseados en Escrutinio**: 
+   - *Problema*: Durante la inserción de actas de una mesa, si se mandaba un array otos_candidaturas que contenía IDs de sindicatos no configurados en esa unidad electoral, el upsert los admitía, ensuciando los reportes de resultados.
+   - *Solución*: Previo al insert en POST /api/interventor/mesa/[id], se ejecuta un borrado previo \wait supabaseAdmin.from('votos_candidaturas').delete().eq('mesa_id', mesa_id);\ y posteriormente un \insert\ rígido (no upsert) únicamente de los que el frontend envía (siendo el frontend responsable de cargar únicamente los \unidades_sindicatos\). Esto asegura siempre un estado 1:1 con el acta enviada.
