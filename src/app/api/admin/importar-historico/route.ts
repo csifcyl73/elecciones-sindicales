@@ -149,35 +149,37 @@ export async function POST(request: Request) {
         }
 
         // ── 5. Upsert Unidad Electoral ──
-        // Buscar por nombre + provincia + anio para idempotencia
+        // Clave de unicidad: SOLO el nombre (igual que los sindicatos por siglas).
+        // Una unidad es una sede/entidad permanente, no se duplica por año o proceso.
         const { data: existingUnit } = await supabase
           .from('unidades_electorales')
           .select('id')
           .eq('nombre', rawUnidad.toUpperCase())
-          .eq('provincia_id', provinciaId)
-          .eq('anio', rawAnio)
           .maybeSingle();
 
         let unidadId: string;
-        const unidadData = {
-          nombre: rawUnidad.toUpperCase(),
-          provincia_id: provinciaId,
-          ccaa_id: ccaaId,
-          sector_id: sector!.id,
-          tipo_organo_id: organo!.id,
-          delegados_a_elegir: rawDelTotal,
-          anio: rawAnio,
-          estado: 'congelada',
-          modo_colegio: 'unico',
-        };
 
         if (existingUnit) {
-          await supabase.from('unidades_electorales').update(unidadData).eq('id', existingUnit.id);
+          // Ya existe: NO sobreescribir sus metadatos, solo reutilizar el ID.
           unidadId = existingUnit.id;
           actualizadas++;
         } else {
+          // Nueva unidad: crear con datos base del Excel.
           const { data: newUnit, error: unitErr } = await supabase
-            .from('unidades_electorales').insert(unidadData).select('id').single();
+            .from('unidades_electorales')
+            .insert({
+              nombre: rawUnidad.toUpperCase(),
+              provincia_id: provinciaId,
+              ccaa_id: ccaaId,
+              sector_id: sector!.id,
+              tipo_organo_id: organo!.id,
+              delegados_a_elegir: rawDelTotal,
+              anio: rawAnio,
+              estado: 'congelada',
+              modo_colegio: 'unico',
+            })
+            .select('id')
+            .single();
           if (unitErr) throw new Error(`Error creando unidad electoral: ${unitErr.message}`);
           unidadId = newUnit.id;
           importadas++;

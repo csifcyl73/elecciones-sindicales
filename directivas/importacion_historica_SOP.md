@@ -51,3 +51,6 @@ Retornar JSON con: `{ importadas, actualizadas, errores: [{fila, motivo}] }`
 - **Formato NumÃ©rico:** Los campos CENSO y DELEGADOS_* pueden llegar como string del Excel. Siempre hacer `parseInt()` con fallback a 0.
 - **LÃ­mite de Filas:** MÃ¡ximo 500 filas por archivo. Si el Excel supera ese lÃ­mite, cortar y notificar.
 - **Estado de Unidad:** Las unidades creadas por importaciÃ³n histÃ³rica siempre tienen `estado = 'congelada'`. Esto asegura que aparezcan en el visualizador con la etiqueta "Resultados Oficiales".
+
+- **Unicidad de Entidad Corporativa**: Previamente la validación comprobaba el año para ver si existía la unidad electoral. Esto causaba multiplicidad de unidades con el mismo nombre si se cargaban Exceles de años históricos. Para mantener la normalización (la unidad es una sede física o jurídica inmutable que alberga distintas elecciones en distintos momentos cronológicos), se evalúa la idempotencia exclusivamente por 
+ombre + provincia_id, NO por año. De esta forma la sede de la elección prevalece única en BD y sólo los procesos y actas se suceden.
