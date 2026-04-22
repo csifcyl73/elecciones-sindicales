@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { 
   ArrowLeft, 
@@ -14,174 +14,40 @@ import {
   Info
 } from 'lucide-react';
 import { SearchableCombobox } from '@/components/ui/searchable-combobox';
+import { useGestionSindicatos } from '@/lib/hooks/useGestionSindicatos';
 
 export default function GestionSindicatosPage() {
-  const [sindicatos, setSindicatos] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  // Estados Modal Edición
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedSindicato, setSelectedSindicato] = useState<any>(null);
-  const [editSiglas, setEditSiglas] = useState('');
-  const [editNombre, setEditNombre] = useState('');
-  const [editEsFederacion, setEditEsFederacion] = useState(false);
-  const [editFederacionId, setEditFederacionId] = useState<number | null>(null);
-  const [saving, setSaving] = useState(false);
-
-  // Estados Modal Añadir
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newSiglas, setNewSiglas] = useState('');
-  const [newNombre, setNewNombre] = useState('');
-  const [newEsFederacion, setNewEsFederacion] = useState(false);
-  const [newFederacionId, setNewFederacionId] = useState<number | null>(null);
-  const [adding, setAdding] = useState(false);
-
-  // Estado inline "Nueva Federación" (compartido por ambos modales)
-  const [showNewFedForm, setShowNewFedForm] = useState<'edit' | 'add' | null>(null);
-  const [newFedSiglas, setNewFedSiglas] = useState('');
-  const [newFedNombre, setNewFedNombre] = useState('');
-  const [savingNewFed, setSavingNewFed] = useState(false);
-
-  useEffect(() => {
-    loadSindicatos();
-  }, []);
-
-  const loadSindicatos = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/admin/sindicatos');
-      const data = await res.json();
-      setSindicatos(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEditClick = (s: any) => {
-    setSelectedSindicato(s);
-    setEditSiglas(s.siglas);
-    setEditNombre(s.nombre_completo);
-    setEditEsFederacion(s.es_federacion || false);
-    setEditFederacionId(s.federacion_id || null);
-    setShowNewFedForm(null);
-    setNewFedSiglas('');
-    setNewFedNombre('');
-    setIsEditModalOpen(true);
-  };
-
-  const handleSaveEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editSiglas.trim() || !editNombre.trim()) return;
-    setSaving(true);
-    try {
-      const response = await fetch('/api/admin/sindicatos', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          id: selectedSindicato.id, 
-          siglas: editSiglas.toUpperCase(), 
-          nombre_completo: editNombre.toUpperCase(),
-          es_federacion: editEsFederacion,
-          federacion_id: editFederacionId
-        }),
-      });
-      if (!response.ok) throw new Error('Error al actualizar');
-      
-      const updated = await response.json();
-      setSindicatos(sindicatos.map(s => s.id === updated.id ? updated : s));
-      setIsEditModalOpen(false);
-    } catch (err: any) {
-      alert(err.message);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleAddNew = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newSiglas.trim() || !newNombre.trim()) return;
-    setAdding(true);
-    try {
-      const response = await fetch('/api/admin/sindicatos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          siglas: newSiglas.toUpperCase(), 
-          nombre_completo: newNombre.toUpperCase(),
-          es_federacion: newEsFederacion,
-          federacion_id: newFederacionId
-        }),
-      });
-      if (!response.ok) throw new Error('Error al añadir');
-      
-      const created = await response.json();
-      setSindicatos([...sindicatos, created]);
-      setIsAddModalOpen(false);
-      setNewSiglas('');
-      setNewNombre('');
-      setNewFederacionId(null);
-      setNewEsFederacion(false);
-    } catch (err: any) {
-      alert(err.message);
-    } finally {
-      setAdding(false);
-    }
-  };
-
-  // Crear federación al vuelo y asignarla al modal activo
-  const handleCreateFederacionInline = async (context: 'edit' | 'add') => {
-    if (!newFedSiglas.trim() || !newFedNombre.trim()) return;
-    setSavingNewFed(true);
-    try {
-      const response = await fetch('/api/admin/sindicatos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          siglas: newFedSiglas.toUpperCase(),
-          nombre_completo: newFedNombre.toUpperCase(),
-          es_federacion: true,
-          federacion_id: null
-        }),
-      });
-      if (!response.ok) throw new Error('Error al crear federación');
-      const created = await response.json();
-      // Añadir a la lista local
-      setSindicatos(prev => [...prev, created]);
-      // Asignar al modal activo
-      if (context === 'edit') setEditFederacionId(created.id);
-      else setNewFederacionId(created.id);
-      // Limpiar form inline
-      setNewFedSiglas('');
-      setNewFedNombre('');
-      setShowNewFedForm(null);
-    } catch (err: any) {
-      alert(err.message);
-    } finally {
-      setSavingNewFed(false);
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!confirm('¿Estás seguro de borrar este sindicato? Esto lo eliminará permanentemente de todos los listados.')) return;
-    try {
-      const res = await fetch(`/api/admin/sindicatos?id=${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Error al borrar');
-      setSindicatos(sindicatos.filter(s => s.id !== id));
-    } catch (err: any) {
-      alert(err.message);
-    }
-  };
-
-  // Federaciones disponibles para vincular (excluye el sindicato que se está editando)
-  const federaciones = sindicatos.filter(s => s.es_federacion && (!selectedSindicato || s.id !== selectedSindicato.id));
-
-  const filtered = (sindicatos || []).filter(s =>
-    (s.siglas?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (s.nombre_completo?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-  );
+  const {
+    loading,
+    searchTerm, setSearchTerm,
+    filtered, federaciones, sindicatos,
+    // Modal Edición
+    isEditModalOpen, setIsEditModalOpen,
+    editSiglas, setEditSiglas,
+    editNombre, setEditNombre,
+    editEsFederacion, setEditEsFederacion,
+    editFederacionId, setEditFederacionId,
+    saving,
+    // Modal Añadir
+    isAddModalOpen, setIsAddModalOpen,
+    newSiglas, setNewSiglas,
+    newNombre, setNewNombre,
+    newEsFederacion, setNewEsFederacion,
+    newFederacionId, setNewFederacionId,
+    adding,
+    // Federación inline
+    showNewFedForm, setShowNewFedForm,
+    newFedSiglas, setNewFedSiglas,
+    newFedNombre, setNewFedNombre,
+    savingNewFed,
+    // Acciones
+    handleEditClick,
+    handleSaveEdit,
+    handleAddNew,
+    handleCreateFederacionInline,
+    handleDelete,
+    openAddModal,
+  } = useGestionSindicatos({ perfil: 'autonomico' });
 
   if (loading) {
     return (
@@ -227,9 +93,9 @@ export default function GestionSindicatosPage() {
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-12">
           <div className="flex flex-col gap-4">
             <h1 className="text-3xl font-black tracking-tight text-white uppercase flex items-center gap-3">
-              <Settings2 className="w-8 h-8 text-orange-400" /> GESTI&Oacute;N DE SINDICATOS
+              <Settings2 className="w-8 h-8 text-orange-400" /> GESTIÓN DE SINDICATOS
             </h1>
-            <p className="text-white/40 text-xs mt-1 uppercase font-bold tracking-[3px]">ADMINISTRACI&Oacute;N GLOBAL DE ORGANIZACIONES</p>
+            <p className="text-white/40 text-xs mt-1 uppercase font-bold tracking-[3px]">ADMINISTRACIÓN GLOBAL DE ORGANIZACIONES</p>
           </div>
           
           <div className="flex flex-col items-end gap-4 w-full md:w-auto">
@@ -249,7 +115,7 @@ export default function GestionSindicatosPage() {
                 />
               </div>
               <button 
-                onClick={() => { setNewSiglas(''); setNewNombre(''); setNewEsFederacion(false); setNewFederacionId(null); setShowNewFedForm(null); setIsAddModalOpen(true); }}
+                onClick={openAddModal}
                 className="w-full sm:w-auto px-6 py-4 bg-orange-600 hover:bg-orange-500 text-white font-black rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 uppercase tracking-widest text-sm shrink-0"
               >
                 <Plus className="w-5 h-5" /> Añadir Nuevo
@@ -322,7 +188,7 @@ export default function GestionSindicatosPage() {
         </div>
 
         <footer className="mt-12 text-center text-white/20 text-[10px] font-bold uppercase tracking-widest">
-          CSIF · GESTI&Oacute;N GLOBAL DE SINDICATOS · ADMINISTRADOR AUTON&Oacute;MICO
+          CSIF · GESTIÓN GLOBAL DE SINDICATOS · ADMINISTRADOR AUTONÓMICO
         </footer>
       </div>
 
@@ -461,7 +327,7 @@ export default function GestionSindicatosPage() {
                   disabled={saving}
                   className="w-full py-4 bg-orange-600 hover:bg-orange-500 text-white font-black rounded-2xl transition-all shadow-lg shadow-orange-600/20 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 uppercase tracking-widest"
                 >
-                  {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle2 className="w-5 h-5" /> Guardar Cambios</>}
+                  {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle2Icon className="w-5 h-5" /> Guardar Cambios</>}
                 </button>
               </form>
             </div>
@@ -615,7 +481,7 @@ export default function GestionSindicatosPage() {
   );
 }
 
-function CheckCircle2(props: any) {
+function CheckCircle2Icon(props: any) {
   return (
     <svg
       {...props}

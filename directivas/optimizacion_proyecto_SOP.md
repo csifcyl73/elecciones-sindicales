@@ -89,6 +89,91 @@ El `package.json` contiene paquetes que no se importan en ningún archivo del c�
 
 ---
 
+## Fase 4: Refactorización DRY — Módulos Nacional / Autonómico
+
+### Problema
+Los módulos `admin/nacional/` y `admin/autonomico/` contienen **~700 KB de código** (377 KB + 324 KB) con **~90% de duplicación** entre pares de archivos. Las únicas diferencias reales entre cada par son:
+
+1. **Rutas de navegación** (`/admin/nacional/dashboard` vs `/admin/autonomico/dashboard`).
+2. **Textos/Labels** ("Panel Nacional" vs "Panel Autonómico", footer).
+3. **Carga de datos** (Nacional carga todos los datos; Autonómico filtra por `comunidad` del usuario).
+4. **Funcionalidades exclusivas Nacional**: Importación Excel de sindicatos, gestión de administradores autonómicos, `ModalImportarHistorico`.
+
+### Pares Duplicados Identificados
+
+| Módulo | Nacional | Autonómico | Diferencia Real |
+|---|---|---|---|
+| Gestión Sindicatos | 35.2 KB (688 líneas) | 32.6 KB (637 líneas) | Nacional tiene importar/exportar Excel |
+| Gestión Unidades | 30.8 KB (561 líneas) | 31.0 KB (564 líneas) | Autonomico filtra por comunidad |
+| Configurar Elecciones | 56.6 KB | 56.5 KB | Autonomico filtra por comunidad |
+| Gestión Interventores | 16.9 KB | 16.9 KB | Solo rutas/labels |
+| Informes | 67.2 KB | 67.5 KB | Solo rutas/labels |
+| Visualizar | 42.0 KB + 60.0 KB | 33.7 KB + 61.0 KB | Nacional tiene multi-select delete |
+| Dashboard | 8.9 KB | 9.6 KB | Menú diferente |
+
+### Estrategia: Extracción de Hooks de Lógica Compartida
+
+**NO se va a unificar el JSX/UI** (demasiado riesgo de regresión visual). En su lugar, se extraerá la **lógica de negocio** (estado, handlers, API calls) a **custom hooks compartidos** en `src/lib/hooks/`.
+
+Esto elimina la duplicación de la parte más propensa a bugs (lógica) manteniendo la flexibilidad del UI.
+
+#### Hooks a Extraer
+
+1. `useGestionSindicatos.ts` — CRUD de sindicatos, federaciones inline, búsqueda.
+2. `useGestionUnidades.ts` — CRUD unidades/procesos, filtrado, agrupación.
+3. `useGestionInterventores.ts` — CRUD interventores.
+4. `useInformes.ts` — Carga de datos, generación Excel, filtros.
+5. `useVisualizarElecciones.ts` — Listado, filtrado, multi-select.
+6. `useVisualizarDetalle.ts` — Detalle de elección, cálculo proporcional.
+7. `useConfigurarElecciones.ts` — Formulario de configuración, guardado.
+
+#### Patrón de cada Hook
+
+```typescript
+// src/lib/hooks/useGestionSindicatos.ts
+interface UseGestionSindicatosOptions {
+  perfil: 'nacional' | 'autonomico';
+}
+
+export function useGestionSindicatos({ perfil }: UseGestionSindicatosOptions) {
+  // Todo el estado (useState)
+  // Todos los handlers (loadSindicatos, handleSaveEdit, handleAddNew, handleDelete, etc.)
+  // return { estado, handlers }
+}
+```
+
+Cada página del admin se reduce a:
+```tsx
+// src/app/admin/nacional/gestion-sindicatos/page.tsx
+export default function Page() {
+  const { state, actions } = useGestionSindicatos({ perfil: 'nacional' });
+  return <JSX usando state y actions />;
+}
+```
+
+### Orden de Ejecución (de menor a mayor riesgo)
+
+1. **useGestionSindicatos** — Módulo más simple, buen candidato para primer hook.
+2. **useGestionUnidades** — Similar pero con agrupación por proceso.
+3. **useGestionInterventores** — Módulo autocontenido.
+4. **useInformes** — Lógica compleja de filtros y Excel.
+5. **useVisualizarElecciones** + **useVisualizarDetalle** — Los más grandes.
+6. **useConfigurarElecciones** — El más complejo (56 KB), se hace al final.
+
+### Restricciones
+- **NO mover ni renombrar archivos de página** (`page.tsx`). Next.js App Router los necesita donde están.
+- **NO unificar JSX**: Cada perfil mantiene su propio return JSX con sus textos y rutas.
+- **Verificar build después de cada hook** antes de pasar al siguiente.
+- **Un commit por hook extraído** para facilitar revert granular si algo falla.
+- **El componente `CheckCircle2` inline** (definido al final de gestion-sindicatos) debe moverse a `lucide-react` import o a un componente compartido.
+
+### Resultado Esperado
+- **~700 KB → ~400 KB** de código en `src/app/admin/` (reducción de ~40%).
+- **~150 KB** de hooks reutilizables en `src/lib/hooks/`.
+- Corrección de bugs en un solo lugar en vez de dos.
+
+---
+
 ## Fase 5: Reorganización del Directorio `scripts/`
 
 ### Problema
