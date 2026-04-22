@@ -1,7 +1,6 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
 import { 
   ArrowLeft, 
   Database, 
@@ -19,182 +18,45 @@ import {
   FolderOpen,
   CalendarRange,
   ChevronDown,
-  ChevronRight,
-  X,
-  Save,
-  Plus
+  Save
 } from 'lucide-react';
 import { SearchableCombobox } from '@/components/ui/searchable-combobox';
+import { useGestionUnidades } from '@/lib/hooks/useGestionUnidades';
 
 export default function GestionUnidadesPage() {
-  const [unidades, setUnidades] = useState<any[]>([]);
-  const [procesos, setProcesos] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterState, setFilterState] = useState<string>('all');
-  const [expandedProceso, setExpandedProceso] = useState<string | null>(null);
-  const [expandedSinProceso, setExpandedSinProceso] = useState(true);
-  const supabase = createClient();
+  const {
+    unidades, procesos, loading,
+    searchTerm, setSearchTerm,
+    filterState, setFilterState,
+    expandedProceso, setExpandedProceso,
+    expandedSinProceso, setExpandedSinProceso,
+    filtered, unidadesPorProceso, unidadesSinProceso, basePath,
+    // Editar proceso
+    editingProceso, setEditingProceso,
+    editNombre, setEditNombre,
+    editPeriodo, setEditPeriodo,
+    editObservaciones, setEditObservaciones,
+    savingEdit, openEditProceso, saveEditProceso,
+    // Editar unidad
+    editingUnidad, setEditingUnidad,
+    editUnidadProcesoId, setEditUnidadProcesoId,
+    editUnidadAnio, setEditUnidadAnio,
+    savingUnidad, openEditUnidad, saveEditUnidad,
+    // Borrado
+    deleteConfig, setDeleteConfig,
+    isDeleting, executeDelete,
+    // Utilidades
+    getStatusBadge,
+  } = useGestionUnidades({ perfil: 'autonomico' });
 
-  // Estado para edición de proceso
-  const [editingProceso, setEditingProceso] = useState<any | null>(null);
-  const [editNombre, setEditNombre] = useState('');
-  const [editPeriodo, setEditPeriodo] = useState('');
-  const [editObservaciones, setEditObservaciones] = useState('');
-  const [savingEdit, setSavingEdit] = useState(false);
-
-  // Estado para edición de unidad (asociar proceso + año)
-  const [editingUnidad, setEditingUnidad] = useState<any | null>(null);
-  const [editUnidadProcesoId, setEditUnidadProcesoId] = useState('');
-  const [editUnidadAnio, setEditUnidadAnio] = useState('');
-  const [savingUnidad, setSavingUnidad] = useState(false);
-
-  // Estado para el modal de confirmación de borrado
-  const [deleteConfig, setDeleteConfig] = useState<{ id: string, nombre: string, type: 'unidad' | 'proceso' } | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const userComunidad = session?.user?.user_metadata?.comunidad || '';
-
-      const [unidadesResp, procesosResp] = await Promise.all([
-        fetch(`/api/admin/autonomico/unidades?comunidad=${encodeURIComponent(userComunidad)}`).then(r => r.json()).catch(() => []),
-        fetch('/api/admin/procesos-electorales').then(r => r.json()).catch(() => [])
-      ]);
-
-      if (Array.isArray(unidadesResp)) setUnidades(unidadesResp);
-      if (Array.isArray(procesosResp)) setProcesos(procesosResp);
-    } catch (err) {
-      console.error('Error cargando datos:', err);
-    } finally {
-      setLoading(false);
+  const StatusIcon = ({ icon }: { icon: string | null }) => {
+    switch (icon) {
+      case 'clock': return <Clock className="w-3 h-3" />;
+      case 'check': return <CheckCircle2 className="w-3 h-3" />;
+      case 'chart': return <BarChart2 className="w-3 h-3" />;
+      default: return null;
     }
   };
-
-  const executeDelete = async () => {
-    if (!deleteConfig) return;
-    setIsDeleting(true);
-    
-    try {
-      if (deleteConfig.type === 'unidad') {
-        const resp = await fetch('/api/admin/unidades', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: deleteConfig.id })
-        });
-        if (!resp.ok) { const d = await resp.json(); throw new Error(d.error); }
-        setUnidades(unidades.filter(u => u.id !== deleteConfig.id));
-      } else {
-        const resp = await fetch('/api/admin/procesos-electorales', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: deleteConfig.id })
-        });
-        if (!resp.ok) { const d = await resp.json(); throw new Error(d.error); }
-        setProcesos(procesos.filter(p => p.id !== deleteConfig.id));
-        setUnidades(unidades.map(u => u.proceso_electoral_id === deleteConfig.id ? {...u, proceso_electoral_id: null} : u));
-      }
-      setDeleteConfig(null);
-    } catch (err: any) {
-      alert('Error al eliminar: ' + err.message);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const openEditProceso = (p: any) => {
-    setEditingProceso(p);
-    setEditNombre(p.nombre || '');
-    setEditPeriodo(p.periodo || '');
-    setEditObservaciones(p.observaciones || '');
-  };
-
-  const openEditUnidad = (u: any) => {
-    setEditingUnidad(u);
-    setEditUnidadProcesoId(u.proceso_electoral_id || '');
-    setEditUnidadAnio(u.anio?.toString() || '');
-  };
-
-  const saveEditUnidad = async () => {
-    if (!editingUnidad) return;
-    setSavingUnidad(true);
-    try {
-      const procId = editUnidadProcesoId && editUnidadProcesoId !== 'NO_PROCEDE' ? editUnidadProcesoId : null;
-      const anioVal = editUnidadAnio ? parseInt(editUnidadAnio) : null;
-
-      const { error } = await supabase
-        .from('unidades_electorales')
-        .update({ proceso_electoral_id: procId, anio: anioVal })
-        .eq('id', editingUnidad.id);
-
-      if (error) throw error;
-      setUnidades(unidades.map(u => u.id === editingUnidad.id ? { ...u, proceso_electoral_id: procId, anio: anioVal } : u));
-      setEditingUnidad(null);
-    } catch (err: any) {
-      alert('Error: ' + err.message);
-    } finally {
-      setSavingUnidad(false);
-    }
-  };
-
-  const saveEditProceso = async () => {
-    if (!editingProceso) return;
-    setSavingEdit(true);
-    try {
-      const resp = await fetch('/api/admin/procesos-electorales', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: editingProceso.id, nombre: editNombre, periodo: editPeriodo, observaciones: editObservaciones })
-      });
-      if (!resp.ok) { const d = await resp.json(); throw new Error(d.error); }
-      const updated = await resp.json();
-      setProcesos(procesos.map(p => p.id === editingProceso.id ? { ...p, ...updated } : p));
-      setEditingProceso(null);
-    } catch (err: any) {
-      alert('Error guardando: ' + err.message);
-    } finally {
-      setSavingEdit(false);
-    }
-  };
-
-  const getStatusBadge = (estado: string) => {
-    switch (estado) {
-      case 'configuracion':
-        return { icon: <Clock className="w-3 h-3" />, text: 'Borrador', class: 'bg-amber-500/10 text-amber-500 border-amber-500/20' };
-      case 'activa':
-        return { icon: <CheckCircle2 className="w-3 h-3" />, text: 'Activa', class: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' };
-      case 'escrutinio':
-        return { icon: <BarChart2 className="w-3 h-3" />, text: 'Escrutinio', class: 'bg-blue-500/10 text-blue-500 border-blue-500/20' };
-      default:
-        return { icon: null, text: estado, class: 'bg-white/5 text-white/40' };
-    }
-  };
-
-  const filtered = unidades.filter(u => {
-    // Si la unidad está congelada, ya pasó al histórico, la quitamos de este panel interactivo
-    if (u.estado === 'congelada') return false;
-    
-    const term = searchTerm.toUpperCase();
-    const matchesSearch = u.nombre.toUpperCase().includes(term) || 
-                         (u.provincias?.nombre || '').toUpperCase().includes(term) ||
-                         (u.anio?.toString() || '').includes(term);
-    const matchesFilter = filterState === 'all' || u.estado === filterState;
-    return matchesSearch && matchesFilter;
-  });
-
-  // Agrupar unidades por proceso
-  const unidadesPorProceso = (procesoId: string) => filtered.filter(u => u.proceso_electoral_id === procesoId);
-  const unidadesSinProceso = filtered.filter(u => {
-    if (!u.proceso_electoral_id || u.proceso_electoral_id === 'NO_PROCEDE') return true;
-    // Si el ID de proceso tiene valor pero NO existe en nuestro listado, se muestra aquí para no quedar oculto
-    return !procesos.some(p => p.id === u.proceso_electoral_id);
-  });
 
   const renderUnidadCard = (u: any) => {
     const badge = getStatusBadge(u.estado);
@@ -202,14 +64,14 @@ export default function GestionUnidadesPage() {
     return (
       <div key={u.id} className="group bg-[#0d1424] border border-white/5 p-6 rounded-3xl hover:border-emerald-500/20 transition-all duration-300 shadow-lg">
         <div className="flex justify-between items-start mb-4">
-          <div className={`px-3 py-1 rounded-full border flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest ${badge.class}`}>
-            {badge.icon} {badge.text}
+          <div className={`px-3 py-1 rounded-full border flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest ${badge.badgeClass}`}>
+            <StatusIcon icon={badge.icon} /> {badge.text}
           </div>
           <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
             <button onClick={() => openEditUnidad(u)} className="p-2 bg-amber-500/10 rounded-xl hover:bg-amber-500 hover:text-black text-amber-400 transition-all" title="Asociar proceso">
               <FolderOpen className="w-4 h-4" />
             </button>
-            <Link href={`/admin/autonomico/configurar-elecciones?unidad_id=${u.id}`} className="p-2 bg-white/5 rounded-xl hover:bg-emerald-500 hover:text-black transition-all">
+            <Link href={`${basePath}/configurar-elecciones?unidad_id=${u.id}`} className="p-2 bg-white/5 rounded-xl hover:bg-emerald-500 hover:text-black transition-all">
               <Edit3 className="w-4 h-4" />
             </Link>
             <button onClick={() => setDeleteConfig({ id: u.id, nombre: u.nombre, type: 'unidad' })} className="p-2 bg-white/5 rounded-xl hover:bg-rose-500 text-white/30 hover:text-white transition-all">
@@ -219,7 +81,6 @@ export default function GestionUnidadesPage() {
         </div>
         <h4 className="text-lg font-black tracking-tight uppercase line-clamp-2 mb-3 leading-tight">{u.nombre}</h4>
         
-        {/* Etiqueta de proceso asociado */}
         {procesoAsociado && (
           <div className="mb-3 px-3 py-1.5 bg-amber-500/5 border border-amber-500/10 rounded-xl inline-flex items-center gap-1.5">
             <FolderOpen className="w-3 h-3 text-amber-400/50" />
@@ -329,7 +190,6 @@ export default function GestionUnidadesPage() {
 
               return (
                 <div key={proc.id} className="bg-[#111827]/60 border border-white/10 rounded-[40px] overflow-hidden backdrop-blur-xl transition-all hover:border-amber-500/20">
-                  {/* Cabecera del proceso */}
                   <div 
                     className="flex items-center justify-between p-8 cursor-pointer group"
                     onClick={() => setExpandedProceso(isExpanded ? null : proc.id)}
@@ -366,7 +226,6 @@ export default function GestionUnidadesPage() {
                     </div>
                   </div>
 
-                  {/* Contenido expandido */}
                   {isExpanded && (
                     <div className="px-8 pb-8 border-t border-white/5 pt-6 animate-in fade-in slide-in-from-top-2 duration-300">
                       {proc.observaciones && (
