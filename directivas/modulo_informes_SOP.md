@@ -72,8 +72,8 @@ Implementar en `/admin/nacional/informes` un visualizador analítico avanzado de
 6. **Por Sindicato (Ficha Sindicato)** — Vista interactiva con selector para aislar un sindicato en concreto y visualizar la distribución exacta de sus delegados extraídos agrupados por Sector, por Provincia y desglosado por Unidad Electoral.
 
 ## Lógica de Colores de Sesión
-- Cada proceso seleccionado recibe un color secuencial de la paleta (9 colores):
-  `['#10b981', '#6366f1', '#f59e0b', '#ec4899', '#3b82f6', '#8b5cf6', '#ef4444', '#14b8a6', '#f97316']`
+- Cada proceso seleccionado recibe un color secuencial de la paleta cíclica (18 colores base, se repite):
+  `['#10b981', '#6366f1', '#f59e0b', '#ec4899', '#3b82f6', '#8b5cf6', '#ef4444', '#14b8a6', '#f97316', '#a3e635', '#e879f9', '#22d3ee', '#fb923c', '#818cf8', '#34d399', '#f472b6', '#60a5fa', '#c084fc']`
 - El color se usa en gráficos y en el chip del panel izquierdo
 
 ## Exportación
@@ -90,7 +90,8 @@ Implementar en `/admin/nacional/informes` un visualizador analítico avanzado de
 ## Restricciones y Casos Borde
 
 - **CRÍTICO — Nombre de columna en `resultados_consolidados`:** La columna de delegados NO se llama `delegados_obtenidos`. El importador histórico (`/api/admin/importar-historico`) y el escrutinio normal guardan los datos en `delegados_totales` (y `delegados_directos` como campo auxiliar). Usar siempre `delegados_totales ?? delegados_directos ?? 0`. Usar `delegados_obtenidos` devuelve siempre `undefined` → los gráficos aparecen vacíos sin ningún error visible.
-- **Máximo 9 procesos en sesión:** El límite es configurable — sólo depende del tamaño de `SESSION_COLORS` y el valor de guard en `toggleUnidad`. Se elevó de 6 a 9 en v3. Para aumentarlo más, añadir colores a la paleta y cambiar el `>= 9`.
+- **Sin límite de procesos en sesión (v4):** Se eliminó el límite anterior de 9 procesos. La paleta de colores ahora es cíclica (18 colores base que se repiten con `index % length`). Cuando se seleccionan más de 12 procesos, el header muestra los primeros 12 dots + un indicador "+N".
+- **Botón "Seleccionar Todo" (v4):** Solo aparece cuando hay filtros activos. Permite seleccionar/deseleccionar todos los resultados filtrados de golpe. El botón tiene 3 estados visuales: vacío (ningún filtrado seleccionado), parcial (algunos seleccionados), completo (todos seleccionados). La acción es inteligente: añade solo los que faltan sin duplicar, y al deseleccionar solo quita los filtrados (preserva selecciones externas al filtro actual).
 - **Proceso sin resultados consolidados:** Si `resultados_consolidados` está vacío, mostrar "Sin datos de escrutinio" en la vista comparativa sin crashear.
 - **recharts no soporta SSR:** Usar `dynamic(() => import(...), { ssr: false })` si es necesario. O simplemente garantizar que el componente está en un cliente con `"use client"`.
 - **xlsx es CommonJS:** Importar con `import * as XLSX from 'xlsx'` en el route handler del servidor. No importar desde el cliente.
@@ -117,4 +118,6 @@ npm install recharts xlsx
 - **La tabla `procesos_electorales` puede estar vacía:** Si la organización no ha creado procesos agrupadores, el panel mostrará "Sin procesos". Esto es comportamiento correcto — la herramienta analiza procesos, no unidades sueltas. No es un error del módulo.
 - **El usuario `castillayleon@csif.es` tiene rol `super_autonomico`** pero accede al panel nacional. Funciona porque la auth del panel nacional verifica exactamente `role === 'super_nacional'` en el middleware, pero si el usuario puede llegar al módulo de informes, las APIs de informes aceptan ambos roles para no bloquear.
 - **`recharts` no hay que instalar**: ya estaba en `package.json`. Ídem `xlsx`.
-- **Colores de sesión**: Paleta de 6 colores asignada secuencialmente `['#10b981','#6366f1','#f59e0b','#ec4899','#3b82f6','#8b5cf6']`. El color del proceso 0 = verde emerald, el 1 = indigo, etc.
+- **Colores de sesión**: Paleta cíclica de 18 colores via `getSessionColor(index)`. El color del proceso 0 = verde emerald, el 1 = indigo, etc. Si se exceden los 18, cicla de vuelta.
+- **"Seleccionar Todo" requiere filtros activos**: El botón no aparece sin filtros para evitar que el usuario seleccione accidentalmente cientos de unidades sin contexto.
+- **Referencia a SESSION_COLORS en el placeholder**: El área principal vacía (estado sin selección) renderiza los dots decorativos de la paleta de colores. Si se renombra la constante, hay que actualizar también esa zona (~línea 870), no solo el panel lateral y la lógica de toggleUnidad.

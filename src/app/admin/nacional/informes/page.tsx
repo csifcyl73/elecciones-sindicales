@@ -13,11 +13,14 @@ import {
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
-// ── Paleta de colores de sesión ────────────────────────────────────────────
-const SESSION_COLORS = [
+// ── Paleta de colores de sesión (cíclica, sin límite) ──────────────────────
+const SESSION_COLORS_BASE = [
   '#10b981', '#6366f1', '#f59e0b', '#ec4899', '#3b82f6', '#8b5cf6',
-  '#ef4444', '#14b8a6', '#f97316',
+  '#ef4444', '#14b8a6', '#f97316', '#a3e635', '#e879f9', '#22d3ee',
+  '#fb923c', '#818cf8', '#34d399', '#f472b6', '#60a5fa', '#c084fc',
 ];
+const getSessionColor = (index: number): string =>
+  SESSION_COLORS_BASE[index % SESSION_COLORS_BASE.length];
 
 // ── Tipos ─────────────────────────────────────────────────────────────────
 interface Unidad {
@@ -244,9 +247,25 @@ export default function InformesPage() {
   const toggleUnidad = (id: string) => {
     setSesion(prev => {
       if (prev.includes(id)) return prev.filter(x => x !== id);
-      if (prev.length >= 9) return prev;
       return [...prev, id];
     });
+  };
+
+  // ── Seleccionar / deseleccionar todo (solo filtradas) ─────────────────────
+  const allFilteredSelected = hasFilters && unidadesFiltradas.length > 0 && unidadesFiltradas.every(u => sesion.includes(u.id));
+  const someFilteredSelected = hasFilters && unidadesFiltradas.some(u => sesion.includes(u.id));
+
+  const toggleSelectAll = () => {
+    if (allFilteredSelected) {
+      // Deseleccionar todas las filtradas
+      const filteredIds = new Set(unidadesFiltradas.map(u => u.id));
+      setSesion(prev => prev.filter(id => !filteredIds.has(id)));
+    } else {
+      // Añadir todas las filtradas que no estén ya seleccionadas
+      const currentSet = new Set(sesion);
+      const newIds = unidadesFiltradas.map(u => u.id).filter(id => !currentSet.has(id));
+      setSesion(prev => [...prev, ...newIds]);
+    }
   };
 
   // ── Exportar Excel ───────────────────────────────────────────────────────
@@ -327,7 +346,7 @@ export default function InformesPage() {
       datos.forEach((u, idx) => {
         ensureSpace(40);
         // Cabecera de la elección
-        const colorHex = SESSION_COLORS[idx] || '#888';
+        const colorHex = getSessionColor(idx);
         const r = parseInt(colorHex.slice(1, 3), 16);
         const g = parseInt(colorHex.slice(3, 5), 16);
         const b = parseInt(colorHex.slice(5, 7), 16);
@@ -624,15 +643,16 @@ export default function InformesPage() {
         <div className="flex items-center gap-3">
           {sesion.length > 0 && (
             <div className="hidden sm:flex items-center gap-1.5">
-              {sesion.map((id, i) => (
+              {sesion.slice(0, 12).map((id, i) => (
                 <div
                   key={id}
                   className="w-2.5 h-2.5 rounded-full border-2 border-[#050c18]"
-                  style={{ backgroundColor: SESSION_COLORS[i] }}
+                  style={{ backgroundColor: getSessionColor(i) }}
                   title={todasUnidades.find(u => u.id === id)?.nombre}
                 />
               ))}
-              <span className="text-[9px] font-black text-white/30 uppercase tracking-widest ml-1">{sesion.length}/9</span>
+              {sesion.length > 12 && <span className="text-[9px] font-black text-white/20">+{sesion.length - 12}</span>}
+              <span className="text-[9px] font-black text-white/30 uppercase tracking-widest ml-1">{sesion.length}</span>
             </div>
           )}
           <button
@@ -719,13 +739,34 @@ export default function InformesPage() {
 
             {/* Tags activos + limpiar */}
             {hasFilters && (
-              <div className="flex items-center justify-between">
-                <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest">
-                  {unidadesFiltradas.length} resultado{unidadesFiltradas.length !== 1 ? 's' : ''}
-                </span>
-                <button onClick={clearFilters} className="flex items-center gap-1 text-[9px] font-black text-white/30 hover:text-amber-400 transition-colors uppercase tracking-widest">
-                  <X className="w-3 h-3" /> Limpiar
-                </button>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest">
+                    {unidadesFiltradas.length} resultado{unidadesFiltradas.length !== 1 ? 's' : ''}
+                  </span>
+                  <button onClick={clearFilters} className="flex items-center gap-1 text-[9px] font-black text-white/30 hover:text-amber-400 transition-colors uppercase tracking-widest">
+                    <X className="w-3 h-3" /> Limpiar
+                  </button>
+                </div>
+                {unidadesFiltradas.length > 0 && (
+                  <button
+                    onClick={toggleSelectAll}
+                    className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all active:scale-[0.98] ${
+                      allFilteredSelected
+                        ? 'bg-amber-500/15 border-amber-500/30 text-amber-300 hover:bg-amber-500/20'
+                        : someFilteredSelected
+                          ? 'bg-amber-500/10 border-amber-500/20 text-amber-400/70 hover:bg-amber-500/15'
+                          : 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:border-white/20'
+                    }`}
+                  >
+                    {allFilteredSelected ? (
+                      <CheckSquare className="w-3.5 h-3.5" />
+                    ) : (
+                      <Square className="w-3.5 h-3.5" />
+                    )}
+                    Seleccionar todo ({unidadesFiltradas.length})
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -748,19 +789,17 @@ export default function InformesPage() {
               unidadesFiltradas.map(u => {
                 const idx = sesion.indexOf(u.id);
                 const isSelected = idx !== -1;
-                const color = isSelected ? SESSION_COLORS[idx] : null;
-                const maxReached = sesion.length >= 9 && !isSelected;
+                const color = isSelected ? getSessionColor(idx) : null;
 
                 return (
                   <button
                     key={u.id}
                     onClick={() => toggleUnidad(u.id)}
-                    disabled={maxReached}
-                    className={`w-full flex items-start gap-2.5 p-2.5 rounded-xl text-left transition-all border ${
+                    className={`w-full flex items-start gap-2.5 p-2.5 rounded-xl text-left transition-all border cursor-pointer ${
                       isSelected
                         ? 'bg-white/5 border-white/10'
                         : 'border-transparent hover:bg-white/[0.04] hover:border-white/5 text-white/50'
-                    } ${maxReached ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`}
+                    }`}
                   >
                     {isSelected ? (
                       <CheckSquare className="w-4 h-4 shrink-0 mt-0.5" style={{ color: color! }} />
@@ -794,18 +833,12 @@ export default function InformesPage() {
 
           {/* Footer del panel */}
           <div className="shrink-0 border-t border-white/5 p-3 space-y-2">
-            {sesion.length >= 9 && (
-              <div className="flex items-center gap-2 p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <p className="text-[9px] font-black text-amber-400 uppercase tracking-wide">Máximo 9 procesos</p>
-              </div>
-            )}
             {sesion.length > 0 && (
               <button
                 onClick={() => setSesion([])}
                 className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-white/10 text-white/30 hover:text-white hover:border-white/20 text-[10px] font-black uppercase tracking-widest transition-all"
               >
-                <X className="w-3 h-3" /> Limpiar sesión ({sesion.length}/9)
+                <X className="w-3 h-3" /> Limpiar sesión ({sesion.length})
               </button>
             )}
             {!loadingUnidades && (
@@ -831,11 +864,11 @@ export default function InformesPage() {
               <div className="text-center max-w-sm">
                 <h2 className="text-xl font-black uppercase tracking-tight text-white/30">Selecciona elecciones</h2>
                 <p className="text-[11px] font-bold text-white/15 uppercase tracking-widest mt-2">
-                  Usa el panel izquierdo para seleccionar hasta 9 elecciones a comparar
+                  Usa el panel izquierdo para seleccionar elecciones a comparar
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-wrap justify-center max-w-[200px]">
-                {SESSION_COLORS.map((c, i) => (
+                {SESSION_COLORS_BASE.slice(0, 9).map((c, i) => (
                   <div key={i} className="w-3 h-3 rounded-full opacity-30" style={{ backgroundColor: c }} />
                 ))}
               </div>
@@ -874,7 +907,7 @@ export default function InformesPage() {
                       key={id}
                       className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full border border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-widest"
                     >
-                      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: SESSION_COLORS[i] }} />
+                      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: getSessionColor(i) }} />
                       <span className="text-white/70 max-w-[150px] truncate">{u.nombre}</span>
                       {u.anio && <span className="text-white/30">{u.anio}</span>}
                       <button
@@ -923,7 +956,7 @@ export default function InformesPage() {
                         <Tooltip content={<CustomTooltip />} />
                         <Legend wrapperStyle={{ fontSize: 10, paddingTop: 12 }} />
                         {datos.map((_, i) => (
-                          <Bar isAnimationActive={false} key={i} dataKey={`u${i}`} name={labelUnidad(i)} fill={SESSION_COLORS[i]} radius={[4, 4, 0, 0]} maxBarSize={40} />
+                          <Bar isAnimationActive={false} key={i} dataKey={`u${i}`} name={labelUnidad(i)} fill={getSessionColor(i)} radius={[4, 4, 0, 0]} maxBarSize={40} />
                         ))}
                       </BarChart>
                     </ResponsiveContainer>
@@ -940,7 +973,7 @@ export default function InformesPage() {
                           <tr className="border-b border-white/5">
                             <th className="text-left py-3 pr-4 font-black text-white/30 uppercase tracking-widest text-[9px] w-20 shrink-0">Sindicato</th>
                             {datos.map((u, i) => (
-                              <th key={u.id} className="text-right py-3 px-3 font-black text-[9px] uppercase tracking-widest min-w-[130px]" style={{ color: SESSION_COLORS[i] + 'cc' }}>
+                              <th key={u.id} className="text-right py-3 px-3 font-black text-[9px] uppercase tracking-widest min-w-[130px]" style={{ color: getSessionColor(i) + 'cc' }}>
                                 <div className="max-w-[150px] truncate">{u.nombre}</div>
                                 <div className="text-white/30 font-bold">{u.anio}</div>
                               </th>
@@ -975,7 +1008,7 @@ export default function InformesPage() {
                           <tr className="border-t border-white/10">
                             <td className="py-3 pr-4 font-black text-white/40 uppercase text-[9px] tracking-widest">Total</td>
                             {datos.map((u, i) => (
-                              <td key={u.id} className="py-3 px-3 text-right font-black" style={{ color: SESSION_COLORS[i] }}>
+                              <td key={u.id} className="py-3 px-3 text-right font-black" style={{ color: getSessionColor(i) }}>
                                 {u.totalDelegadosObtenidos}
                               </td>
                             ))}
@@ -1004,7 +1037,7 @@ export default function InformesPage() {
                         <Tooltip content={<CustomTooltip />} />
                         <Legend wrapperStyle={{ fontSize: 10 }} />
                         {sindicatosTop6.map((s, i) => (
-                          <Line isAnimationActive={false} key={s.siglas} type="monotone" dataKey={s.siglas} stroke={SESSION_COLORS[i]} strokeWidth={2.5} dot={{ fill: SESSION_COLORS[i], r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                          <Line isAnimationActive={false} key={s.siglas} type="monotone" dataKey={s.siglas} stroke={getSessionColor(i)} strokeWidth={2.5} dot={{ fill: getSessionColor(i), r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} />
                         ))}
                       </LineChart>
                     </ResponsiveContainer>
@@ -1023,7 +1056,7 @@ export default function InformesPage() {
                         <Tooltip content={<CustomTooltip />} />
                         <Legend wrapperStyle={{ fontSize: 10 }} />
                         {datos.map((_, i) => (
-                          <Bar isAnimationActive={false} key={i} dataKey={`u${i}`} name={labelUnidad(i)} fill={SESSION_COLORS[i]} radius={[0, 4, 4, 0]} />
+                          <Bar isAnimationActive={false} key={i} dataKey={`u${i}`} name={labelUnidad(i)} fill={getSessionColor(i)} radius={[0, 4, 4, 0]} />
                         ))}
                       </BarChart>
                     </ResponsiveContainer>
