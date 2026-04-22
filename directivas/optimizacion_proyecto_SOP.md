@@ -153,12 +153,12 @@ export default function Page() {
 
 ### Orden de Ejecución (de menor a mayor riesgo)
 
-1. **useGestionSindicatos** — Módulo más simple, buen candidato para primer hook.
-2. **useGestionUnidades** — Similar pero con agrupación por proceso.
-3. **useGestionInterventores** — Módulo autocontenido.
-4. **useInformes** — Lógica compleja de filtros y Excel.
-5. **useVisualizarElecciones** + **useVisualizarDetalle** — Los más grandes.
-6. **useConfigurarElecciones** — El más complejo (56 KB), se hace al final.
+1. **useGestionSindicatos** — ✅ Completado (`8dfae4e`)
+2. **useGestionUnidades** — ✅ Completado (`af83cdf`)
+3. **useGestionInterventores** — ✅ Completado (`5d7fe7a`)
+4. **useInformes** — ⏸️ Aplazado (ver restricciones aprendidas)
+5. **useVisualizarElecciones** + **useVisualizarDetalle** — ⏸️ Aplazado
+6. **useConfigurarElecciones** — ⏸️ Aplazado
 
 ### Restricciones
 - **NO mover ni renombrar archivos de página** (`page.tsx`). Next.js App Router los necesita donde están.
@@ -167,10 +167,18 @@ export default function Page() {
 - **Un commit por hook extraído** para facilitar revert granular si algo falla.
 - **El componente `CheckCircle2` inline** (definido al final de gestion-sindicatos) debe moverse a `lucide-react` import o a un componente compartido.
 
-### Resultado Esperado
-- **~700 KB → ~400 KB** de código en `src/app/admin/` (reducción de ~40%).
-- **~150 KB** de hooks reutilizables en `src/lib/hooks/`.
-- Corrección de bugs en un solo lugar en vez de dos.
+### ✅ Resultado (Ejecutado 2026-04-22)
+- 3 hooks extraídos en `src/lib/hooks/`:
+  - `useGestionSindicatos.ts` — CRUD sindicatos, federaciones inline, importación Excel
+  - `useGestionUnidades.ts` — CRUD unidades/procesos, filtrado por comunidad (autonómico)
+  - `useGestionInterventores.ts` — CRUD interventores, generación de credenciales
+- **Reducción neta: ~850 líneas eliminadas** de código duplicado en `src/app/admin/`
+- Build limpio verificado tras cada extracción
+- 3 commits granulares independientes para revert seguro
+
+### Restricciones Aprendidas
+- **NOTA: Informes, Visualizar y Configurar NO son buenos candidatos para extracción de hooks.** Estos módulos tienen 1200+ líneas cada uno con lógica de generación PDF (jsPDF), captura de gráficos (html2canvas), y rendering de charts (recharts) profundamente acoplada al JSX. La única diferencia real entre Nacional y Autonómico es la URL de carga inicial (1 línea). Extraer un hook de 600+ líneas para ahorrar 1 línea no es justificable.
+- **NOTA: Para los módulos grandes (>500 líneas), la estrategia correcta es extraer SOLO la carga de datos** a un helper function compartido (no un hook completo), dejando el resto de la lógica in-situ.
 
 ---
 
