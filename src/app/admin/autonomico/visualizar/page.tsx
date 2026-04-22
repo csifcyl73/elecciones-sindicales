@@ -46,6 +46,7 @@ export default function VisualizarEleccionesAutonomicoPage() {
   const [filterOrganos, setFilterOrganos] = useState<string[]>([]);
   const [filterAnyos, setFilterAnyos] = useState<string[]>([]);
   const [openPanel, setOpenPanel] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Notificaciones RT logic
   const [notificaciones, setNotificaciones] = useState<any[]>([]);

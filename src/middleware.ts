@@ -1,7 +1,65 @@
+// Rate Limiter simple en memoria (Fase 2 Auditoría)
+// --------------------------------------------------------------------------------
+// FASE 3: Edge Rate Limiting Distribuido (@upstash/ratelimit) - FALLBACK EN MEMORIA
+// --------------------------------------------------------------------------------
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
+// Instanciar limitador (con fallback condicional por si no hay env vars configuradas en entorno local)
+let ratelimit: Ratelimit | null = null;
+try {
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    ratelimit = new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(20, "60 s"),
+      analytics: true,
+      prefix: "@upstash/ratelimit",
+    });
+  }
+} catch (e) {
+  console.warn("Upstash RateLimit inactivo: Faltan variables de entorno.");
+}
+
+const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
+const RATE_LIMIT = 100; // max requests per minute
+const WINDOW_MS = 60000;
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  if (!record) {
+    rateLimitMap.set(ip, { count: 1, lastReset: now });
+    return true;
+  }
+  if (now - record.lastReset > WINDOW_MS) {
+    rateLimitMap.set(ip, { count: 1, lastReset: now });
+    return true;
+  }
+  if (record.count >= RATE_LIMIT) {
+    return false;
+  }
+  record.count++;
+  return true;
+}
+
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
+  // Fase 2 - Rate Limiting
+  const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+  if (request.nextUrl.pathname.startsWith('/api/') || request.nextUrl.pathname.startsWith('/admin/')) {
+    // Fase 3 - Comprobación Edge (Fallback silencioso a memo)
+    if (ratelimit) {
+      const { success } = await ratelimit.limit(ip);
+      if (!success) return new NextResponse('Too Many Requests', { status: 429 });
+    } else {
+      if (!checkRateLimit(ip)) {
+        return new NextResponse('Too Many Requests Locally', { status: 429 });
+      }
+    }
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(

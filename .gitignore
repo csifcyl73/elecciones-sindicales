@@ -36,6 +36,12 @@ yarn-error.log*
 # vercel
 .vercel
 
+# deprecated artifacts
+/_deprecated/
+
+# temp data
+/.tmp/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

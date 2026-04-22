@@ -210,6 +210,46 @@ export default function VisualizarEleccionesPage() {
     if (deletedCount === ids.length) clearSelection();
   };
 
+  const renderGroupHeader = (proc: any, groupIds: string[]) => {
+    const isExpanded = expandedProceso === proc.id || selectionMode;
+    const allSelected = groupIds.every(id => selectedIds.has(id));
+
+    return (
+      <div 
+        className="flex items-center justify-between p-6 md:p-8 cursor-pointer group hover:bg-white/5 transition-colors"
+        onClick={() => !selectionMode && setExpandedProceso(isExpanded ? null : proc.id)}
+      >
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          {selectionMode && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                selectAll(groupIds);
+              }}
+              className={`w-7 h-7 rounded-xl border-2 flex items-center justify-center transition-all shrink-0 ${
+                allSelected ? 'bg-rose-500 border-rose-500' : 'bg-[#0a101f] border-white/20 hover:border-rose-400'
+              }`}
+            >
+              {allSelected && <CheckCircle2 className="w-4 h-4 text-white" />}
+            </button>
+          )}
+          <div className="p-3 bg-rose-500/10 rounded-2xl border border-rose-500/20 shrink-0">
+            <CalendarRange className="w-6 h-6 text-rose-400" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-lg md:text-xl font-black tracking-tight uppercase truncate">{proc.nombre}</h3>
+            <p className="text-[9px] font-black text-rose-400/60 uppercase tracking-widest mt-1">
+              {groupIds.length} Eleccion{groupIds.length !== 1 ? 'es' : ''} en este proceso
+            </p>
+          </div>
+        </div>
+        <div className={`p-2 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+          <ChevronDown className="w-5 h-5 text-white/20" />
+        </div>
+      </div>
+    );
+  };
+
   const renderUnidadCard = (u: any) => (
     <div key={u.id} className="relative group">
       <Link 

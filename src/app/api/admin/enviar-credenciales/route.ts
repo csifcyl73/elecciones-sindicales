@@ -55,6 +55,16 @@ export async function POST(req: NextRequest) {
           <div style="padding: 20px; background-color: #f9fafb; text-align: center; border-top: 1px solid #e5e7eb;">
             <p style="color: #9ca3af; font-size: 10px; font-weight: 600; text-transform: uppercase;">Sistema de Gestión Electoral · CSIF 2026</p>
           </div>
+
+          <div style="padding: 20px; background-color: #f3f4f6; border-top: 1px solid #e5e7eb; font-size: 9px; color: #6b7280; line-height: 1.5; text-align: justify; font-family: sans-serif;">
+            <strong>INFORMACIÓN BÁSICA SOBRE PROTECCIÓN DE DATOS (RGPD Y LOPDGDD):</strong><br/>
+            <strong>Responsable:</strong> El Sindicato u Organización emisora de las credenciales.<br/>
+            <strong>Finalidad:</strong> Gestión organizativa de elecciones sindicales y provisión de accesos de auditoría de mesas.<br/>
+            <strong>Legitimación:</strong> Cumplimiento de obligaciones legales aplicables en materia sindical (Art. 6.1.c RGPD) y amparo laboral (Art. 9.2.b RGPD).<br/>
+            <strong>Destinatarios:</strong> No se prevén comunicaciones de datos, salvo previsión legal.<br/>
+            <strong>Tus Derechos:</strong> Puedes ejercer tus derechos ARSOL (Acceso, Rectificación, Supresión, Oposición y Limitación) dirigiendo una solicitud formal al Responsable de Tratamiento.<br/>
+            <em>Este mensaje es estrictamente confidencial. Si lo has recibido por error, bórralo de inmediato y notifícalo.</em>
+          </div>
         </div>
       `,
     });
