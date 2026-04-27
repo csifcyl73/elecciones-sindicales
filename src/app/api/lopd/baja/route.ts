@@ -7,7 +7,8 @@ export async function POST(req: Request) {
     const supabase = await createClient();
     const { data: { session } } = await supabase.auth.getSession();
 
-    if (!session || session.user.user_metadata?.role !== 'interventor') {
+    const role = session.user.user_metadata?.role;
+    if (!session || !['interventor', 'super_nacional', 'super_autonomico'].includes(role)) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 

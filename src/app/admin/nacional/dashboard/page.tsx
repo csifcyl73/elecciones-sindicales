@@ -89,6 +89,16 @@ const menuItems = [
     shadow: 'shadow-amber-500/30',
     href: '/admin/nacional/informes',
   },
+  {
+    id: 'privacidad-lopd',
+    label: 'Privacidad (LOPD)',
+    description: 'Gestión de derechos de protección de datos y baja del sistema',
+    icon: ShieldCheck,
+    color: 'from-gray-600 to-slate-700',
+    shadow: 'shadow-gray-500/30',
+    href: '/admin/nacional/privacidad',
+  },
+
 ];
 
 export default function AdminNacionalDashboard() {

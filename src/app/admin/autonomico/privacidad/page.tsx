@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { ArrowLeft, ShieldAlert, AlertTriangle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-export default function PrivacidadLOPDPage() {
+export default function PrivacidadAutonomicoPage() {
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
@@ -15,14 +15,14 @@ export default function PrivacidadLOPDPage() {
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session || session.user.user_metadata?.role !== 'interventor') {
-        router.replace('/interventor');
+      if (!session || session.user.user_metadata?.role !== 'super_autonomico') {
+        router.replace('/admin/autonomico');
         return;
       }
       setUserData({
         id: session.user.id,
         email: session.user.email || '',
-        nombre: session.user.user_metadata?.full_name || session.user.user_metadata?.nombre || '',
+        nombre: session.user.user_metadata?.nombre || 'Administrador Autonómico',
       });
     };
     fetchUser();
@@ -32,8 +32,8 @@ export default function PrivacidadLOPDPage() {
     if (!userData) return;
     
     const confirmacion = window.confirm(
-      "Estás a punto de solicitar tu BAJA DEFINITIVA y el borrado de tus datos (Derecho de Supresión - LOPD).\n\n" +
-      "Perderás el acceso al sistema inmediatamente y tu correo será añadido a una lista de exclusión para no volver a ser importado.\n\n" +
+      "Estás a punto de solicitar tu BAJA DEFINITIVA como Administrador Autonómico y el borrado de tus datos (Derecho de Supresión - LOPD).\n\n" +
+      "Perderás el acceso al sistema inmediatamente. Tu correo será añadido a una lista de exclusión para no volver a ser importado.\n\n" +
       "¿Estás completamente seguro de que deseas proceder?"
     );
 
@@ -54,7 +54,7 @@ export default function PrivacidadLOPDPage() {
       if (res.ok) {
         alert("Solicitud de baja tramitada. Tus datos han sido eliminados de la base de datos activa y se ha registrado tu solicitud para evitar futuros envíos.");
         await supabase.auth.signOut();
-        router.replace('/interventor');
+        router.replace('/admin/autonomico');
       } else {
         const error = await res.json();
         alert(`Error al procesar la baja: ${error.error}`);
@@ -70,7 +70,7 @@ export default function PrivacidadLOPDPage() {
   if (!userData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-emerald-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -78,14 +78,14 @@ export default function PrivacidadLOPDPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-3xl mx-auto bg-white p-8 md:p-12 rounded-[3rem] shadow-sm border border-gray-100">
-        <Link href="/interventor/dashboard" className="inline-flex items-center text-sm font-bold text-emerald-600 hover:text-emerald-700 mb-10 transition-all hover:-translate-x-1">
+        <Link href="/admin/autonomico/dashboard" className="inline-flex items-center text-sm font-bold text-blue-600 hover:text-blue-700 mb-10 transition-all hover:-translate-x-1">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Volver al panel
+          Volver al panel autonómico
         </Link>
 
         <div className="flex items-center gap-4 mb-8">
-          <div className="bg-emerald-50 p-4 rounded-2xl">
-            <ShieldAlert className="w-10 h-10 text-emerald-600" />
+          <div className="bg-blue-50 p-4 rounded-2xl">
+            <ShieldAlert className="w-10 h-10 text-blue-600" />
           </div>
           <div>
             <h1 className="text-3xl font-black text-gray-900 tracking-tight">Privacidad y LOPD</h1>
@@ -93,7 +93,7 @@ export default function PrivacidadLOPDPage() {
           </div>
         </div>
 
-        <div className="prose prose-emerald max-w-none text-gray-600 leading-relaxed mb-10">
+        <div className="prose prose-blue max-w-none text-gray-600 leading-relaxed mb-10">
           <p>
             De acuerdo con lo establecido en el <strong>Reglamento General de Protección de Datos (RGPD)</strong> y en la <strong>Ley Orgánica 3/2018 de Protección de Datos Personales y garantía de los derechos digitales (LOPDGDD)</strong>, tienes derecho a solicitar la supresión de tus datos personales alojados en nuestra plataforma.
           </p>
@@ -101,8 +101,7 @@ export default function PrivacidadLOPDPage() {
             Al solicitar la baja definitiva:
           </p>
           <ul>
-            <li>Tu usuario y acceso a la plataforma serán revocados inmediatamente.</li>
-            <li>Se te desvinculará de cualquier mesa electoral activa a la que estuvieras asignado.</li>
+            <li>Tu usuario y acceso de administrador a la plataforma serán revocados inmediatamente.</li>
             <li>Tus datos se incluirán en un listado interno e independiente de exclusión (<strong>Lista de supresión</strong>), cuya única finalidad es cruzar información con futuros volcados o backups para garantizar que no vuelvas a ser dado de alta sin tu consentimiento explícito.</li>
           </ul>
         </div>

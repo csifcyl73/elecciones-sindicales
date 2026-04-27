@@ -17,12 +17,12 @@ Para garantizar que un interventor dado de baja no vuelva a ser importado en el 
 
 ## Protocolo de Ejecución
 
-1. **Interfaz del Interventor:**
-   - En el Dashboard (`src/app/interventor/dashboard/page.tsx`), se añade un botón de "Privacidad (LOPD)".
-   - La página `/interventor/privacidad` debe informar de forma clara e inequívoca las consecuencias de la baja (pérdida de acceso, desvinculación de mesas).
+1. **Interfaz de Usuario:**
+   - En los Dashboards (`src/app/interventor/dashboard/page.tsx`, `src/app/admin/nacional/dashboard/page.tsx` y `src/app/admin/autonomico/dashboard/page.tsx`), se añade un botón de "Privacidad (LOPD)".
+   - La página correspondiente (`/privacidad`) debe informar de forma clara e inequívoca las consecuencias de la baja (pérdida de acceso, desvinculación de mesas en caso de interventores, pérdida de gestión en caso de admins).
    
-2. **Procesamiento de la Solicitud (`/api/interventor/lopd`):**
-   - Validar la sesión del interventor.
+2. **Procesamiento de la Solicitud (`/api/lopd/baja`):**
+   - Validar la sesión del usuario (interventor, super_nacional o super_autonomico).
    - Insertar el registro (`email`, `nombre_completo`) en la tabla `lopd_bajas`.
    - Utilizar el cliente de Supabase con permisos de administrador (`SUPABASE_SERVICE_ROLE_KEY`) para eliminar al usuario de `auth.users`.
    - Por integridad referencial (`ON DELETE CASCADE` y `ON DELETE SET NULL`), el usuario desaparecerá de `public.usuarios` y su asignación a las `mesas_electorales` quedará nula (liberando la mesa).

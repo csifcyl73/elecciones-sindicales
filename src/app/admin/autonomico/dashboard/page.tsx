@@ -82,6 +82,16 @@ const menuItems = [
     shadow: 'shadow-orange-500/30',
     href: '/admin/autonomico/gestion-sindicatos',
   },
+  {
+    id: 'privacidad-lopd',
+    label: 'Privacidad (LOPD)',
+    description: 'Gestión de derechos de protección de datos y baja del sistema',
+    icon: ShieldCheck,
+    color: 'from-gray-600 to-slate-700',
+    shadow: 'shadow-gray-500/30',
+    href: '/admin/autonomico/privacidad',
+  },
+
 ];
 
 export default function AdminAutonomicoDashboard() {
