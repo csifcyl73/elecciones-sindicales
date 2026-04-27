@@ -203,3 +203,19 @@ scripts/
 
 ### Restricciones Aprendidas
 - **NOTA Windows:** Los emojis Unicode (📁) no se pueden imprimir en la consola de PowerShell con codificación cp1252. Usar texto ASCII plano en scripts de Python que imprimen por consola.
+
+---
+
+## Fase 6: Resolución de Errores de Build (Turbopack)
+
+### Problema
+Durante el despliegue en Vercel con Next.js 16.2.4 (Turbopack), se producía el error `Module not found: Can't resolve '@react-email/render'` al importar `resend`. Turbopack es estricto con las dependencias dinámicas implícitas de `resend`.
+
+### Acción
+1. Instalar `@react-email/render` explícitamente en `package.json` mediante `npm install @react-email/render`.
+
+### ✅ Resultado (Ejecutado 2026-04-27)
+- Dependencia añadida. Build en Turbopack completado con éxito y error resuelto.
+
+### Restricciones Aprendidas
+- **NOTA:** Siempre que se use la librería `resend` en entornos Next.js con Turbopack, la dependencia `@react-email/render` debe estar declarada explícitamente en el `package.json`, aunque no se importe directamente en el código de la aplicación.
