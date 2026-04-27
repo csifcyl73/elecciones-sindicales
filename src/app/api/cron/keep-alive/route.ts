@@ -32,7 +32,7 @@ export async function GET(req: Request) {
       timestamp: new Date().toISOString()
     });
   } catch (error: any) {
-    console.error('Cron Keep-Alive Error:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('[cron keep-alive] Error interno:', error);
+    return NextResponse.json({ success: false, error: 'Error en el keep-alive.' }, { status: 500 });
   }
 }

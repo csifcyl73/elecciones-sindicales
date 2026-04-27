@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, unidad_id: unidad_id_final });
 
   } catch (error: any) {
-    console.error("Save config backend error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[save-config POST] Error interno:', error);
+    return NextResponse.json({ error: 'Error al guardar la configuración.' }, { status: 500 });
   }
 }

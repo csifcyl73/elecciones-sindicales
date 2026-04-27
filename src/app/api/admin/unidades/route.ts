@@ -33,7 +33,8 @@ export async function GET() {
     if (error) throw error;
     return NextResponse.json(data || []);
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('[unidades GET] Error interno:', err);
+    return NextResponse.json({ error: 'Error al obtener las unidades.' }, { status: 500 });
   }
 }
 
@@ -55,7 +56,8 @@ export async function DELETE(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('[unidades DELETE] Error interno:', err);
+    return NextResponse.json({ error: 'Error al eliminar la unidad.' }, { status: 500 });
   }
 }
 
@@ -80,6 +82,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json(data);
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('[unidades POST] Error interno:', err);
+    return NextResponse.json({ error: 'Error al crear la unidad.' }, { status: 500 });
   }
 }

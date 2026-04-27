@@ -2,11 +2,11 @@ import type { NextConfig } from "next";
 
 const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline';
+    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com;
     style-src 'self' 'unsafe-inline';
-    img-src 'self' blob: data:;
+    img-src 'self' blob: data: https://*.google-analytics.com https://*.googletagmanager.com;
     font-src 'self';
-    connect-src 'self' https://*.supabase.co;
+    connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'X-Frame-Options',
-            value: 'SAMEORIGIN'
+            value: 'DENY' // Fix #7: DENY es más seguro para un sistema con autenticación
           },
           {
             key: 'X-Content-Type-Options',

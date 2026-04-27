@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(mesasFiltradas);
   } catch (error: any) {
-    console.error("Mis mesas API error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[mis-mesas POST] Error interno:', error);
+    return NextResponse.json({ error: 'Error al obtener las mesas.' }, { status: 500 });
   }
 }

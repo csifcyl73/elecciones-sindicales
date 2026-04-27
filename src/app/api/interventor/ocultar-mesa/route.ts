@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("Ocultar mesa error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[ocultar-mesa POST] Error interno:', error);
+    return NextResponse.json({ error: 'Error al ocultar la mesa.' }, { status: 500 });
   }
 }

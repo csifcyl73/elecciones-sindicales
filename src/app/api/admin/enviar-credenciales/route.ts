@@ -17,7 +17,8 @@ export async function POST(req: NextRequest) {
     // Nota: El remitente 'onboarding@resend.dev' es para pruebas gratuitas. 
     // Para producción definitiva el usuario deberá configurar su dominio.
     const { data, error } = await resend.emails.send({
-      from: 'CSIF Elecciones <onboarding@resend.dev>',
+      // Fix #6: Remitente configurable via env var. Para producción, configurar EMAIL_FROM con dominio verificado.
+      from: process.env.EMAIL_FROM ?? 'CSIF Elecciones <onboarding@resend.dev>',
       to: [email],
       subject: '🔑 TUS CREDENCIALES DE INTERVENTOR - CSIF ELECCIONES',
       html: `

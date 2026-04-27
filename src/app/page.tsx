@@ -116,9 +116,22 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Footer info (Minimalista) */}
-        <div className="mt-12 md:mt-16 text-gray-400 text-[10px] uppercase tracking-[0.2em] font-bold z-10">
-          &copy; 2026 CSIF Nacional
+        {/* Footer Legal (Minimalista) */}
+        <div className="mt-12 md:mt-16 z-10 flex flex-col items-center gap-4">
+          <div className="text-gray-400 text-[10px] uppercase tracking-[0.2em] font-bold">
+            &copy; 2026 CSIF Nacional
+          </div>
+          <div className="flex flex-wrap justify-center gap-4 md:gap-8 text-xs font-medium text-gray-500">
+            <Link href="/terminos" className="hover:text-[#008c45] transition-colors">
+              Términos de Servicio
+            </Link>
+            <Link href="/seguridad" className="hover:text-[#008c45] transition-colors">
+              Política de Seguridad
+            </Link>
+            <Link href="/cookies" className="hover:text-[#008c45] transition-colors">
+              Configuración de Cookies
+            </Link>
+          </div>
         </div>
 
         <style jsx global>{`

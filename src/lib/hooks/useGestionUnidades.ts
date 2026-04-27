@@ -67,8 +67,9 @@ export function useGestionUnidades({ perfil }: UseGestionUnidadesOptions) {
 
       // Autonómico filtra por comunidad del usuario
       if (perfil === 'autonomico') {
-        const { data: { session } } = await supabase.auth.getSession();
-        const userComunidad = session?.user?.user_metadata?.comunidad || '';
+      // Fix #4: Usar getUser() de forma consistente con el resto del proyecto
+        const { data: { user } } = await supabase.auth.getUser();
+        const userComunidad = user?.user_metadata?.comunidad || '';
         unidadesUrl = `/api/admin/autonomico/unidades?comunidad=${encodeURIComponent(userComunidad)}`;
       }
 

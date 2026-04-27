@@ -52,7 +52,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: 'Unidad eliminada correctamente' });
   } catch (error: any) {
-    console.error("Delete unit backend error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[unidades/[id] DELETE] Error interno:', error);
+    return NextResponse.json({ error: 'Error al eliminar la unidad.' }, { status: 500 });
   }
 }
