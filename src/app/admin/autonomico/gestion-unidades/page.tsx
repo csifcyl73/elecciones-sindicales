@@ -135,12 +135,8 @@ export default function GestionUnidadesPage() {
             </Link>
             <div className="flex items-center gap-6">
                <div className="text-right hidden sm:block">
-                  <p className="text-[10px] font-black text-white/30 uppercase tracking-widest leading-none">Procesos</p>
-                  <p className="text-4xl font-black text-amber-400 leading-none mt-1">{procesos.length}</p>
-               </div>
-               <div className="text-right hidden sm:block">
-                  <p className="text-[10px] font-black text-white/30 uppercase tracking-widest leading-none">Elecciones</p>
-                  <p className="text-4xl font-black text-white leading-none mt-1">{unidades.length}</p>
+                  <p className="text-[10px] font-black text-emerald-400/80 uppercase tracking-widest leading-none">Procesos Activos</p>
+                  <p className="text-4xl font-black text-emerald-400 leading-none mt-1">{filtered.length}</p>
                </div>
                <div className="p-4 bg-white/5 rounded-3xl border border-white/10 backdrop-blur-3xl">
                   <Database className="w-10 h-10 text-emerald-400" />
