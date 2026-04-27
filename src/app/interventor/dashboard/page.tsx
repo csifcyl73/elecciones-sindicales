@@ -97,16 +97,27 @@ export default function InterventorDashboard() {
         </div>
 
         <div className="flex items-center gap-2 md:gap-6 shrink-0">
-          <a
-            href="https://notebooklm.google.com/notebook/d919f2a0-8f7f-43ce-a976-2b6696ecf1e7/preview"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 font-bold rounded-xl transition-colors shadow-sm text-sm md:text-base mr-2"
-            title="Asistente IA - Manual de Elecciones"
-          >
-            <MessageSquare className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
-            <span className="hidden xs:inline">Manual IA</span>
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href="https://notebooklm.google.com/notebook/d919f2a0-8f7f-43ce-a976-2b6696ecf1e7/preview"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 font-bold rounded-xl transition-colors shadow-sm text-sm md:text-base mr-2"
+              title="Asistente IA - Manual de Elecciones"
+            >
+              <MessageSquare className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
+              <span className="hidden xs:inline">Manual IA</span>
+            </a>
+
+            <button
+              onClick={() => router.push('/interventor/privacidad')}
+              className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200 font-bold rounded-xl transition-colors shadow-sm text-sm md:text-base mr-2"
+              title="Gestión de Privacidad (LOPD)"
+            >
+              <Lock className="w-4 h-4 md:w-5 md:h-5 text-gray-500" />
+              <span className="hidden xs:inline">Privacidad</span>
+            </button>
+          </div>
 
           <div className="hidden sm:flex flex-col items-end">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Activo como</span>
