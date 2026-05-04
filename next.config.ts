@@ -2,11 +2,12 @@ import type { NextConfig } from "next";
 
 const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com;
+    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/;
     style-src 'self' 'unsafe-inline';
-    img-src 'self' blob: data: https://*.google-analytics.com https://*.googletagmanager.com;
+    img-src 'self' blob: data: https://*.google-analytics.com https://*.googletagmanager.com https://www.gstatic.com/;
     font-src 'self';
-    connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com;
+    frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/;
+    connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://www.google.com/recaptcha/;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
