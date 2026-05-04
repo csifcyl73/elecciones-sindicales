@@ -20,6 +20,7 @@ export const metadata: Metadata = {
 
 import CookieBanner from "@/components/CookieBanner";
 import AnalyticsWrapper from "@/components/AnalyticsWrapper";
+import RecaptchaProvider from "@/components/RecaptchaProvider";
 
 export default function RootLayout({
   children,
@@ -32,7 +33,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {children}
+        <RecaptchaProvider>
+          {children}
+        </RecaptchaProvider>
         <CookieBanner />
         <AnalyticsWrapper gaId={process.env.NEXT_PUBLIC_GA_ID || ''} />
       </body>

@@ -26,22 +26,29 @@ Automatizar la creación de un árbol de carpetas (expediente administrativo) en
 
 *   **Fase 1: Promoción o Preaviso**
     *   `1.1_Registro_Preaviso_OPR` (Obligatorio)
+    *   `1.1.1_Recursos_Contra_Preaviso` (Opcional - Creable vía UI)
     *   `1.2_Comunicacion_Empresa_Trabajadores` (Obligatorio)
 *   **Fase 2: Constitución de la Mesa y Censo**
     *   `2.1_Acta_Constitucion_Mesa` (Obligatorio)
+    *   `2.1.1_Recursos_Contra_Acta_Constitucion` (Opcional - Creable vía UI)
     *   `2.2_Censo_Provisional_Y_Calendario` (Obligatorio)
-    *   `2.ACT_Reclamaciones_Censo` (Opcional - Creable vía UI)
+    *   `2.2.1_Reclamaciones_Censo_Provisional_Y_Calendario` (Opcional - Creable vía UI)
     *   `2.3_Censo_Definitivo` (Obligatorio)
+    *   `2.3.1_Reclamaciones_Contra_Censo_Definitivo` (Opcional - Creable vía UI)
 *   **Fase 3: Presentación de Candidaturas**
     *   `3.1_Presentacion_Candidaturas` (Obligatorio)
-    *   `3.2_Proclamacion_Provisional` (Obligatorio)
-    *   `3.ACT_Reclamaciones_Candidaturas` (Opcional)
+    *   `3.1.1_Reclamaciones_Contra_Candidaturas` (Opcional - Creable vía UI)
+    *   `3.2_Proclamacion_Provisional_Candidaturas` (Obligatorio)
+    *   `3.2.1_Reclamaciones_Contra_Proclamacion_Provisional` (Opcional - Creable vía UI)
     *   `3.3_Proclamacion_Definitiva` (Obligatorio)
-*   **Fase 4: Escrutinio y Resultados**
-    *   `4.1_Votacion_Y_Acta_Escrutinio` (Obligatorio)
-    *   `4.2_Publicacion_Tablones` (Obligatorio)
-*   **Fase 5: Registro OPR**
-    *   `5.1_Presentacion_OPR` (Obligatorio)
+    *   `3.3.1_Reclamaciones_Contra_Proclamacion_Definitiva` (Opcional - Creable vía UI)
+*   **Fase 4: Campaña electoral**
+    *   `4.1_Campaña_Electoral` (Obligatorio)
+*   **Fase 5: Escrutinio y Resultados**
+    *   `5.1_Votacion_Y_Acta_Escrutinio` (Obligatorio)
+    *   `5.2_Publicacion_Tablones` (Obligatorio)
+*   **Fase 6: Registro OPR**
+    *   `6.1_Presentacion_OPR` (Obligatorio)
     *   `5.ACT_Subsanacion_Defectos` (Opcional)
     *   `5.2_Registro_Oficial` (Obligatorio)
 *   **Fase 6: Impugnaciones (Vía Arbitral)** -> *Se inicia manual desde UI*

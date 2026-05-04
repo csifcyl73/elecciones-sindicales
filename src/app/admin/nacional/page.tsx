@@ -4,11 +4,13 @@ import Link from 'next/link';
 import { Mail, Inbox, FileText, Users, ArrowLeft, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 const supabase = createClient();
 
 export default function AdminNacionalLogin() {
   const router = useRouter();
+  const { executeRecaptcha } = useGoogleReCaptcha();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -19,11 +21,34 @@ export default function AdminNacionalLogin() {
     setError('');
     setLoading(true);
 
+    // PASO 1: Verificar reCAPTCHA antes de intentar el login
+    if (executeRecaptcha) {
+      try {
+        const token = await executeRecaptcha('login_nacional');
+        const captchaRes = await fetch('/api/auth/verify-captcha', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        });
+        if (!captchaRes.ok) {
+          const captchaData = await captchaRes.json();
+          setError(captchaData.error || 'Verificación de seguridad fallida. Inténtalo de nuevo.');
+          setLoading(false);
+          return;
+        }
+      } catch {
+        setError('Error al verificar la seguridad. Comprueba tu conexión.');
+        setLoading(false);
+        return;
+      }
+    }
+
+    // PASO 2: Login con Supabase (solo si el CAPTCHA pasó)
     const { data: { user }, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error || user?.user_metadata?.role !== 'super_nacional') {
       setError('Acceso denegado. No tienes permisos de Administrador Nacional.');
-      if (!error) await supabase.auth.signOut(); // Si el login fue exitoso pero el rol es incorrecto
+      if (!error) await supabase.auth.signOut();
       setLoading(false);
     } else {
       router.push('/admin/nacional/dashboard');

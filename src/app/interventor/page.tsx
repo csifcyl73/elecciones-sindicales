@@ -4,10 +4,12 @@ import Link from 'next/link';
 import { Mail, Inbox, FileText, Users, ArrowLeft, Loader2, UserCheck } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 export default function InterventorLogin() {
   const router = useRouter();
   const supabase = createClient();
+  const { executeRecaptcha } = useGoogleReCaptcha();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -18,6 +20,29 @@ export default function InterventorLogin() {
     setError('');
     setLoading(true);
 
+    // PASO 1: Verificar reCAPTCHA antes de intentar el login
+    if (executeRecaptcha) {
+      try {
+        const token = await executeRecaptcha('login_interventor');
+        const captchaRes = await fetch('/api/auth/verify-captcha', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        });
+        if (!captchaRes.ok) {
+          const captchaData = await captchaRes.json();
+          setError(captchaData.error || 'Verificación de seguridad fallida. Inténtalo de nuevo.');
+          setLoading(false);
+          return;
+        }
+      } catch {
+        setError('Error al verificar la seguridad. Comprueba tu conexión.');
+        setLoading(false);
+        return;
+      }
+    }
+
+    // PASO 2: Login con Supabase (solo si el CAPTCHA pasó)
     const { data: { user }, error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
     if (authError) {

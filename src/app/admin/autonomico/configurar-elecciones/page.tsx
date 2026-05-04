@@ -307,21 +307,20 @@ function ConfigurarEleccionesSPA() {
       const emails = selectedInterventors.map(i => i.email).join(',');
       
       if (selectedInterventors.length > 0 && selectedUnit) {
-        const names = selectedInterventors.map(i => i.nombre_completo).join(', ');
         const subject = encodeURIComponent(`Notificación de asignación: Interventor/a para elecciones sindicales - ${selectedUnit.nombre}`);
         const body = encodeURIComponent(
-          `Hola, ${names}:\n\n` +
-          `Te escribimos para comunicarte que ya figuras como interventor/a asignado/a para el proceso de elecciones sindicales de este año. Estos son los detalles de la unidad correspondiente:\n\n` +
+          `Estimado/a interventor/a:\n\n` +
+          `Te escribimos para comunicarte que se te ha asignado una mesa para el proceso de elecciones sindicales de este año. Estos son los detalles de la unidad correspondiente:\n\n` +
           `📌 Unidad electoral: ${selectedUnit.nombre.toUpperCase()}\n` +
           `📅 Año: ${formData.anio || '2026'}\n\n` +
-          `Como el proceso ya está configurado en el sistema, puedes acceder desde ahora mismo a tu Panel de Interventor. Allí podrás realizar el seguimiento, la carga de datos y toda la gestión de las mesas que tienes asignadas.\n\n` +
+          `Como el proceso ya está configurado en el sistema, puedes acceder desde ahora mismo a tu Panel de Interventor. Allí podrás realizar el seguimiento, ver la mesa exacta que te corresponde, realizar la carga de datos y toda la gestión del proceso.\n\n` +
           `Próximo paso: Por favor, accede al portal oficial con tus credenciales para confirmar que toda la información sea correcta.\n\n` +
           `Agradecemos de antemano tu tiempo y tu implicación en este proceso. Si tienes cualquier duda, estamos aquí para ayudarte.\n\n` +
           `Un saludo cordial,\n\n` +
           `Departamento de Elecciones Sindicales\n` +
           `CSIF`
         );
-        window.location.href = `mailto:${emails}?subject=${subject}&body=${body}`;
+        window.location.href = `mailto:?bcc=${emails}&subject=${subject}&body=${body}`;
       }
 
       setTimeout(() => {

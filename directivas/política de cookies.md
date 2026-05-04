@@ -1,7 +1,4 @@
-import os
-
-# Content for the Markdown file
-markdown_content = """# Guía de Implementación: Disclaimer de Cookies (España)
+# Guía de Implementación: Disclaimer de Cookies (España)
 
 Esta guía detalla los requisitos legales y técnicos según la **Agencia Española de Protección de Datos (AEPD)**, el **RGPD** y la **LSSI** para el correcto tratamiento de cookies en sitios web españoles.
 
@@ -49,15 +46,3 @@ No requieren consentimiento las cookies estrictamente necesarias para la funcion
 - **Evitar "Dark Patterns":** No uses colores que confundan al usuario (ej. poner "Rechazar" en gris claro sobre fondo blanco y "Aceptar" en verde brillante).
 - **Muro de cookies (Cookie Wall):** No puedes impedir el acceso a la web por no aceptar cookies, a menos que ofrezcas una alternativa (que puede ser de pago) para navegar sin ellas.
 - **Renovación del consentimiento:** El consentimiento debe renovarse al menos cada **24 meses**.
-
----
-
-> **Aviso Legal:** Este documento es una guía informativa y no constituye asesoramiento jurídico profesional. Se recomienda la revisión por parte de un experto legal en protección de datos para casos específicos.
-"""
-
-file_path = "/mnt/data/Guia_Cookies_Espana_AEPD.md"
-
-with open(file_path, "w", encoding="utf-8") as f:
-    f.write(markdown_content)
-
-print(file_path)
